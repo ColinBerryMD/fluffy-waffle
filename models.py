@@ -7,6 +7,7 @@ class WebUser(UserMixin,db.Model):
     id = db.Column(db.Integer, primary_key=True) # primary keys are required by SQLAlchemy
     User = db.Column(db.String(32))
     password = db.Column(db.String(255))
+    password_expires = db.Column(db.DateTime())
     first = db.Column(db.String(50))
     last = db.Column(db.String(50))
     email = db.Column(db.String(100), unique=True)
@@ -15,7 +16,6 @@ class WebUser(UserMixin,db.Model):
     is_admin = db.Column( db.Boolean() )
     is_sms = db.Column( db.Boolean() )
     translate = db.Column( db.Boolean() )
-    last_login = db.Column( db.DateTime() )
     last_2fa = db.Column( db.DateTime() )
 
 class BadPasswords(db.Model):

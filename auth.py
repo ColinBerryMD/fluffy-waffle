@@ -1,7 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, session
 from flask_login import login_user, login_required, logout_user, current_user
-from flask_principal import Identity, AnonymousIdentity, identity_changed, \
-RoleNeed, UserNeed, Permission, identity_loaded
+from datetime import datetime
 
 # database models
 from .models import WebUser
@@ -11,11 +10,10 @@ from .phonenumber import cleanphone
 from .cleanpassword import cleanpassword
 
 #app factory products
-from .app import db, bcrypt, permit
-from .extensions import admin_permission
+from .extensions import db, bcrypt
+from .app import password_lifetime, 2fa_lifetime
 
 auth = Blueprint('auth', __name__)
-
 
 @auth.route('/login', methods= ( 'GET','POST'))
 def login():
@@ -34,11 +32,11 @@ def login():
             return redirect(url_for('auth.login')) # if the user doesn't exist or password is wrong, reload the page
 
         # if the above check passes, then we know the user has the right credentials
-        # I think this is where the permissions go
         login_user(user, remember=remember)
 
-        # Tell Flask-Principal the identity changed
-        identity_changed.send(current_app._get_current_object(),identity=Identity(user.id))
+        if user.password_expires < datetime.now():
+            flash('Your password has expired.','info')
+            redirect(url_for('auth.change_password', user_id = user.id))
 
         return redirect(url_for('main.profile'))
 
@@ -72,9 +70,16 @@ def user_name_lookup():
     # Handle GET requests
     return render_template('claim_username_lookup.html')
 
+
+
 @auth.route('/create', methods=('GET','POST'))
-@admin_permission.require()
+@login_required
 def create():
+    # require admin access
+    if not current_user.is_admin:
+        flash('You need administrative access for this.','error')
+        return redirect(url_for('main.index'))
+
     if request.method == 'POST':
         user_name = request.form.get('user_name')
 
@@ -89,8 +94,8 @@ def create():
             return render_template('create_username.html')
         
         # if this returns a user, then they already exist in database
-        current_user = WebUser.query.filter_by(User=user_name).first() 
-        if current_user: # if a user is found, we want to redirect to login
+        current = WebUser.query.filter_by(User=user_name).first() 
+        if current: 
             flash('That user already exists. ','error')
             return render_template('create_username.html')
 
@@ -105,6 +110,43 @@ def create():
 
     # Handle GET requests
     return render_template('create_username.html')
+
+@auth.route('/<int:user_id>/change_password', methods=('GET','POST'))
+@login_required
+def change_password(user_id):
+    user = WebUser.query.get_or_404(user_id)
+
+    # handle PUT request
+    if request.method == 'POST':
+        current_password = request.form.get('current_password')
+        new_password     = request.form.get('new_password')
+        verify_password  = request.form.get('verify_password')
+        
+        # check for empties
+        if not current_password or not new_password or not verify_password:
+            flash('Invalid empty fields.','error')
+            return render_template('new_password.html',user=user)
+
+        # test old password
+        if not bcrypt.check_password_hash(user.password, current_password):
+            flash('Current Password does not match.','error')
+            return render_template('new_password.html',user=user)
+
+        # test password quality
+        if cleanpassword(new_password,verify_password):
+            pw_hash = bcrypt.generate_password_hash(new_password).decode("utf-8")
+        else:
+            return render_template('new_password.html',user=user)
+
+        user.password = pw_hash
+        user.password_expires = datetime.now + password_lifetime
+        
+        db.session.add(user)
+        db.session.commit()
+        return redirect(url_for('auth.login'))
+
+    # handle GET request
+    return render_template('new_password.html',user=user)
 
 @auth.route('/<int:user_id>/claim', methods=('GET','POST'))
 def claim(user_id):
@@ -170,8 +212,13 @@ def claim(user_id):
     return render_template('claim.html',user=user)
 
 @auth.route('/list')
-#@admin_permission.require()
+@login_required
 def list():
+    # require admin access
+    if not current_user.is_admin:
+        flash('You need administrative access for this.','error')
+        return redirect(url_for('main.index'))
+
     webusers = WebUser.query.all()
     return render_template('user_list.html', webusers=webusers)
 
@@ -179,21 +226,17 @@ def list():
 @login_required
 def logout():
     logout_user()
-
-    # Remove session keys set by Flask-Principal
-    for key in ('identity.name', 'identity.auth_type'):
-        session.pop(key, None)
-
-    # Tell Flask-Principal the user is anonymous
-    identity_changed.send(current_app._get_current_object(),
-                          identity=AnonymousIdentity())
-
     return redirect(url_for('main.index'))
 
 
 @auth.route('/<int:user_id>/delete/', methods=(['POST']))
-@admin_permission.require()
+@login_required
 def delete(user_id):
+    # require admin access
+    if not current_user.is_admin:
+        flash('You need administrative access for this.','error')
+        return redirect(url_for('main.index'))
+
     u = WebUser.query.get_or_404(user_id)
     db.session.delete(u)
     db.session.commit()

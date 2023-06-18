@@ -2,10 +2,13 @@ import os
 from flask import Flask
 from flask import Blueprint
 from config import Config
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from .extensions import db, bcrypt, login_manager, current_user
 from .models import WebUser
+
+password_lifetime = timedelta( days = int(os.environ['PASSWORD_LIFE_IN_DAYS']))
+two_fa_lifetime   = timedelta( days = int(os.environ['TWO_FA_LIFE_IN_DAYS']))
    
 def create_app(config_class=Config):
     app = Flask(__name__)  
@@ -15,8 +18,7 @@ def create_app(config_class=Config):
     app.config['SECRET_KEY'] = os.environ['WTF_SECRET']
     #app.config['SECRET_KEY'] = 'not_very_secret_key'
 
-    password_lifetime = timedelta( days = int(os.environ['PASSWORD_LIFE_IN_DAYS']))
-    2fa_lifetime      = timedelta( days = int(os.environ['2FA_LIFE_IN_DAYS']))
+    
 
 
     # uncomment this to use SQLite for development

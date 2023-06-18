@@ -16,7 +16,7 @@ class WebUser(UserMixin,db.Model):
     is_admin = db.Column( db.Boolean() )
     is_sms = db.Column( db.Boolean() )
     translate = db.Column( db.Boolean() )
-    last_2fa = db.Column( db.DateTime() )
+    two_fa_expires = db.Column( db.DateTime() )
 
 class BadPasswords(db.Model):
     __tablename__ = 'BadPasswords'

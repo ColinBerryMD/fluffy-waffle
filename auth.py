@@ -1,9 +1,11 @@
+import os
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, session
 from flask_login import login_user, login_required, logout_user, current_user
 from datetime import datetime
+from twilio.rest import Client as twilio_client
 
 # database models
-from .models import WebUser
+from .models import WebUser, OldPasswords
 
 # my own modules
 from .phonenumber import cleanphone
@@ -11,7 +13,15 @@ from .cleanpassword import cleanpassword
 
 #app factory products
 from .extensions import db, bcrypt
-from .app import password_lifetime, 2fa_lifetime
+from .app import password_lifetime, two_fa_lifetime
+
+# Find your Account SID and Auth Token at twilio.com/console
+# and set the environment variables. See http://twil.io/secure
+account_sid = os.environ['TWILIO_ACCOUNT_SID']
+otp_sid = os.environ['TWILIO_OTP_SERVICE_SID']
+auth_token = os.environ['TWILIO_AUTH_TOKEN']
+my_cell = os.environ['MY_CELL_NUMBER']
+
 
 auth = Blueprint('auth', __name__)
 
@@ -23,7 +33,7 @@ def login():
         password = request.form.get('password')
         remember = True if request.form.get('remember') else False
 
-        user = WebUser.query.filter_by(User=User).first()
+        user = WebUser.query.filter_by(User=User).first() 
 
         # check if the user actually exists
         # take the user-supplied password, hash it, and compare it to the hashed password in the database
@@ -36,7 +46,19 @@ def login():
 
         if user.password_expires < datetime.now():
             flash('Your password has expired.','info')
-            redirect(url_for('auth.change_password', user_id = user.id))
+            return redirect(url_for('auth.change_password', user_id = user.id))
+
+        if not user.two_fa_expires or user.two_fa_expires < datetime.now():
+            flash('Sending a new one time pass code to '+ user.sms +'.','info')
+
+            client = twilio_client(account_sid, auth_token)
+
+            verification = client.verify \
+                            .v2 \
+                            .services( otp_sid ) \
+                            .verifications \
+                            .create(to= user.sms, channel='sms')
+            return redirect(url_for('auth.two_factor', user_id = user.id))
 
         return redirect(url_for('main.profile'))
 
@@ -139,14 +161,52 @@ def change_password(user_id):
             return render_template('new_password.html',user=user)
 
         user.password = pw_hash
-        user.password_expires = datetime.now + password_lifetime
+        user.password_expires = datetime.now() + password_lifetime
         
         db.session.add(user)
         db.session.commit()
-        return redirect(url_for('auth.login'))
+
+        old_password = OldPasswords(oldie = user.password, created = datetime.now())
+        db.session.add(old_password)
+        db.session.commit()
+
+        return redirect(url_for('main.profile'))
 
     # handle GET request
     return render_template('new_password.html',user=user)
+
+@auth.route('/<int:user_id>/two_factor', methods=('GET','POST'))
+@login_required
+def two_factor(user_id):
+    user = WebUser.query.get_or_404(user_id)
+
+    # handle PUT request
+    if request.method == 'POST':
+        one_time_pass_code = request.form.get('one_time_pass_code')
+
+        # check OTP via twilio
+        client = twilio_client(account_sid, auth_token)
+        verification_check = client.verify \
+                            .v2 \
+                            .services( otp_sid ) \
+                            .verification_checks \
+                            .create(to= user.sms, code=one_time_pass_code)
+        
+        if not verification_check.status:
+            flash('Invalid pass code.','info')
+            return render_template('two_factor.html',user=user)
+
+        # update expiration
+        user.two_fa_expires = datetime.now() + two_fa_lifetime
+        
+        db.session.add(user)
+        db.session.commit()
+
+        flash('Pass Code Accepted.','info')
+        return redirect(url_for('main.profile'))
+
+    # handle GET request
+    return render_template('two_factor.html',user=user)
 
 @auth.route('/<int:user_id>/claim', methods=('GET','POST'))
 def claim(user_id):
@@ -199,6 +259,7 @@ def claim(user_id):
         user.last = last
         user.email = email
         user.password = pw_hash
+        user.password_expires = datetime.now() + password_lifetime
         user.sms = sms
         user.voice = voice
         user.is_sms = is_sms
@@ -206,6 +267,12 @@ def claim(user_id):
         
         db.session.add(user)
         db.session.commit()
+
+        # store old password to prevent re-use
+        old_password = OldPasswords(oldie = user.password, created = datetime.now())
+        db.session.add(old_password)
+        db.session.commit()
+        
         return redirect(url_for('auth.login'))
 
     # handle GET request

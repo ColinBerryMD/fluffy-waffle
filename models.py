@@ -18,6 +18,16 @@ class WebUser(UserMixin,db.Model):
     translate = db.Column( db.Boolean() )
     two_fa_expires = db.Column( db.DateTime() )
 
+class SMSClient(db.Model):
+    __tablename__ ="SMSClient"
+    id = db.Column(db.Integer, primary_key=True)
+    firstname = db.Column(db.String(100))
+    lastname = db.Column(db.String(100))
+    email = db.Column(db.String(80))
+    phone = db.Column(db.String(15))
+    translate = db.Column(db.Boolean)
+    blocked = db.Column(db.Boolean)
+
 class BadPasswords(db.Model):
     __tablename__ = 'BadPasswords'
     id = db.Column(db.Integer, primary_key=True) # primary keys are required by SQLAlchemy

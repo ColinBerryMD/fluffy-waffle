@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1 style="width: 100%">
+	    {% block title %} Edit {{ client.firstname }}{{ client.lastname }} {% endblock %}
+    </h1>
+    <form method="post" action='{{ url_for('edit', client_id=client.id ) }}'>
+        <p>
+            <label for="firstname">First Name</label>
+            <input type="text" name="firstname"
+                   value={{ client.firstname }}
+                   placeholder="First name">
+            </input>
+        </p>
+
+        <p>
+            <label for="lastname">Last Name</label>
+            <input type="text" name="lastname"
+                   value={{ client.lastname }}
+                   placeholder="Last name">
+            </input>
+        </p>
+
+        <p>
+            <label for="email">Email</label>
+            <input type="email" name="email"
+                   value={{ client.email }}
+                   placeholder="Student email">
+            </input>
+        </p>
+
+        <p>
+            <label for="phone">Phone Number</label>
+            <input type="text" name="phone"
+                   value={{ client.phone }}
+                   placeholder="XXX-XXX_XXXX">
+            </input>
+        </p>
+	<p>
+            <label for="translate">Translate</label>
+	    <input type="checkbox" name="translate" value= {{ client.translate }}>
+            </input>
+        </p>
+        <p>
+            <button type="submit">Submit</button>
+        </p>
+    </form>
+{% endblock %}

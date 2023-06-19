@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="column is-4 is-offset-4">
+    <h1 style="width: 100%">{% block title %} Add a New Text Message Client {% endblock %}</h1>
+    <div class="box">
+        <form method="POST" action='{{ url_for('sms_client.create_sms_client') }}'>
+            <div class="field">
+                <div class="control">
+                    <input type="text" name="firstname" placeholder="First Name"/>
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <input type="text" name="lastname" placeholder="Last Name"/>
+                </div>
+            </div>           
+            <div class="field">
+                <div class="control">
+                    <input type="email" name="email" placeholder="Client Email"/>
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <input type="text" name="phone" placeholder="Cell Number"/>
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <label for="translate">Traducir español al inglés</label>
+                    <input type="checkbox" name="translate"/>
+                </div>
+            </div>
+            <p>To review and send a one time passcode to your phone, press Sign Up.</p>
+            <button class="button is-block is-info is-large is-fullwidth">Sign Up</button>
+        </form>
+        <br/>
+        <form method="GET" action="{{ url_for('main.index') }}"> 
+            <button class="button is-block is-info is-large is-fullwidth">Cancel</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

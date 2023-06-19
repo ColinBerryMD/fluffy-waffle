@@ -42,6 +42,9 @@
                             <a href="{{ url_for('auth.user_name_lookup') }}" class="navbar-item">
                                 Claim My User Name
                             </a>
+                            <a href="{{ url_for('sms_client.create_sms_client') }}" class="navbar-item">
+                                New SMS Account
+                            </a>
                             {% endif %}
                             {% if current_user.is_admin %}
                             <a href="{{ url_for('auth.list') }}" class="navbar-item">

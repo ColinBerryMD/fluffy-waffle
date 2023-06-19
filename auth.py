@@ -1,8 +1,7 @@
 import os
-from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, session
+from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
 from flask_login import login_user, login_required, logout_user, current_user
 from datetime import datetime
-from twilio.rest import Client as twilio_client
 
 # database models
 from .models import WebUser, OldPasswords
@@ -12,15 +11,8 @@ from .phonenumber import cleanphone
 from .cleanpassword import cleanpassword
 
 #app factory products
-from .extensions import db, bcrypt
+from .extensions import db, bcrypt, v_client, twilio_config
 from .app import password_lifetime, two_fa_lifetime
-
-# Find your Account SID and Auth Token at twilio.com/console
-# and set the environment variables. See http://twil.io/secure
-account_sid = os.environ['TWILIO_ACCOUNT_SID']
-otp_sid = os.environ['TWILIO_OTP_SERVICE_SID']
-auth_token = os.environ['TWILIO_AUTH_TOKEN']
-my_cell = os.environ['MY_CELL_NUMBER']
 
 
 auth = Blueprint('auth', __name__)
@@ -51,11 +43,9 @@ def login():
         if not user.two_fa_expires or user.two_fa_expires < datetime.now():
             flash('Sending a new one time pass code to '+ user.sms +'.','info')
 
-            client = twilio_client(account_sid, auth_token)
-
-            verification = client.verify \
+            verification = v_client.verify \
                             .v2 \
-                            .services( otp_sid ) \
+                            .services( twilio_config.otp_sid ) \
                             .verifications \
                             .create(to= user.sms, channel='sms')
             return redirect(url_for('auth.two_factor', user_id = user.id))
@@ -185,14 +175,13 @@ def two_factor(user_id):
         one_time_pass_code = request.form.get('one_time_pass_code')
 
         # check OTP via twilio
-        client = twilio_client(account_sid, auth_token)
-        verification_check = client.verify \
+        verification_check = v_client.verify \
                             .v2 \
-                            .services( otp_sid ) \
+                            .services( twilio_config.otp_sid ) \
                             .verification_checks \
                             .create(to= user.sms, code=one_time_pass_code)
         
-        if not verification_check.status:
+        if not verification_check.status == 'approved':
             flash('Invalid pass code.','info')
             return render_template('two_factor.html',user=user)
 

@@ -1,17 +1,19 @@
 # check for safe password
-import os
+#import os
 from password_strength import PasswordPolicy
+
 from .app import bcrypt, db
 from .models import BadPasswords, OldPasswords
+from .extensions import environ
 
-forgive = os.environ.get('FORGIVE_BAD_PASSWORDS')
+forgive = environ.get('FORGIVE_BAD_PASSWORDS')
 #forgive = True
 
 policy = PasswordPolicy.from_names(
-    length=8,  # min length: 8
-    uppercase=2,  # need min. 2 uppercase letters
-    nonletters=2,  # need min. 2 non-letter characters (digits, specials, anything)
-    strength=(0.33, 30)
+    length     = environ['PASSWORD_LENGTH'],
+    uppercase  = environ['PASSWORD_REQUIRE_UPPERCASE'],
+    nonletters = environ['PASSWORD_REQUIRE_NON_LETTERS'],
+    strength   =(environ['PASSWORD_REQUIRE_STRENGTH'], environ['PASSWORD_REQUIRE_ENTROPY_BITS'])
 )
 
 def cleanpassword(password,verify):

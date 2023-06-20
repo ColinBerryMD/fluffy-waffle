@@ -31,6 +31,9 @@
                                class="navbar-item">
                                 Change Password
                             </a>
+                            <a href="{{ url_for('sms_client.list') }}" class="navbar-item">
+                                List Clients
+                            </a>
                             <a href="{{ url_for('auth.logout') }}" class="navbar-item">
                                 Logout
                             </a>
@@ -42,7 +45,7 @@
                             <a href="{{ url_for('auth.user_name_lookup') }}" class="navbar-item">
                                 Claim My User Name
                             </a>
-                            <a href="{{ url_for('sms_client.create_sms_client') }}" class="navbar-item">
+                            <a href="{{ url_for('sms_client.create') }}" class="navbar-item">
                                 New SMS Account
                             </a>
                             {% endif %}

@@ -1,48 +1,52 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1 style="width: 100%">
-	    {% block title %} Edit {{ client.firstname }}{{ client.lastname }} {% endblock %}
-    </h1>
-    <form method="post" action='{{ url_for('edit', client_id=client.id ) }}'>
-        <p>
-            <label for="firstname">First Name</label>
-            <input type="text" name="firstname"
-                   value={{ client.firstname }}
-                   placeholder="First name">
-            </input>
-        </p>
-
-        <p>
-            <label for="lastname">Last Name</label>
-            <input type="text" name="lastname"
-                   value={{ client.lastname }}
-                   placeholder="Last name">
-            </input>
-        </p>
-
-        <p>
-            <label for="email">Email</label>
-            <input type="email" name="email"
-                   value={{ client.email }}
-                   placeholder="Student email">
-            </input>
-        </p>
-
-        <p>
-            <label for="phone">Phone Number</label>
-            <input type="text" name="phone"
-                   value={{ client.phone }}
-                   placeholder="XXX-XXX_XXXX">
-            </input>
-        </p>
-	<p>
-            <label for="translate">Translate</label>
-	    <input type="checkbox" name="translate" value= {{ client.translate }}>
-            </input>
-        </p>
-        <p>
-            <button type="submit">Submit</button>
-        </p>
-    </form>
+<div class="column is-4 is-offset-4">
+    <h3 class="title">Edit {{ client.firstname }} {{ client.lastname }}</h3>
+    <div class="box">
+        <form method="POST" action="{{ url_for('sms_client.edit', sms_client_id = client.id, dob_str=dob_str) }}">
+            <div class="field">
+                <label for="firstname">First Name</label>
+                <div class="control">
+                    <input class="input is-large" type="text" name="firstname" value={{ client.firstname }} />
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <label for="lastname">Last Name</label>
+                    <input class="input is-large" type="text" name="lastname" value={{ client.lastname }} />
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <label for="dob_str">Date of Birth</label>
+                    <input class="input is-large" type="text" name="dob_str" value={{ dob_str }} />
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <label for="email">Email</label>
+                    <input class="input is-large" type="text" name="email" value={{ client.email }} />
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <label for="phone">Cell Phone</label>
+                    <input class="input is-large" type="text" name="phone" value={{ client.phone }} />
+                </div>
+            </div>
+            <div class="control">
+                <div class="field">
+                    <label for="translate">Translate from English to Spanish</label>
+                    <input type="checkbox" name="translate" checked="{{ client.translate }}"/>
+                </div>
+            </div>
+            <button class="button is-block is-info is-large is-fullwidth">Submit</button>
+            <br/>
+        </form>
+        <form method="GET" action="{{ url_for('main.index') }}"> 
+            <button class="button is-block is-info is-large is-fullwidth">Cancel</button>
+        </form>
+    </div>
+</div>
 {% endblock %}

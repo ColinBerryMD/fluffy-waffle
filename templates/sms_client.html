@@ -4,25 +4,30 @@
 <div class="column is-4 is-offset-4">
     <h1 style="width: 100%">{% block title %} Add a New Text Message Client {% endblock %}</h1>
     <div class="box">
-        <form method="POST" action='{{ url_for('sms_client.create_sms_client') }}'>
+        <form method="POST" action='{{ url_for('sms_client.create') }}'>
             <div class="field">
                 <div class="control">
-                    <input type="text" name="firstname" placeholder="First Name"/>
+                    <input class="input is-large" type="text" name="firstname" placeholder="First Name"/>
                 </div>
             </div>
             <div class="field">
                 <div class="control">
-                    <input type="text" name="lastname" placeholder="Last Name"/>
+                    <input class="input is-large" type="text" name="lastname" placeholder="Last Name"/>
                 </div>
-            </div>           
+            </div> 
             <div class="field">
                 <div class="control">
-                    <input type="email" name="email" placeholder="Client Email"/>
+                    <input class="input is-large" type="text" name="dob" placeholder="Date of Birth"/>
+                </div>
+            </div>          
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="email" name="email" placeholder="Client Email"/>
                 </div>
             </div>
             <div class="field">
                 <div class="control">
-                    <input type="text" name="phone" placeholder="Cell Number"/>
+                    <input class="input is-large" type="text" name="phone" placeholder="Cell Number"/>
                 </div>
             </div>
             <div class="field">

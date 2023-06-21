@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+
+<h1>OOOOPS! Something went wrong.</h1>
+    {% block content %}
+        {% block error_content %}
+        {% endblock %}
+    <form method="GET" action="{{ url_for('main.index') }}"> 
+        <button class="button is-block is-info is-large">Home</button>
+    </form>
+    {% endblock %}

@@ -1,0 +1,8 @@
+{% extends 'errors.html' %}
+        
+{% block content %}
+        <h1>{% block title %} Twilio Error {% endblock %}</h1>
+        <p>This error was on a Twilio request. Many things can cause this including a not in service number, an expired passcode,
+           a passcode not being sent, or using a passcode twice.</p>
+{% endblock %}
+        

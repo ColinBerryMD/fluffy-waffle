@@ -11,7 +11,7 @@ from .phonenumber import cleanphone
 from .cleanpassword import cleanpassword
 
 #app factory products
-from .extensions import db, bcrypt, v_client, twilio_config
+from .extensions import db, bcrypt, v_client, twilio_config, sql_error
 from .app import password_lifetime, two_fa_lifetime
 
 
@@ -25,7 +25,10 @@ def login():
         password = request.form.get('password')
         remember = True if request.form.get('remember') else False
 
-        user = WebUser.query.filter_by(User=User).first() 
+        try:
+            user = WebUser.query.filter_by(User=User).first()
+        except sql_error as e:
+            return redirect(url_for('errors.mysql_server', error = e)) 
 
         # check if the user actually exists
         # take the user-supplied password, hash it, and compare it to the hashed password in the database
@@ -40,16 +43,24 @@ def login():
             flash('Your password has expired.','info')
             return redirect(url_for('auth.change_password', user_id = user.id))
 
-        if not user.two_fa_expires or user.two_fa_expires < datetime.now():
+        if not user.two_fa_expires or user.two_fa_expires < datetime.now(): # time for new two factor
             flash('Sending a new one time pass code to '+ user.sms +'.','info')
 
-            verification = v_client.verify \
+            try:
+                verification = v_client.verify \
                             .v2 \
                             .services( twilio_config.otp_sid ) \
                             .verifications \
                             .create(to= user.sms, channel='sms')
+            except:
+                return redirect(url_for('errors.twilio_server'))
+
+            if not verification == 'pending':
+                return redirect(url_for('errors.twilio_server'))
+
             return redirect(url_for('auth.two_factor', user_id = user.id))
 
+        # two factor is in date
         return redirect(url_for('main.profile'))
 
     # GET request
@@ -72,7 +83,11 @@ def user_name_lookup():
             return render_template('claim_username_lookup.html')
         
         # if this returns a user, then we can proceed with claim
-        found = WebUser.query.filter_by(User=user_name).first() 
+        try:
+            found = WebUser.query.filter_by(User=user_name).first() 
+        except sql_error as e: 
+            return redirect(url_for(errors.mysql_server, error = e))
+
         if found: # if a user is found, we want to redirect to claim route
             return redirect(url_for('auth.claim',user_id=found.id))
         else:
@@ -106,7 +121,11 @@ def create():
             return render_template('create_username.html')
         
         # if this returns a user, then they already exist in database
-        current = WebUser.query.filter_by(User=user_name).first() 
+        try:
+            current = WebUser.query.filter_by(User=user_name).first() 
+        except sql_error as e: 
+            return redirect(url_for(errors.mysql_server, error = e))
+
         if current: 
             flash('That user already exists. ','error')
             return render_template('create_username.html')
@@ -115,8 +134,12 @@ def create():
         new_user = WebUser(User = user_name)
 
         # add the new user to the database
-        db.session.add(new_user)
-        db.session.commit()
+        try:
+            db.session.add(new_user)
+            db.session.commit()
+        except sql_error as e: 
+            return redirect(url_for(errors.mysql_server, error = e))
+
         flash('User '+ user_name + ' created.','info')
         return redirect(url_for('main.index'))        
 
@@ -153,13 +176,19 @@ def change_password(user_id):
         user.password = pw_hash
         user.password_expires = datetime.now() + password_lifetime
         
-        db.session.add(user)
-        db.session.commit()
-
-        old_password = OldPasswords(oldie = user.password, created = datetime.now())
-        db.session.add(old_password)
-        db.session.commit()
-
+        try:
+            db.session.add(user)
+            db.session.commit()
+        except sql_error as e: 
+            return redirect(url_for(errors.mysql_server, error = e))
+            
+        try:
+            old_password = OldPasswords(oldie = user.password, created = datetime.now())
+            db.session.add(old_password)
+            db.session.commit()
+        except sql_error as e: 
+            return redirect(url_for(errors.mysql_server, error = e))
+        
         return redirect(url_for('main.profile'))
 
     # handle GET request
@@ -239,7 +268,11 @@ def claim(user_id):
             return render_template('claim.html',user_id=user_id)
 
         # need a unique email
-        existing_user = WebUser.query.filter_by(email=email).first() # if this returns a user, then the email already exists in database
+        try:
+            existing_user = WebUser.query.filter_by(email=email).first() # if this returns a user, then the email already exists in database
+        except sql_error as e: 
+            return redirect(url_for(errors.mysql_server, error = e))
+
         if existing_user : 
             flash('That email address is taken.', 'error')
             return render_template('claim.html',user_id=user_id)
@@ -254,14 +287,21 @@ def claim(user_id):
         user.is_sms = is_sms
         user.translate = translate
         
-        db.session.add(user)
-        db.session.commit()
+        try:
+            db.session.add(user)
+            db.session.commit()
+        except sql_error as e: 
+            return redirect(url_for(errors.mysql_server, error = e))
 
         # store old password to prevent re-use
-        old_password = OldPasswords(oldie = user.password, created = datetime.now())
-        db.session.add(old_password)
-        db.session.commit()
+        try:
+            old_password = OldPasswords(oldie = user.password, created = datetime.now())
+            db.session.add(old_password)
+            db.session.commit()
+        except sql_error as e: 
+            return redirect(url_for(errors.mysql_server, error = e))
         
+        # time to log in
         return redirect(url_for('auth.login'))
 
     # handle GET request
@@ -275,7 +315,12 @@ def list():
         flash('You need administrative access for this.','error')
         return redirect(url_for('main.index'))
 
-    webusers = WebUser.query.all()
+    try:
+        webusers = WebUser.query.all()
+    except (MySQLdb.Error, MySQLdb.Warning) as e:
+        print(e)
+        return redirect(url_for(errors.mysql_server, error = e))
+
     return render_template('user_list.html', webusers=webusers)
 
 @auth.route('/logout')
@@ -294,7 +339,12 @@ def delete(user_id):
         return redirect(url_for('main.index'))
 
     u = WebUser.query.get_or_404(user_id)
-    db.session.delete(u)
-    db.session.commit()
+    try:
+        db.session.delete(u)
+        db.session.commit()
+    except (MySQLdb.Error, MySQLdb.Warning) as e:
+        print(e)
+        return redirect(url_for(errors.mysql_server, error = e))
+
     flash('User '+ u.User + ' deleted.','info')
     return redirect(url_for('main.index'))

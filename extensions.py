@@ -1,5 +1,6 @@
 from os import environ
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import SQLAlchemyError as sql_error
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, current_user
 from twilio.rest import Client as TwilioClient
@@ -17,4 +18,8 @@ class twilio_config():
 	auth_token 	= environ['TWILIO_AUTH_TOKEN']
 	my_cell 	= environ['MY_CELL_NUMBER']
 
-v_client = TwilioClient(twilio_config.account_sid, twilio_config.auth_token)
+try:
+	v_client = TwilioClient(twilio_config.account_sid, twilio_config.auth_token)
+except:
+	print("Error on initial twilio connection.")
+	abort(401)

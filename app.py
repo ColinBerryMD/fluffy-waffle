@@ -36,7 +36,9 @@ def create_app(config_class=Config):
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
 
+    # this doesn't throw exception with bad password
     db.init_app(app)
+    
     bcrypt.init_app(app)
 
 # Register blueprints here
@@ -48,6 +50,10 @@ def create_app(config_class=Config):
 
     from .sms_client import sms_client as sms_client_blueprint
     app.register_blueprint(sms_client_blueprint) 
+
+    from .errors import errors as errors_blueprint
+    app.register_blueprint(errors_blueprint) 
+
 
 # Login manager
     @login_manager.user_loader

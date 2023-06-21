@@ -6,7 +6,7 @@ from sqlalchemy.sql import func, or_
 
 from .phonenumber import cleanphone
 
-from .extensions import v_client, twilio_config, db, environ
+from .extensions import v_client, twilio_config, db, environ, sql_error
 from .models import SMSClient
 from .auth import login_required, current_user
 
@@ -47,15 +47,25 @@ def create():
             return render_template('sms_client.html')
 
         existing_sms_client=False  #for testing
-        #existing_sms_client = SMSClient.query.filter(or_(SMSClient.email==email, SMSClient.phone==phone)).first()
+        #try:
+        #   existing_sms_client = SMSClient.query.filter(or_(SMSClient.email==email, SMSClient.phone==phone)).first()
+        #except sql_error as e:   
+        #    return redirect(url_for(errors.mysql_server, error = e))
+        
         # if this returns a user, then the email or phone already exists in database
         if existing_sms_client : # if a user is found, we want to redirect back to signup page so user can try again
             flash('Client with this email or phone already exists','error')
             return render_template('sms_client.html')
         
         # send verification code from twilio to proposed sms number
-        verification = v_client.verify.v2.services( twilio_config.otp_sid ).verifications \
-                        .create(to= phone, channel='sms')
+        try:
+            verification = v_client.verify.v2.services( twilio_config.otp_sid ).verifications \
+                            .create(to= phone, channel='sms')
+        except: # wrong numbers throw an untracable exception
+                return redirect(url_for('errors.twilio_server'))
+                
+        if not verification == 'pending':
+            return redirect(url_for('errors.twilio_server'))
 
         return redirect(url_for('sms_client.terms'))
     
@@ -77,17 +87,28 @@ def terms():
                                     blocked = session['blocked'])
 
         # check OTP with Twilio and flash on error
-        verification_check = v_client.verify.v2.services( twilio_config.otp_sid ).verification_checks \
-                             .create(to= new_sms_client.phone, code=OTP)
+        try: 
+            verification_check = v_client.verify.v2.services( twilio_config.otp_sid ).verification_checks \
+                                  .create(to= new_sms_client.phone, code=OTP)
     
+        except: # delayed entry, tried twice, and never sent -- throw an untracable exception
+            return redirect(url_for('errors.twilio_server'))
+                
+        if verification == 'pending': # probably wrong code entered
+            flash('Are you sure that was the correct code?','error')
+            return redirect(url_for('sms_client.terms'))
+
         if not verification_check.status == 'approved':
             flash('One time code verification failed.','error')
             return redirect(url_for('sms_client.terms'))
 
         else:
-            # add to database on success
-            db.session.add(new_sms_client)
-            db.session.commit()
+            try:            # add to database on success
+                db.session.add(new_sms_client)
+                db.session.commit()
+            except sql_error as e: 
+                return redirect(url_for(errors.mysql_server, error = e))
+
             flash('Passcode accepted.','info')
             return redirect(url_for('main.index'))
 
@@ -102,7 +123,11 @@ def list():
         flash('You need messaging access for this.','error')
         return redirect(url_for('main.index'))
 
-    clients = SMSClient.query.all()
+    try:
+        clients = SMSClient.query.all()
+    except sql_error as e: 
+        return redirect(url_for(errors.mysql_server, error = e))
+
     return render_template('client_index.html', clients=clients)
 
 @sms_client.route('/<int:sms_client_id>/edit/', methods=('GET', 'POST'))
@@ -114,7 +139,11 @@ def edit(sms_client_id):
         flash('You need messaging access for this.','error')
         return redirect(url_for('main.index'))
 
-    client_to_edit = SMSClient.query.get_or_404(sms_client_id)
+    try:
+        client_to_edit = SMSClient.query.get_or_404(sms_client_id)
+    except sql_error as e: 
+        return redirect(url_for(errors.mysql_server, error = e))
+
     if client_to_edit.dob:
         dob_str = client_to_edit.dob.strftime('%m/%d/%Y')
     else:
@@ -145,7 +174,11 @@ def edit(sms_client_id):
             dob_obj = datetime.strptime(dob_str,'%m/%d/%Y')
 
         existing_sms_client=False # for testing
-        #existing_sms_client = SMSClient.query.filter(or_(SMSClient.email==email, SMSClient.phone==phone)).first()
+        #try:
+        #   existing_sms_client = SMSClient.query.filter(or_(SMSClient.email==email, SMSClient.phone==phone)).first()
+        #except sql_error as e:
+        #   return redirect(url_for(errors.mysql_server, error = e))
+        
         if existing_sms_client : # if a user is found, we want to redirect back to signup page so user can try again
             flash('New email address or phone number already exists', 'error')
             return render_template('edit-client.html', client=client_to_edit, dob_str = dob_str)
@@ -159,8 +192,11 @@ def edit(sms_client_id):
         client_to_edit.translate = translate
         client_to_edit.blocked = False
 
-        db.session.add(client_to_edit)
-        db.session.commit()
+        try:
+            db.session.add(client_to_edit)
+            db.session.commit()
+        except sql_error as e: 
+            return redirect(url_for(errors.mysql_server, error = e))
 
         flash('SMS client updated.','info')
         return redirect(url_for('main.index'))
@@ -178,8 +214,12 @@ def block(sms_client_id):
 
     sms_client_to_block = SMSClient.query.get_or_404(sms_client_id)
     sms_client_to_block.blocked = True
-    db.session.add( sms_client_to_block)
-    db.session.commit()
+    try:
+        db.session.add( sms_client_to_block)
+        db.session.commit()
+    except sql_error as e:
+        return redirect(url_for(errors.mysql_server, error = e))
+
     flash('Client '+sms_client_to_block.firstname +' '+sms_client_to_block.lastname+' blocked.','info')
     return redirect(url_for('main.index'))
 
@@ -192,8 +232,12 @@ def delete(sms_client_id):
         flash('You need messaging access for this.','error')
         return redirect(url_for('main.index'))
 
-    sms_client_to_delete = SMSClient.query.get_or_404(sms_client_id)
-    db.session.delete(sms_client_to_delete)
-    db.session.commit()
+    try:
+        sms_client_to_delete = SMSClient.query.get_or_404(sms_client_id)
+        db.session.delete(sms_client_to_delete)
+        db.session.commit()
+    except sql_error as e:
+        return redirect(url_for(errors.mysql_server, error = e))
+
     flash('Client '+sms_client_to_delete.firstname +' '+sms_client_to_delete.lastname+' deleted.','info')
     return redirect(url_for('main.index'))

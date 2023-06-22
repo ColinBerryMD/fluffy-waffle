@@ -29,6 +29,15 @@ class SMSClient(db.Model):
     translate = db.Column(db.Boolean)
     blocked = db.Column(db.Boolean)
 
+class Message(db.Model):
+    __tablename__ ="Message"
+    id = db.Column(db.Integer, primary_key=True)
+    SentFrom = db.Column(db.String(14))
+    SentTo = db.Column(db.String(14))
+    SentAt =db.Column(db.String(50))
+    Body = db.Column(db.String(160))
+    Completed = db.Column(db.Boolean)
+
 class BadPasswords(db.Model):
     __tablename__ = 'BadPasswords'
     id = db.Column(db.Integer, primary_key=True) # primary keys are required by SQLAlchemy

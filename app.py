@@ -51,6 +51,9 @@ def create_app(config_class=Config):
     from .sms_client import sms_client as sms_client_blueprint
     app.register_blueprint(sms_client_blueprint) 
 
+    from .message import message as message_blueprint
+    app.register_blueprint(message_blueprint) 
+
     from .errors import errors as errors_blueprint
     app.register_blueprint(errors_blueprint) 
 

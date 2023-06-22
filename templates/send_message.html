@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Messages{% endblock %}
+{% block longtitle %}Send a New Message{% endblock %}
+{% block content %}
+    <form method="post">
+        <label for="SentTo">Recieving Number</label>
+        <br>
+        <input type="text" name="SentTo"
+               placeholder="xxx-xxx-xxxx"
+               value="{{ request.form['SentTo'] }}"></input>
+        <br>
+        <textarea name="Body"
+                  placeholder="Message content"
+                  rows="5"
+                  cols="60"
+                  >{{ request.form['Body'] }}</textarea>
+        <br>
+        <button type="submit">Submit</button>
+    </form>
+{% endblock %}

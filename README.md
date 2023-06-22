@@ -4,6 +4,15 @@ Redid the repository with some changes. App now can run from SQLite practice dat
 
 The __init__.py is empty. app.py initializes and extensions.py prevents circular imports. 
 
-The remaining tasks are real front end for the sms chat and more profesional 'look and feel'.
+Send, recieve, and list sms messages from a cell phone works. It won't look right until 
+I can work in SSE and a pretty front end.
+
+Error tracking is fine. Some Twilio situations break the program rather than throw a catchable exception. There Alarm utility doesn't seem to stop this. I'm trying to make all the 'reasonable' user errors and catch the ones I can for flash messages and do overs.
+
+Next is the ability to create named client groups.
+
+By then I hope I have learned enough about SSE to work that in to the chat function.
+
+Then remaining tasks are real front end for the sms chat and more profesional 'look and feel'.
 
 I would appreciate feedback regarding style, readability and potential security vulnerabilities. 

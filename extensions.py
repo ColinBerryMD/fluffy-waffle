@@ -15,7 +15,9 @@ login_manager = LoginManager()
 class twilio_config():
 	account_sid = environ['TWILIO_ACCOUNT_SID']
 	otp_sid 	= environ['TWILIO_OTP_SERVICE_SID']
+	sms_sid		= environ['TWILIO_MSG_SERVICE_SID']
 	auth_token 	= environ['TWILIO_AUTH_TOKEN']
+	twilio_phone= environ['TWILIO_PHONE_NUMBER']
 	my_cell 	= environ['MY_CELL_NUMBER']
 
 try:

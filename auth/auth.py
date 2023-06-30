@@ -60,7 +60,9 @@ def login():
 
             return redirect(url_for('auth.two_factor', user_id = user.id))
 
-        # two factor is in date
+        # two factor is in date 
+        # set a default SMS account here
+        
         return redirect(url_for('main.profile'))
 
     # GET request

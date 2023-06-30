@@ -1,6 +1,4 @@
-#import os
-from flask import Flask
-from flask import Blueprint
+from flask import Flask, Blueprint
 from config import Config
 from datetime import datetime, timedelta
 
@@ -51,8 +49,14 @@ def create_app(config_class=Config):
     from .sms_client import sms_client as sms_client_blueprint
     app.register_blueprint(sms_client_blueprint) 
 
+    from .client_group import group as group_blueprint
+    app.register_blueprint(group_blueprint) 
+
     from .message import message as message_blueprint
     app.register_blueprint(message_blueprint) 
+
+    from .account import account as account_blueprint
+    app.register_blueprint(account_blueprint) 
 
     from .errors import errors as errors_blueprint
     app.register_blueprint(errors_blueprint) 

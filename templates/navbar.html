@@ -1,0 +1,57 @@
+<nav class="navbar">
+    <span class="navbar-text align-baseline">
+        {% if current_user.is_authenticated %}
+            Current User: &nbsp {{ current_user.User }} &nbsp
+        {% endif %}
+    </span>
+    <span class="navbar-text align-baseline">
+        {% if session['account_name'] %}
+            SMS: &nbsp {{ session['account_name'] }} &nbsp
+        {% endif %}
+    </span>
+    <div class="container">
+        <div id="navbarMenuHeroA" class="navbar-menu">
+            <div class="navbar-end">
+                <a href="{{ url_for('main.index') }}" class="navbar-item">
+                    Home
+                </a>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('main.profile') }}" class="navbar-item">
+                    Profile
+                </a>
+                <a href="{{ url_for('main.edit', user_id = current_user.id) }}" class="navbar-item">
+                    Edit Profile
+                </a>
+                <a href="{{ url_for('auth.change_password', user_id = current_user.id) }}" 
+                   class="navbar-item">
+                    Change Password
+                </a>
+                <a href="{{ url_for('sms_client.list') }}" class="navbar-item">
+                    List Clients
+                </a>
+                <a href="{{ url_for('auth.logout') }}" class="navbar-item">
+                    Logout
+                </a>
+                {% else %}
+                <a href="{{ url_for('auth.login') }}" class="navbar-item">
+                    Login
+                </a> 
+                <a href="{{ url_for('auth.user_name_lookup') }}" class="navbar-item">
+                    Claim My User Name
+                </a>
+                <a href="{{ url_for('sms_client.create') }}" class="navbar-item">
+                    New SMS Account
+                </a>
+                {% endif %}
+                {% if current_user.is_admin %}
+                <a href="{{ url_for('auth.list') }}" class="navbar-item">
+                    List Users
+                </a>
+                <a href="{{ url_for('auth.create') }}" class="navbar-item">
+                    Create User
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>

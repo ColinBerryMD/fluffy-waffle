@@ -29,6 +29,36 @@ class SMSClient(db.Model):
     translate = db.Column(db.Boolean)
     blocked = db.Column(db.Boolean)
 
+class Client_Group_Link(db.Model):
+    __tablename__ ="Client_Group_Link"
+    id = db.Column(db.Integer, primary_key=True)
+    client_id = db.Column(db.Integer)
+    group_id = db.Column(db.Integer)
+    owner_id = db.Column(db.Integer)
+    is_default = db.Column(db.Boolean)
+
+class SMSGroup(db.Model):
+    __tablename__ ="SMSGroup"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(40))
+    comment = db.Column(db.String(160))
+
+class SMSAccount(db.Model):
+    __tablename__ ="SMSAccount"
+    id = db.Column(db.Integer, primary_key=True)
+    owner_id = db.Column(db.Integer)
+    name = db.Column(db.String(40))
+    comment = db.Column(db.String(160))
+    number = db.Column(db.String(12))
+    sid = db.Column(db.String(36))
+
+class User_Account_Link(db.Model):
+    __tablename__ ="User_Account_Link"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer)
+    account_id = db.Column(db.Integer)
+    is_default = db.Column(db.Boolean)
+
 class Message(db.Model):
     __tablename__ ="Message"
     id = db.Column(db.Integer, primary_key=True)
@@ -36,7 +66,9 @@ class Message(db.Model):
     SentTo = db.Column(db.String(14))
     SentAt =db.Column(db.String(50))
     Body = db.Column(db.String(160))
+    Outgoing = db.Column(db.Boolean)
     Completed = db.Column(db.Boolean)
+    Account = db.Column(db.Integer)
 
 class BadPasswords(db.Model):
     __tablename__ = 'BadPasswords'

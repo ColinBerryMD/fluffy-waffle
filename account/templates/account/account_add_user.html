@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="column is-4 is-offset-4">
+    <h3 class="title">Add User to SMS Account</h3>
+    <div class="box">
+        <form method="POST" action="{{ url_for('message.account_add_user') }}">
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="text" name="user_name" placeholder='User Name' autofocus="">
+                </div>
+            </div>
+            
+            <button class="button is-block is-info is-large is-fullwidth">Add</button>
+            <br/>
+            <input type='submit' formmethod="POST" formaction="{{ url_for('message.account_delete_user') }}"
+                   class="button is-block is-info is-large is-fullwidth" 
+                   onclick="return confirm('Are you sure you want to remove user from this account?')"
+                   value ='Remove' />
+            <br/>
+            <input type='submit' formmethod="GET" formaction="{{ url_for('main.index') }}"
+                   class="button is-block is-info is-large is-fullwidth" 
+                   value ='Cancel' />
+    </div>
+</div>
+{% endblock %}

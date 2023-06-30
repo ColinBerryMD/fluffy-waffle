@@ -12,7 +12,17 @@ from .auth import login_required, current_user
 
 sms_client = Blueprint('sms_client', __name__, url_prefix='/client')
 
+@sms_client.route('/lookup', methods=('GET', 'POST'))
+def lookup():
+    if request.method == 'POST':
+        firstname = request.form['firstname']
+        lastname  = request.form['lastname']
+        dob_str   = request.form['dob']
 
+        # clients = query
+        return render_template('client_lookup.html', clients=clients)
+    
+    return render_template('client_lookup.html')
 @sms_client.route('/create', methods=('GET', 'POST'))
 def create():
     if request.method == 'POST':

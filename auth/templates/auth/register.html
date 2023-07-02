@@ -4,7 +4,7 @@
 <div class="column is-4 is-offset-4">
     <h3 class="title">Claim Username: {{ user.User }}</h3>
     <div class="box">
-        <form method="POST" action="{{ url_for('auth.claim', user_id = user.id) }}">
+        <form method="POST" action="{{ url_for('auth.register', user_id = user.id) }}">
             <div class="field">
                 <div class="control">
                     <input class="input is-large" type="password" name="password" placeholder="Password">

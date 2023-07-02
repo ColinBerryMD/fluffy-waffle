@@ -11,8 +11,12 @@
                 </div>
             </div>
             
-            <button class="button is-block is-info is-large is-fullwidth">Submit</button>
+            <button class="button is-block is-info is-large is-fullwidth">Register</button>
     
+        </form>
+        <br/>
+        <form formmethod="PUT" formaction="{{ url_for('auth.profile') }}"> 
+            <button class="button is-block is-info is-large is-fullwidth">Veiw Profile</button>
         </form>
         <br/>
         <form method="GET" action="{{ url_for('main.index') }}"> 

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="content">
+        {% if accounts %}
+            <hr>
+            {% for account in accounts %}
+                {% include "profile.html"}
+            {% endfor %}
+        {% else %}
+            <h2>No accounts found in database.</h2>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -1,22 +1,26 @@
-import os
+# auth.py
+# authorize logins
+# CB 6/23
+
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
 from flask_login import login_user, login_required, logout_user, current_user
 from datetime import datetime
 
 # database models
-from .models import WebUser, OldPasswords
+from models import WebUser, OldPasswords
 
 # my own modules
-from .phonenumber import cleanphone
-from .cleanpassword import cleanpassword
+from phonenumber import cleanphone
+from cleanpassword import cleanpassword
 
 #app factory products
-from .extensions import db, bcrypt, v_client, twilio_config, sql_error
-from .app import password_lifetime, two_fa_lifetime
+from extensions import db, bcrypt, v_client, twilio_config, sql_error
+from app import password_lifetime, two_fa_lifetime
+
+auth = Blueprint('auth', __name__, url_prefix='/auth', template_folder='templates/auth')
 
 
-auth = Blueprint('auth', __name__)
-
+# this whole blueprint culminates in a successful login
 @auth.route('/login', methods= ( 'GET','POST'))
 def login():
     if request.method == 'POST':
@@ -34,7 +38,7 @@ def login():
         # take the user-supplied password, hash it, and compare it to the hashed password in the database
         if not user or not bcrypt.check_password_hash(user.password, password):
             flash('Please check your login details and try again.')
-            return redirect(url_for('auth.login')) # if the user doesn't exist or password is wrong, reload the page
+                return render_template('login.html')  # if the user doesn't exist or password is wrong, reload the page
 
         # if the above check passes, then we know the user has the right credentials
         login_user(user, remember=remember)
@@ -61,46 +65,14 @@ def login():
             return redirect(url_for('auth.two_factor', user_id = user.id))
 
         # two factor is in date 
-        # set a default SMS account here
+        #### need to set a default SMS account here
         
         return redirect(url_for('main.profile'))
 
     # GET request
     return render_template('login.html')
 
-
-@auth.route('/lookup', methods = ('GET','POST'))
-def user_name_lookup():
-    if request.method == 'POST':
-        user_name = request.form.get('user_name')
-
-        # check for empties
-        if not user_name:
-            flash('Need a user name to continue.','error')
-            return render_template('claim_username_lookup.html')
-
-        # exclude too short usernames
-        if len(user_name) < 5:
-            flash('Your user name needs to be at least five characters.','error')
-            return render_template('claim_username_lookup.html')
-        
-        # if this returns a user, then we can proceed with claim
-        try:
-            found = WebUser.query.filter_by(User=user_name).first() 
-        except sql_error as e: 
-            return redirect(url_for(errors.mysql_server, error = e))
-
-        if found: # if a user is found, we want to redirect to claim route
-            return redirect(url_for('auth.claim',user_id=found.id))
-        else:
-            flash('That username is not allowed. ','error')
-            return render_template('claim_username_lookup.html')
-
-    # Handle GET requests
-    return render_template('claim_username_lookup.html')
-
-
-
+# set the stage by admin inviting a user and creating their username    
 @auth.route('/create', methods=('GET','POST'))
 @login_required
 def create():
@@ -115,12 +87,12 @@ def create():
         # check for empties
         if not user_name:
             flash('Need a user name to continue.','error')
-            return render_template('create_username.html')
+            return render_template('create.html')
 
         # exclude too short usernames
         if len(user_name) < 5:
             flash('Your user name needs to be at least five characters.','error')
-            return render_template('create_username.html')
+            return render_template('create.html')
         
         # if this returns a user, then they already exist in database
         try:
@@ -130,9 +102,9 @@ def create():
 
         if current: 
             flash('That user already exists. ','error')
-            return render_template('create_username.html')
+            return render_template('create.html')
 
-        # create a new user name and id -- we will add the rest of the data later
+        # create a new user name and id -- they will add the rest of their profile later
         new_user = WebUser(User = user_name)
 
         # add the new user to the database
@@ -146,44 +118,115 @@ def create():
         return redirect(url_for('main.index'))        
 
     # Handle GET requests
-    return render_template('create_username.html')
+    return render_template('create.html')
 
-@auth.route('/<int:user_id>/change_password', methods=('GET','POST'))
-@login_required
-def change_password(user_id):
+
+# admin started the process by creating a username
+# now our invited user looks up and claims the name; they will soon create a profile and log in
+# this same form can also be used to veiw a user profile with a redirect from the html
+@auth.route('/lookup', methods = ('GET','POST'))
+def lookup():
+    if request.method == 'POST':
+        user_name = request.form.get('user_name')
+
+        # check for empties
+        if not user_name:
+            flash('Need a user name to continue.','error')
+            return render_template('lookup.html')
+
+        # exclude too short usernames
+        if len(user_name) < 5:
+            flash('Your user name needs to be at least five characters.','error')
+            return render_template('lookup.html')
+        
+        # if this returns a user, then we can proceed with claim
+        try:
+            found = WebUser.query.filter_by(User=user_name).first() 
+        except sql_error as e: 
+            return redirect(url_for(errors.mysql_server, error = e))
+
+        if found: # if a user is found, we want to redirect to register route to create their profile
+            return redirect(url_for('auth.register',user_id=found.id))
+        else:
+            flash('That username is not in our database. ','error')
+            return render_template('lookup.html')
+
+    # Handle GET requests
+    return render_template('lookup.html')
+
+
+# our invited user has found their username. Here they create a profile
+@auth.route('/<int:user_id>/register', methods=('GET','POST'))
+def register(user_id):
     user = WebUser.query.get_or_404(user_id)
 
     # handle PUT request
     if request.method == 'POST':
-        current_password = request.form.get('current_password')
-        new_password     = request.form.get('new_password')
-        verify_password  = request.form.get('verify_password')
+        password = request.form.get('password')
+        repeat_password = request.form.get('repeat_password')
+        first = request.form.get('first')
+        last = request.form.get('last')
+        email = request.form.get('email')
+        sms = request.form.get('sms')
+        voice = request.form.get('voice')
         
-        # check for empties
-        if not current_password or not new_password or not verify_password:
-            flash('Invalid empty fields.','error')
-            return render_template('new_password.html',user=user)
+        # correct normal phone strings to international +18885551234 format
+        sms = cleanphone(sms)
+        if voice:
+            voice = cleanphone(voice)
+        else:
+            voice = sms
+        
+        # why this is "on" rather than true.....
+        if request.form.get('is_sms') == 'on':
+            is_sms = True
+        else:
+            is_sms = False
 
-        # test old password
-        if not bcrypt.check_password_hash(user.password, current_password):
-            flash('Current Password does not match.','error')
-            return render_template('new_password.html',user=user)
+        if request.form.get('translate') == 'on':
+            translate = True
+        else:
+            translate = False
+
+        # check for empties
+        if not first or not last or not email or not sms:
+            flash('Invalid empty fields.','error')
+            return render_template('register.html',user=user)
 
         # test password quality
-        if cleanpassword(new_password,verify_password):
-            pw_hash = bcrypt.generate_password_hash(new_password).decode("utf-8")
+        # os.environ.FORGIVE_BAD_PASSWORDS=True avoids the tedium of rigorous passwords in development
+        if cleanpassword(password,repeat_password):
+            pw_hash = bcrypt.generate_password_hash(password).decode("utf-8")
         else:
-            return render_template('new_password.html',user=user)
+            return render_template('register.html',user=user)
 
+        # demand a unique email, not certian why at this point
+        try:
+            existing_user = WebUser.query.filter_by(email=email).first() # if this returns a user, then the email already exists in database
+        except sql_error as e: 
+            return redirect(url_for(errors.mysql_server, error = e))
+
+        if existing_user : 
+            flash('That email address is in use already.', 'error')
+            return render_template('register.html',user=user)
+
+        user.first = first
+        user.last = last
+        user.email = email
         user.password = pw_hash
         user.password_expires = datetime.now() + password_lifetime
+        user.sms = sms
+        user.voice = voice
+        user.is_sms = is_sms
+        user.translate = translate
         
         try:
             db.session.add(user)
             db.session.commit()
         except sql_error as e: 
             return redirect(url_for(errors.mysql_server, error = e))
-            
+
+        # store old password to prevent re-use
         try:
             old_password = OldPasswords(oldie = user.password, created = datetime.now())
             db.session.add(old_password)
@@ -191,11 +234,13 @@ def change_password(user_id):
         except sql_error as e: 
             return redirect(url_for(errors.mysql_server, error = e))
         
-        return redirect(url_for('main.profile'))
+        # time to log in
+        return redirect(url_for('auth.login'))
 
     # handle GET request
-    return render_template('new_password.html',user=user)
+    return render_template('register.html',user=user)
 
+# at their first login and then periodically, our new user will need to do a 2 factor auth    
 @auth.route('/<int:user_id>/two_factor', methods=('GET','POST'))
 @login_required
 def two_factor(user_id):
@@ -228,24 +273,101 @@ def two_factor(user_id):
     # handle GET request
     return render_template('two_factor.html',user=user)
 
-@auth.route('/<int:user_id>/claim', methods=('GET','POST'))
-def claim(user_id):
+# the rest of these routes are not for our initial user experience
+# change an expired or undesired password
+@auth.route('/<int:user_id>/change_password', methods=('GET','POST'))
+@login_required
+def change_password(user_id):
     user = WebUser.query.get_or_404(user_id)
 
     # handle PUT request
     if request.method == 'POST':
-        password = request.form.get('password')
-        repeat_password = request.form.get('repeat_password')
-        first = request.form.get('first')
-        last = request.form.get('last')
-        email = request.form.get('email')
-        sms = request.form.get('sms')
-        voice = request.form.get('voice')
+        current_password = request.form.get('current_password')
+        new_password     = request.form.get('new_password')
+        verify_password  = request.form.get('verify_password')
         
-        sms = cleanphone(sms)
-        if voice:
-            voice = cleanphone(voice)
+        # check for empties
+        if not current_password or not new_password or not verify_password:
+            flash('Invalid empty fields.','error')
+            return render_template('change_password.html',user=user)
+
+        # test old password
+        if not bcrypt.check_password_hash(user.password, current_password):
+            flash('Current Password does not match.','error')
+            return render_template('change_password.html',user=user)
+
+        # test password quality
+        if cleanpassword(new_password,verify_password):
+            pw_hash = bcrypt.generate_password_hash(new_password).decode("utf-8")
         else:
+            return render_template('change_password.html',user=user)
+
+        user.password = pw_hash
+        user.password_expires = datetime.now() + password_lifetime
+        
+        try:
+            db.session.add(user)
+            db.session.commit()
+        except sql_error as e: 
+            return redirect(url_for(errors.mysql_server, error = e))
+            
+        try:
+            old_password = OldPasswords(oldie = user.password, created = datetime.now())
+            db.session.add(old_password)
+            db.session.commit()
+        except sql_error as e: 
+            return redirect(url_for(errors.mysql_server, error = e))
+        
+        return redirect(url_for('main.profile'))
+
+    # handle GET request
+    return render_template('change_password.html',user=user)
+
+# veiw one user account
+# Use two routes one for GET and one for POST -- but not in the usual way
+@auth.route('/current_profile', methods=(['GET']))
+@login_required
+def current_profile():
+    return render_template('profile.html', user=current_user)
+
+@auth.post('/profile')
+def profile():
+        user_name = request.form.get('user_name')
+
+        # check for empties
+        if not user_name:
+            flash('Need a user name to continue.','error')
+            return render_template('lookup.html')
+
+        # if this returns a user, then we can proceed 
+        try:
+            user = WebUser.query.filter_by(User=user_name).first() 
+        except sql_error as e: 
+            return redirect(url_for(errors.mysql_server, error = e))
+
+        if not user: # if a user is found, we want to redirect to their profile
+            flash('That username is not in our database. ','error')
+            return render_template('lookup.html')
+
+        render_template('profile.html',user=user)
+
+@auth.route('/<int:user_id>/edit/', methods=('GET', 'POST'))
+def edit(user_id):
+    user = WebUser.query.get_or_404(user_id)
+
+    if not ( user_id == current_user.id or current_user.is_admin ):
+        flash('You cannot edit that account.', 'error')
+        return redirect(url_for('main.index'))
+
+    current_email = user.email 
+
+    if request.method == 'POST':
+        first = request.form['first']
+        last = request.form['last']
+        email = request.form['email']
+        sms = cleanphone(request.form['sms'])
+        voice = cleanphone(request.form['voice'])
+        if not voice:
             voice = sms
         
         if request.form.get('is_sms') == 'on':
@@ -257,58 +379,36 @@ def claim(user_id):
             translate = True
         else:
             translate = False
-
-        # check for empties
+    
+        # check for empty fields
         if not first or not last or not email or not sms:
-            flash('Invalid empty fields.','error')
-            return render_template('claim.html',user_id=user_id)
-
-        # test password quality
-        if cleanpassword(password,repeat_password):
-            pw_hash = bcrypt.generate_password_hash(password).decode("utf-8")
-        else:
-            return render_template('claim.html',user_id=user_id)
-
-        # need a unique email
-        try:
+            flash('One or more required fields is empty.','error')
+            return render_template('edit.html', user=user)
+        
+        if not email == current_email: # new email address
             existing_user = WebUser.query.filter_by(email=email).first() # if this returns a user, then the email already exists in database
-        except sql_error as e: 
-            return redirect(url_for(errors.mysql_server, error = e))
-
-        if existing_user : 
-            flash('That email address is taken.', 'error')
-            return render_template('claim.html',user_id=user_id)
-
+            if existing_user : # if a user is found, we want to redirect back to signup page so user can try again
+                flash('New email address already exists', 'error')
+                return render_template('edit.html', user=user)
+        
         user.first = first
         user.last = last
         user.email = email
-        user.password = pw_hash
-        user.password_expires = datetime.now() + password_lifetime
         user.sms = sms
         user.voice = voice
-        user.is_sms = is_sms
+        user._is_sms = is_sms
         user.translate = translate
         
-        try:
-            db.session.add(user)
-            db.session.commit()
-        except sql_error as e: 
-            return redirect(url_for(errors.mysql_server, error = e))
+        db.session.add(user)
+        db.session.commit()
+        return redirect(url_for('main.index'))
 
-        # store old password to prevent re-use
-        try:
-            old_password = OldPasswords(oldie = user.password, created = datetime.now())
-            db.session.add(old_password)
-            db.session.commit()
-        except sql_error as e: 
-            return redirect(url_for(errors.mysql_server, error = e))
-        
-        # time to log in
-        return redirect(url_for('auth.login'))
+    # handle GET request    
+    return render_template('edit.html', user=user)
 
-    # handle GET request
-    return render_template('claim.html',user=user)
 
+
+# list all users
 @auth.route('/list')
 @login_required
 def list():
@@ -323,15 +423,16 @@ def list():
         print(e)
         return redirect(url_for(errors.mysql_server, error = e))
 
-    return render_template('user_list.html', webusers=webusers)
+    return render_template('list.html', webusers=webusers)
 
+# logout
 @auth.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('main.index'))
 
-
+# delete a user account
 @auth.route('/<int:user_id>/delete/', methods=(['POST']))
 @login_required
 def delete(user_id):

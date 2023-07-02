@@ -1,6 +1,6 @@
 from flask import Flask, Blueprint, render_template, request
 
-errors = Blueprint('errors', __name__, url_prefix='/errors',template_folder='error_templates')
+errors = Blueprint('errors', __name__, url_prefix='/errors',template_folder='templates/errors')
 
 @errors.app_errorhandler(404)
 def page_not_found(error):

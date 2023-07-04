@@ -4,11 +4,11 @@ from flask import Flask, Blueprint, render_template, request, url_for, flash, re
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func, or_
 
-from .phonenumber import cleanphone
+from cbmd.phonenumber import cleanphone
 
-from .extensions import v_client, twilio_config, db, environ, sql_error
-from .models import SMSClient
-from .auth import login_required, current_user
+from cbmd.extensions import v_client, twilio_config, db, environ, sql_error
+from cbmd.models import SMSClient
+from cbmd.auth.auth import login_required, current_user
 
 sms_client = Blueprint('sms_client', __name__, url_prefix='/client', template_folder='templates/sms_client')
 

@@ -43,22 +43,22 @@ def create_app(config_class=Config):
     from .main import main as main_bp
     app.register_blueprint(main_bp)
     
-    from .auth import auth as auth_blueprint
+    from .auth.auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint)  
 
-    from .sms_client import sms_client as sms_client_blueprint
+    from .sms_client.sms_client import sms_client as sms_client_blueprint
     app.register_blueprint(sms_client_blueprint) 
 
-    from .client_group import group as group_blueprint
-    app.register_blueprint(group_blueprint) 
+    from .groups.groups import groups as groups_blueprint
+    app.register_blueprint(groups_blueprint) 
 
-    from .message import message as message_blueprint
+    from .message.message import message as message_blueprint
     app.register_blueprint(message_blueprint) 
 
-    from .account import account as account_blueprint
+    from .account.account import account as account_blueprint
     app.register_blueprint(account_blueprint) 
 
-    from .errors import errors as errors_blueprint
+    from .errors.errors import errors as errors_blueprint
     app.register_blueprint(errors_blueprint) 
 
 

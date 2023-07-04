@@ -4,9 +4,9 @@ from flask_login import login_required, current_user
 from .models import WebUser
 from .extensions import db
 from .phonenumber import cleanphone
-from .cleanpassword import cleanpassword
+from .auth.cleanpassword import cleanpassword
 
-main = Blueprint('main', __name__)
+main = Blueprint('main', __name__,template_folder="/templates")
 
 @main.route('/')
 def index():

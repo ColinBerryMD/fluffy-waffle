@@ -7,15 +7,15 @@ from flask_login import login_user, login_required, logout_user, current_user
 from datetime import datetime
 
 # database models
-from models import WebUser, OldPasswords
+from cbmd.models import WebUser, OldPasswords
 
 # my own modules
-from phonenumber import cleanphone
-from cleanpassword import cleanpassword
+from cbmd.phonenumber import cleanphone
+from .cleanpassword import cleanpassword
 
 #app factory products
-from extensions import db, bcrypt, v_client, twilio_config, sql_error
-from app import password_lifetime, two_fa_lifetime
+from cbmd.extensions import db, bcrypt, v_client, twilio_config, sql_error
+from cbmd.app import password_lifetime, two_fa_lifetime
 
 auth = Blueprint('auth', __name__, url_prefix='/auth', template_folder='templates/auth')
 
@@ -38,7 +38,7 @@ def login():
         # take the user-supplied password, hash it, and compare it to the hashed password in the database
         if not user or not bcrypt.check_password_hash(user.password, password):
             flash('Please check your login details and try again.')
-                return render_template('login.html')  # if the user doesn't exist or password is wrong, reload the page
+            return render_template('login.html')  # if the user doesn't exist or password is wrong, reload the page
 
         # if the above check passes, then we know the user has the right credentials
         login_user(user, remember=remember)
@@ -48,7 +48,6 @@ def login():
             return redirect(url_for('auth.change_password', user_id = user.id))
 
         if not user.two_fa_expires or user.two_fa_expires < datetime.now(): # time for new two factor
-            flash('Sending a new one time pass code to '+ user.sms +'.','info')
 
             try:
                 verification = v_client.verify \
@@ -59,15 +58,13 @@ def login():
             except:
                 return redirect(url_for('errors.twilio_server'))
 
-            if not verification == 'pending':
-                return redirect(url_for('errors.twilio_server'))
-
+            flash('Sending a new one time pass code to '+ user.sms +'.','info')
             return redirect(url_for('auth.two_factor', user_id = user.id))
 
         # two factor is in date 
         #### need to set a default SMS account here
         
-        return redirect(url_for('main.profile'))
+        return redirect(url_for('auth.profile',user_id=user.id ))
 
     # GET request
     return render_template('login.html')
@@ -251,12 +248,15 @@ def two_factor(user_id):
         one_time_pass_code = request.form.get('one_time_pass_code')
 
         # check OTP via twilio
-        verification_check = v_client.verify \
-                            .v2 \
-                            .services( twilio_config.otp_sid ) \
-                            .verification_checks \
-                            .create(to= user.sms, code=one_time_pass_code)
-        
+        try:
+            verification_check = v_client.verify \
+                                .v2 \
+                                .services( twilio_config.otp_sid ) \
+                                .verification_checks \
+                                .create(to= user.sms, code=one_time_pass_code)
+        except:
+            return redirect(url_for('errors.twilio_server'))
+
         if not verification_check.status == 'approved':
             flash('Invalid pass code.','info')
             return render_template('two_factor.html',user=user)
@@ -268,7 +268,7 @@ def two_factor(user_id):
         db.session.commit()
 
         flash('Pass Code Accepted.','info')
-        return redirect(url_for('main.profile'))
+        return redirect(url_for('auth.profile'))
 
     # handle GET request
     return render_template('two_factor.html',user=user)
@@ -318,39 +318,18 @@ def change_password(user_id):
         except sql_error as e: 
             return redirect(url_for(errors.mysql_server, error = e))
         
-        return redirect(url_for('main.profile'))
+        return redirect(url_for('auth.profile',user_id=user.id))
 
     # handle GET request
     return render_template('change_password.html',user=user)
 
 # veiw one user account
-# Use two routes one for GET and one for POST -- but not in the usual way
-@auth.route('/current_profile', methods=(['GET']))
+@auth.route('/<int:user_id>/profile')
+def profile(user_id):
+    user = WebUser.query.get_or_404(user_id) 
+    return render_template('profile.html',user=user)
+
 @login_required
-def current_profile():
-    return render_template('profile.html', user=current_user)
-
-@auth.post('/profile')
-def profile():
-        user_name = request.form.get('user_name')
-
-        # check for empties
-        if not user_name:
-            flash('Need a user name to continue.','error')
-            return render_template('lookup.html')
-
-        # if this returns a user, then we can proceed 
-        try:
-            user = WebUser.query.filter_by(User=user_name).first() 
-        except sql_error as e: 
-            return redirect(url_for(errors.mysql_server, error = e))
-
-        if not user: # if a user is found, we want to redirect to their profile
-            flash('That username is not in our database. ','error')
-            return render_template('lookup.html')
-
-        render_template('profile.html',user=user)
-
 @auth.route('/<int:user_id>/edit/', methods=('GET', 'POST'))
 def edit(user_id):
     user = WebUser.query.get_or_404(user_id)
@@ -409,8 +388,8 @@ def edit(user_id):
 
 
 # list all users
-@auth.route('/list')
 @login_required
+@auth.route('/list')
 def list():
     # require admin access
     if not current_user.is_admin:
@@ -418,12 +397,12 @@ def list():
         return redirect(url_for('main.index'))
 
     try:
-        webusers = WebUser.query.all()
+        users = WebUser.query.all()
     except (MySQLdb.Error, MySQLdb.Warning) as e:
         print(e)
         return redirect(url_for(errors.mysql_server, error = e))
 
-    return render_template('list.html', webusers=webusers)
+    return render_template('list.html', users=users)
 
 # logout
 @auth.route('/logout')

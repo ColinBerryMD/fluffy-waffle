@@ -40,6 +40,7 @@ class Client_Group_Link(db.Model):
 class SMSGroup(db.Model):
     __tablename__ ="SMSGroup"
     id = db.Column(db.Integer, primary_key=True)
+    account_id = db.Column(db.Integer)
     name = db.Column(db.String(40))
     comment = db.Column(db.String(160))
 

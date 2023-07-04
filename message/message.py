@@ -6,10 +6,10 @@ from sqlalchemy import desc
 from twilio.request_validator import RequestValidator
 from twilio.twiml.messaging_response import MessagingResponse
 
-from .models import Message, WebUser, SMSAccount
-from .extensions import db, v_client, twilio_config, sql_error
-from .phonenumber import cleanphone
-from .auth import login_required, current_user
+from cbmd.models import Message, WebUser, SMSAccount
+from cbmd.extensions import db, v_client, twilio_config, sql_error
+from cbmd.phonenumber import cleanphone
+from cbmd.auth.auth import login_required, current_user
 
 message = Blueprint('message', __name__,url_prefix='/message', template_folder='templates/message')
 

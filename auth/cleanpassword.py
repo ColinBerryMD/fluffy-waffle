@@ -2,9 +2,9 @@
 #import os
 from password_strength import PasswordPolicy
 
-from .app import bcrypt, db
-from .models import BadPasswords, OldPasswords
-from .extensions import environ
+from cbmd.app import bcrypt, db
+from cbmd.models import BadPasswords, OldPasswords
+from cbmd.extensions import environ
 
 forgive = environ.get('FORGIVE_BAD_PASSWORDS')
 #forgive = True

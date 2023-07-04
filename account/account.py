@@ -8,10 +8,10 @@ from sqlalchemy.sql import func, or_, and_
 from sqlalchemy import desc
 from twilio.request_validator import RequestValidator
 
-from .models import WebUser, SMSAccount
-from .extensions import db, v_client, twilio_config, sql_error
-from .phonenumber import cleanphone
-from .auth import login_required, current_user
+from cbmd.models import WebUser, SMSAccount
+from cbmd.extensions import db, v_client, twilio_config, sql_error
+from cbmd.phonenumber import cleanphone
+from cbmd.auth.auth import login_required, current_user
 
 account = Blueprint('account', __name__, url_prefix='/account', template_folder='templates/account')
 
@@ -89,14 +89,21 @@ def create():
 @login_required
 @account.route('/<int:account_id>/profile')
 def profile(account_id):
-    account = SMSAccount.query.get(account_id)
-    owner = WebUser.query.get(account.owner_id)
-    users = None # SQL Join from WebUser to User_Account_Link
-    return render_template("account_profile.html", account=account, owner=owner, users=users)
+
+    try: 
+        account = SMSAccount.query.get(account_id)
+        query = db.session.query(WebUser.id, WebUser.first, Webuser.last,\
+                                 User_Account_Link.user_id, User_Account_Link.account_id)
+        query = query.join(Webuser).join(User_Account_Link)
+        users = query.filter(User_Account_Link.account_id == account_id).all()
+    except sql_error as e:
+        return redirect(url_for(errors.mysql_server, error = e))        
+
+    return render_template("account_profile.html", account=account, users=users)
 
 # list all accounts
-@auth.route('/list')
 @login_required
+@account.route('/list')
 def list():
     # require admin access
     if not current_user.is_admin:
@@ -190,8 +197,8 @@ def add_user():
     return render_template("add_user.html")
     
 # here the owner of an SMS account can remove a user from that account
-@account.post('/delete_user')
 @login_required
+@account.post('/delete_user')
 def delete_user():
     # restrict access
     current_account = SMSaccount.query.get_or_404(session['current_account_id'])
@@ -233,8 +240,8 @@ def delete_user():
     return redirect(url_for('main.index'))
 
 # and finally, the admin or owner of an account can delete the account
-@account.post('/delete_account')
 @login_required
+@account.post('/delete_account')
 def delete_account():
     # restrict access
     current_account = SMSaccount.query.get_or_404(session['current_account_id'])

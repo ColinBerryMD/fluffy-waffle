@@ -2,56 +2,51 @@
 
 {% block content %}
 <div class="column is-4 is-offset-4">
-    <h3 class="title">Edit User {{ user.User }}</h3>
+    <h3 class="title">Edit User : {{ user.User }}</h3>
     <div class="box">
-        <form method="POST" action="{{ url_for('main.edit', user_id = user.id) }}">
+        <form method="POST" action="{{ url_for('auth.edit', user_id = user.id) }}">            
             <div class="field">
                 <div class="control">
-                    <label for="first">First Name</label>
-                    <input class="input is-large" type="text" name="first" value="{{ user.first  }}" autofocus="">
+                    <input class="input is-large" type="text" name="first" value="{{ user.first }}" autofocus="">
                 </div>
             </div>
 
             <div class="field">
                 <div class="control">
-                    <label for="last">Last Name</label>
                     <input class="input is-large" type="text" name="last" value="{{ user.last }}" autofocus="">
                 </div>
             </div>
            
             <div class="field"> 
-                <div class="control">
-                    <label for="email">Email</label>                  
+                <div class="control">                   
                     <input class="input is-large" type="email" name="email" value="{{ user.email }}" autofocus="">
                 </div>
             </div>
 
             <div class='field'>
                 <div class="control">
-                    <label for="sms">SMS</label>
-                    <input class="input is-large" type="text" name="sms" value="{{ user.sms }}"
-                     autofocus="">
+                    <input class="input is-large" type="text" name="sms" value="{{ user.sms }}" autofocus="">
                 </div>
             </div>
 	
             <div class='field'>
                 <div class="control">
-                    <label for="voice">Voice Phone Number (optional)</label>
-                    <input  class="input is-large" type="text" name="voice" value="{{ user.voice }}" autofocus="">
+                    <input  class="input is-large" type="text" name="voice" 
+                            value="{{ user.voice }}" autofocus="">
                 </div>
             </div>
 
             <div class="control">
                 <div class="field">
                     <label for="is_sms">Use SMS Account</label>
-                    <input type="checkbox" name="is_sms" checked ="{{ user.is_sms }}" />
+                    <input type="checkbox" name="is_sms" {% if user.sms %}checked{%endif%}/>
                     
                 </div>
             </div>
             <div class="control">
                 <div class="field">
                     <label for="translate">Translate from English to Spanish</label>
-                    <input type="checkbox" name="translate" checked="{{ user.translate }}"/>
+                    <input type="checkbox" name="translate" {% if user.translate %}checked{%endif%}/>
                     
                 </div>
             </div>

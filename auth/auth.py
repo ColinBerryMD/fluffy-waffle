@@ -17,7 +17,7 @@ from .cleanpassword import cleanpassword
 from cbmd.extensions import db, bcrypt, v_client, twilio_config, sql_error
 from cbmd.app import password_lifetime, two_fa_lifetime
 
-auth = Blueprint('auth', __name__, url_prefix='/auth', template_folder='templates/auth')
+auth = Blueprint('auth', __name__, url_prefix='/auth', template_folder='templates')
 
 
 # this whole blueprint culminates in a successful login
@@ -38,7 +38,7 @@ def login():
         # take the user-supplied password, hash it, and compare it to the hashed password in the database
         if not user or not bcrypt.check_password_hash(user.password, password):
             flash('Please check your login details and try again.')
-            return render_template('login.html')  # if the user doesn't exist or password is wrong, reload the page
+            return render_template('auth/login.html')  # if the user doesn't exist or password is wrong, reload the page
 
         # if the above check passes, then we know the user has the right credentials
         login_user(user, remember=remember)
@@ -67,7 +67,7 @@ def login():
         return redirect(url_for('auth.profile',user_id=user.id ))
 
     # GET request
-    return render_template('login.html')
+    return render_template('auth/login.html')
 
 # set the stage by admin inviting a user and creating their username    
 @auth.route('/create', methods=('GET','POST'))
@@ -84,12 +84,12 @@ def create():
         # check for empties
         if not user_name:
             flash('Need a user name to continue.','error')
-            return render_template('create.html')
+            return render_template('auth/create.html')
 
         # exclude too short usernames
         if len(user_name) < 5:
             flash('Your user name needs to be at least five characters.','error')
-            return render_template('create.html')
+            return render_template('auth/create.html')
         
         # if this returns a user, then they already exist in database
         try:
@@ -99,7 +99,7 @@ def create():
 
         if current: 
             flash('That user already exists. ','error')
-            return render_template('create.html')
+            return render_template('auth/create.html')
 
         # create a new user name and id -- they will add the rest of their profile later
         new_user = WebUser(User = user_name)
@@ -115,7 +115,7 @@ def create():
         return redirect(url_for('main.index'))        
 
     # Handle GET requests
-    return render_template('create.html')
+    return render_template('auth/create.html')
 
 
 # admin started the process by creating a username
@@ -129,12 +129,12 @@ def lookup():
         # check for empties
         if not user_name:
             flash('Need a user name to continue.','error')
-            return render_template('lookup.html')
+            return render_template('auth/lookup.html')
 
         # exclude too short usernames
         if len(user_name) < 5:
             flash('Your user name needs to be at least five characters.','error')
-            return render_template('lookup.html')
+            return render_template('auth/lookup.html')
         
         # if this returns a user, then we can proceed with claim
         try:
@@ -146,10 +146,10 @@ def lookup():
             return redirect(url_for('auth.register',user_id=found.id))
         else:
             flash('That username is not in our database. ','error')
-            return render_template('lookup.html')
+            return render_template('auth/lookup.html')
 
     # Handle GET requests
-    return render_template('lookup.html')
+    return render_template('auth/lookup.html')
 
 
 # our invited user has found their username. Here they create a profile
@@ -188,14 +188,14 @@ def register(user_id):
         # check for empties
         if not first or not last or not email or not sms:
             flash('Invalid empty fields.','error')
-            return render_template('register.html',user=user)
+            return render_template('auth/register.html',user=user)
 
         # test password quality
         # os.environ.FORGIVE_BAD_PASSWORDS=True avoids the tedium of rigorous passwords in development
         if cleanpassword(password,repeat_password):
             pw_hash = bcrypt.generate_password_hash(password).decode("utf-8")
         else:
-            return render_template('register.html',user=user)
+            return render_template('auth/register.html',user=user)
 
         # demand a unique email, not certian why at this point
         try:
@@ -205,7 +205,7 @@ def register(user_id):
 
         if existing_user : 
             flash('That email address is in use already.', 'error')
-            return render_template('register.html',user=user)
+            return render_template('auth/register.html',user=user)
 
         user.first = first
         user.last = last
@@ -235,7 +235,7 @@ def register(user_id):
         return redirect(url_for('auth.login'))
 
     # handle GET request
-    return render_template('register.html',user=user)
+    return render_template('auth/register.html',user=user)
 
 # at their first login and then periodically, our new user will need to do a 2 factor auth    
 @auth.route('/<int:user_id>/two_factor', methods=('GET','POST'))
@@ -271,7 +271,7 @@ def two_factor(user_id):
         return redirect(url_for('auth.profile'))
 
     # handle GET request
-    return render_template('two_factor.html',user=user)
+    return render_template('auth/two_factor.html',user=user)
 
 # the rest of these routes are not for our initial user experience
 # change an expired or undesired password
@@ -289,18 +289,18 @@ def change_password(user_id):
         # check for empties
         if not current_password or not new_password or not verify_password:
             flash('Invalid empty fields.','error')
-            return render_template('change_password.html',user=user)
+            return render_template('auth/change_password.html',user=user)
 
         # test old password
         if not bcrypt.check_password_hash(user.password, current_password):
             flash('Current Password does not match.','error')
-            return render_template('change_password.html',user=user)
+            return render_template('auth/change_password.html',user=user)
 
         # test password quality
         if cleanpassword(new_password,verify_password):
             pw_hash = bcrypt.generate_password_hash(new_password).decode("utf-8")
         else:
-            return render_template('change_password.html',user=user)
+            return render_template('auth/change_password.html',user=user)
 
         user.password = pw_hash
         user.password_expires = datetime.now() + password_lifetime
@@ -321,13 +321,13 @@ def change_password(user_id):
         return redirect(url_for('auth.profile',user_id=user.id))
 
     # handle GET request
-    return render_template('change_password.html',user=user)
+    return render_template('auth/change_password.html',user=user)
 
 # veiw one user account
 @auth.route('/<int:user_id>/profile')
 def profile(user_id):
     user = WebUser.query.get_or_404(user_id) 
-    return render_template('profile.html',user=user)
+    return render_template('auth/profile.html',user=user)
 
 @login_required
 @auth.route('/<int:user_id>/edit/', methods=('GET', 'POST'))
@@ -362,13 +362,13 @@ def edit(user_id):
         # check for empty fields
         if not first or not last or not email or not sms:
             flash('One or more required fields is empty.','error')
-            return render_template('edit.html', user=user)
+            return render_template('auth/edit.html', user=user)
         
         if not email == current_email: # new email address
             existing_user = WebUser.query.filter_by(email=email).first() # if this returns a user, then the email already exists in database
             if existing_user : # if a user is found, we want to redirect back to signup page so user can try again
                 flash('New email address already exists', 'error')
-                return render_template('edit.html', user=user)
+                return render_template('auth/edit.html', user=user)
         
         user.first = first
         user.last = last
@@ -383,7 +383,7 @@ def edit(user_id):
         return redirect(url_for('main.index'))
 
     # handle GET request    
-    return render_template('edit.html', user=user)
+    return render_template('auth/edit.html', user=user)
 
 
 
@@ -402,7 +402,7 @@ def list():
         print(e)
         return redirect(url_for(errors.mysql_server, error = e))
 
-    return render_template('list.html', users=users)
+    return render_template('auth/list.html', users=users)
 
 # logout
 @auth.route('/logout')

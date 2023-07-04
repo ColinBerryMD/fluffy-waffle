@@ -1,23 +1,23 @@
 from flask import Flask, Blueprint, render_template, request
 
-errors = Blueprint('errors', __name__, url_prefix='/errors',template_folder='templates/errors')
+errors = Blueprint('errors', __name__, url_prefix='/errors',template_folder='templates')
 
 @errors.app_errorhandler(404)
 def page_not_found(error):
-    return render_template('404.html'), 404
+    return render_template('errors/404.html'), 404
 
 @errors.app_errorhandler(500)
 def server_error(error):
-    return render_template('500.html'), 500
+    return render_template('errors/500.html'), 500
 
 @errors.route('/twilio_server', methods=('GET','POST'))
 def twilio_server():
-    return render_template('twilio.html')
+    return render_template('errors/twilio.html')
 
 @errors.route('/mysql_server', methods=('GET','POST'))
 def mysql_server():
     error = request.args.get('error')
-    return render_template('mysql.html',error=error)
+    return render_template('errors/mysql.html',error=error)
 
 @errors.route('/twilio_alarm', methods=['POST'])
 def twilio_alarm():

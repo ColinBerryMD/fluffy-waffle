@@ -6,7 +6,7 @@ from cbmd.extensions import  db, sql_error
 from cbmd.models import SMSClient, Client_Group_Link, SMSGroup
 from cbmd.auth.auth import login_required, current_user
 
-groups = Blueprint('groups', __name__, url_prefix='/groups',template_folder='templates/groups')
+groups = Blueprint('groups', __name__, url_prefix='/groups',template_folder='templates')
 
 @login_required
 @groups.route('/create', methods=('GET', 'POST'))
@@ -24,7 +24,7 @@ def create():
         # check for empty fields
         if not name:
             flash('Name Field cannot be empty.','error')
-            return render_template('create.html')
+            return render_template('groups/create.html')
 
         try:
            existing_group = SMSGroup.query.filter(SMSGroup.name == name).first()
@@ -35,7 +35,7 @@ def create():
         # if this returns a group we are creating a duplicate
         if existing_group : 
             flash('Group with this name already exists','error')
-            return render_template('create.html')
+            return render_template('groups/create.html')
         
         new_group = SMSGroup (name = name, comment = comment)
         try:            # add to database on success
@@ -46,7 +46,7 @@ def create():
 
         return redirect(url_for('main.index'))
     
-    return render_template('create.html')
+    return render_template('groups/create.html')
 
 # we expect a small number of groups
 # so this veiw constructs a radio button based list 
@@ -76,7 +76,7 @@ def select_list():
         return redirect(url_for('group.profile'))
 
 
-    return render_template("select.html", groups=groups)
+    return render_template("groups/select.html", groups=groups)
 
 # Veiw group details
 @login_required
@@ -104,7 +104,7 @@ def profile(group_id):
     except sql_error as e:
         return redirect(url_for(errors.mysql_server, error = e))
 
-    return render_template("profile.html", group=group, account=account, clients=clients)
+    return render_template("groups/profile.html", group=group, account=account, clients=clients)
 
 
 # add a client the current group

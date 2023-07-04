@@ -6,7 +6,7 @@ from .extensions import db
 from .phonenumber import cleanphone
 from .auth.cleanpassword import cleanpassword
 
-main = Blueprint('main', __name__,template_folder="/templates")
+main = Blueprint('main', __name__,template_folder="templates")
 
 @main.route('/')
 def index():

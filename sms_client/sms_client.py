@@ -10,11 +10,11 @@ from cbmd.extensions import v_client, twilio_config, db, environ, sql_error
 from cbmd.models import SMSClient
 from cbmd.auth.auth import login_required, current_user
 
-sms_client = Blueprint('sms_client', __name__, url_prefix='/client', template_folder='templates/sms_client')
+sms_client = Blueprint('sms_client', __name__, url_prefix='/sms_client', template_folder='templates')
 
 @sms_client.route('/welcome')
 def welcome():
-    return render_template('welcome.html')
+    return render_template('sms_client/welcome.html')
 
 @sms_client.route('/create', methods=('GET', 'POST'))
 def create():
@@ -42,12 +42,12 @@ def create():
         # check for empty fields
         if not firstname or not lastname or not email or not phone:
             flash('One or more required fields is empty.')
-            return render_template('create.html')
+            return render_template('sms_client/create.html')
 
         # check fo valid date string
         if not (bool(datetime.strptime(dob_str, '%m/%d/%Y'))):
             flash('Date of birth is misformatted.','error')
-            return render_template('create.html')
+            return render_template('sms_client/create.html')
 
         existing_sms_client=False  #for testing
         #try:
@@ -62,7 +62,7 @@ def create():
                 return redirect(url_for('main.index'))
             else:
                 flash('Client with this email or phone already exists','error')
-                return render_template('create.html')
+                return render_template('sms_client/create.html')
         
         # send verification code from twilio to proposed sms number
         try:
@@ -76,7 +76,7 @@ def create():
 
         return redirect(url_for('sms_client.terms'))
     
-    return render_template('create.html')
+    return render_template('sms_client/create.html')
 
 # two factor authentication at signup will prove them not to be a spam bot
 # and give documentation that they read our terms and conditions
@@ -123,7 +123,7 @@ def terms():
         flash('Send us that text message now.','info')
         return redirect(url_for('sms_client.welcome'))
 
-    return render_template('terms.html')
+    return render_template('sms_client/terms.html')
 
 # as in the other blueprints, list lists all the clients
 @sms_client.route('/list')
@@ -140,7 +140,7 @@ def list():
     except sql_error as e: 
         return redirect(url_for(errors.mysql_server, error = e))
 
-    return render_template('list.html', clients=clients)
+    return render_template('sms_client/list.html', clients=clients)
 
 # and select narrows the list to a client or a select list
 @sms_client.route('/select', methods=('GET', 'POST'))
@@ -156,12 +156,12 @@ def select():
         return redirect(url_for('errors.mysql_server', error = e)) 
 
     # if only one
-        return render_template('profile.html', client=client)
+        return render_template('sms_client/profile.html', client=client)
 
     # else we have a list
-        return render_template('list.html', clients=clients)
+        return render_template('sms_client/list.html', clients=clients)
     
-    return render_template('select.html')
+    return render_template('sms_client/select.html')
 
 # since they have no login, the clients can't make corrections themselves
 # but any use with a login can do it for them
@@ -200,12 +200,12 @@ def edit(sms_client_id):
         # check for empty fields
         if not firstname or not lastname or not email or not phone:
             flash('One or more required fields is empty.','error')
-            return render_template('edit.html', client=client_to_edit, dob_str=dob_str)
+            return render_template('sms_client/edit.html', client=client_to_edit, dob_str=dob_str)
 
         # check fo valid date string
         if not (bool(datetime.strptime(dob_str, '%m/%d/%Y'))) or not dob_str:
             flash('Date of birth is misformatted or blank.','error')
-            return render_template('edit.html', client=client_to_edit, dob_str=dob_str)
+            return render_template('sms_client/edit.html', client=client_to_edit, dob_str=dob_str)
         else:
             dob_obj = datetime.strptime(dob_str,'%m/%d/%Y')
 
@@ -217,7 +217,7 @@ def edit(sms_client_id):
         
         if conflicting_sms_client : # if a user is found, we want to redirect back to signup page so user can try again
             flash('New email address or phone number already exists', 'error')
-            return render_template('edit.html', client=client_to_edit, dob_str = dob_str)
+            return render_template('sms_client/edit.html', client=client_to_edit, dob_str = dob_str)
         
         # ok. We passed all the tests, now lets update the DB with our new info
         client_to_edit.firstname = firstname
@@ -237,7 +237,7 @@ def edit(sms_client_id):
         flash('SMS client updated.','info')
         return redirect(url_for('main.index'))
 
-    return render_template('edit.html', client=client_to_edit, dob_str= dob_str)
+    return render_template('sms_client/edit.html', client=client_to_edit, dob_str= dob_str)
 
 # We might also need a list of numbers to block from jump street
 # without an invitation to sign up

@@ -11,7 +11,7 @@ from cbmd.extensions import db, v_client, twilio_config, sql_error
 from cbmd.phonenumber import cleanphone
 from cbmd.auth.auth import login_required, current_user
 
-message = Blueprint('message', __name__,url_prefix='/message', template_folder='templates/message')
+message = Blueprint('message', __name__,url_prefix='/message', template_folder='templates')
 
 # the whole point of the project is this messaging dashboard
 # it will have tabs for each active chatting client
@@ -25,7 +25,7 @@ def dashboard():
         flash('You need messaging access for this.','error')
         return redirect(url_for('main.index'))
 
-    return render_template('dashboard.html') 
+    return render_template('message/dashboard.html') 
        
 # list all messages
 @message.route('/list')
@@ -35,7 +35,7 @@ def list():
     except sql_error as e:
         return redirect(url_for('errors.mysql_server', error = e)) 
 
-    return render_template('list.html', messages=messages)
+    return render_template('message/list.html', messages=messages)
 
 # identical to list; but creates a selection
 @message.route('/selection')
@@ -45,7 +45,7 @@ def selection():
     except sql_error as e:
         return redirect(url_for('errors.mysql_server', error = e)) 
 
-    return render_template('list.html', messages=messages)
+    return render_template('message/list.html', messages=messages)
 
 # send an sms message
 @message.route('/send', methods=('GET','POST'))
@@ -56,11 +56,11 @@ def send():
 
         if not SentTo:
             flash('Valid SMS Number is Required!','error')
-            return render_template('send_message.html')
+            return render_template('message/send_message.html')
 
         if not Body:
             flash('Message content is required!','error')
-            return render_template('send_message.html')
+            return render_template('message/send_message.html')
 
         # post the message via twilio
         try:
@@ -97,7 +97,7 @@ def send():
 
         return redirect(url_for('message.list'))
 
-    return render_template('send_message.html')
+    return render_template('message/send_message.html')
 
 # recieve a Twilio SMS message via webhook
 @message.route('/recieve', methods=['POST'])

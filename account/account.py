@@ -13,7 +13,7 @@ from cbmd.extensions import db, v_client, twilio_config, sql_error
 from cbmd.phonenumber import cleanphone
 from cbmd.auth.auth import login_required, current_user
 
-account = Blueprint('account', __name__, url_prefix='/account', template_folder='templates/account')
+account = Blueprint('account', __name__, url_prefix='/account', template_folder='templates')
 
 
 # process starts with admin creating a Twilio SMS account and assigning ownership to a user
@@ -34,7 +34,7 @@ def create():
 
         if not user_name or not account_name or not number or not sid:
             flash('Need complete information to continue.','error')
-            return render_template('create.html')
+            return render_template('account/create.html')
 
         try:
             owner = WebUser.query.filter(WebUser.User == user_name).first()
@@ -44,7 +44,7 @@ def create():
         
         if not owner or not owner.is_sms:
             flash('That user is not allowed.','error')
-            return render_template('create.html')
+            return render_template('account/create.html')
 
         existing_account=False  #for testing
 #        try:
@@ -58,7 +58,7 @@ def create():
         # if this returns an account we are creating a duplicate
         if existing_account : 
             flash('Conflict with existing account','error')
-            return render_template('create.html')
+            return render_template('account/create.html')
 
         new_account = SMSAccount (owner_id = owner.id,
                                   name = account_name, 
@@ -83,7 +83,7 @@ def create():
         return redirect(url_for('main.index'))        
 
     # Handle GET requests
-    return render_template('create.html')
+    return render_template('account/create.html')
 
 # Veiw SMS Account details
 @login_required
@@ -99,7 +99,7 @@ def profile(account_id):
     except sql_error as e:
         return redirect(url_for(errors.mysql_server, error = e))        
 
-    return render_template("account_profile.html", account=account, users=users)
+    return render_template("account/profile.html", account=account, users=users)
 
 # list all accounts
 @login_required
@@ -116,12 +116,12 @@ def list():
         print(e)
         return redirect(url_for(errors.mysql_server, error = e))
 
-    return render_template('list.html', accounts=accounts )
+    return render_template('account/list.html', accounts=accounts )
 
 
 @login_required
-@account.route('/select_account', methods=('GET', 'POST'))
-def select_account():
+@account.route('/select', methods=('GET', 'POST'))
+def select():
     # require sms access
     if not current_user.is_sms:
         flash('You need messaging access for this.','error')
@@ -142,7 +142,7 @@ def select_account():
         print(e)
         return redirect(url_for(errors.mysql_server, error = e))
 
-    return render_template("current_account.html", accounts=accounts)
+    return render_template("account/select.html", accounts=accounts)
 
 # having created an account or otherwise made it active
 # we can add users to the active account
@@ -165,7 +165,7 @@ def add_user():
         user_name = request.form['user_name']
         if not user_name:
                 flash('Need a user name to continue.','error')
-                return render_template('add_user.html')
+                return render_template('account/add_user.html')
         try:
             user_to_add = WebUser.query.filter(WebUser.User == user_name).first()
             link_exists = User_Account_Link.query.filter(
@@ -194,7 +194,7 @@ def add_user():
         return redirect(url_for('main.index'))
     
     # GET request
-    return render_template("add_user.html")
+    return render_template("account/add_user.html")
     
 # here the owner of an SMS account can remove a user from that account
 @login_required
@@ -210,7 +210,7 @@ def delete_user():
     user_name = request.form['user_name']
     if not user_name:
             flash('Need a user name to continue.','error')
-            return render_template('account_add_user.html')
+            return render_template('account/add_user.html')
     try:
         user_to_delete = WebUser.query.filter(WebUser.User == user_name).first()
     except sql_error as e:

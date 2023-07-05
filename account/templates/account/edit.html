@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="column is-4 is-offset-4">
+    <h3 class="title">Update Twilio Account Information</h3>
+    <div class="box">
+        <form method="POST" action="{{ url_for('account.edit') }}">
+            <div class="field">
+                <div class="control">
+                    <label for="owner_user_name">Owner</label>
+                    <input class="input is-large" type="text" name="owner_user_name" value='{{ account.owner_user_name }}' autofocus="">
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <label for="account_name">Account Name</label>
+                    <input class="input is-large" type="text" name="account_name" value='{{ account.account_name }}' autofocus="">
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <label for="comment">Comments</label>
+                    <textarea name="comment" value='{{ account.account_name }}' rows="5"></textarea>
+                </div>   
+            </div>
+            <div class="field">
+                <div class="control">
+                    <label for="number">SMS Number</label>
+                    <input class="input is-large" type="text" name="number" value='{{ account.number }}' autofocus="">
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <label for="sid">Twilio Service ID</label>
+                    <input class="input is-large" type="text" name="sid" value='{{ account.sid }}' autofocus="">
+                </div>
+            </div>
+            <button class="button is-block is-info is-large is-fullwidth">Submit</button>
+        </form>
+        <br/>
+        <form method="GET" action="{{ url_for('main.index') }}"> 
+            <button class="button is-block is-info is-large is-fullwidth">Cancel</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

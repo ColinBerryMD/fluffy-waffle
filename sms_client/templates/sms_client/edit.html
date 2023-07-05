@@ -4,10 +4,10 @@
 <div class="column is-4 is-offset-4">
     <h3 class="title">Edit {{ client.firstname }} {{ client.lastname }}</h3>
     <div class="box">
-        <form method="POST" action="{{ url_for('sms_client.edit', client_id = client.id, dob_str=dob_str) }}">
+        <form method="POST" action="{{ url_for('sms_client.edit', sms_client_id = client.id, dob_str=dob_str) }}">
             <div class="field">
-                <label for="firstname">First Name</label>
                 <div class="control">
+                <label for="firstname">First Name</label>
                     <input class="input is-large" type="text" name="firstname" value={{ client.firstname }} />
                 </div>
             </div>

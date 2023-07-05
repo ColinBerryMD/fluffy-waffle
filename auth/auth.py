@@ -255,11 +255,12 @@ def two_factor(user_id):
                                 .verification_checks \
                                 .create(to= user.sms, code=one_time_pass_code)
         except:
-            return redirect(url_for('errors.twilio_server'))
+            flash('Pass code failed.','error')
+            return render_template('auth/two_factor.html',user=user)
 
         if not verification_check.status == 'approved':
-            flash('Invalid pass code.','info')
-            return render_template('two_factor.html',user=user)
+            flash('Pass code failed.','error')
+            return render_template('auth/two_factor.html',user=user)
 
         # update expiration
         user.two_fa_expires = datetime.now() + two_fa_lifetime
@@ -268,7 +269,7 @@ def two_factor(user_id):
         db.session.commit()
 
         flash('Pass Code Accepted.','info')
-        return redirect(url_for('auth.profile'))
+        return redirect(url_for('auth.profile',user=user))
 
     # handle GET request
     return render_template('auth/two_factor.html',user=user)

@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from flask import Flask, Blueprint, render_template, request, url_for, flash, redirect, session
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.sql import func, or_
+from sqlalchemy.sql import func, or_, and_, text
 
 from cbmd.phonenumber import cleanphone
 
@@ -71,9 +71,6 @@ def create():
         except: # wrong numbers throw an untracable exception
                 return redirect(url_for('errors.twilio_server'))
                 
-        if not verification == 'pending':
-            return redirect(url_for('errors.twilio_server'))
-
         return redirect(url_for('sms_client.terms'))
     
     return render_template('sms_client/create.html')
@@ -101,10 +98,7 @@ def terms():
                                   .create(to= new_sms_client.phone, code=OTP)
     
         except: # delayed entry, tried twice, and never sent -- all those errors throw the same untracable exception
-            return redirect(url_for('errors.twilio_server'))
-                
-        if verification == 'pending': # probably wrong code entered
-            flash('Are you sure that was the correct code?','error')
+            flash('One time code verification failed.','error')
             return redirect(url_for('sms_client.terms'))
 
         if not verification_check.status == 'approved':  # I don't think this can happen
@@ -126,8 +120,8 @@ def terms():
     return render_template('sms_client/terms.html')
 
 # as in the other blueprints, list lists all the clients
-@sms_client.route('/list')
 @login_required
+@sms_client.route('/list')
 def list():
 
     # require sms access
@@ -142,6 +136,19 @@ def list():
 
     return render_template('sms_client/list.html', clients=clients)
 
+@login_required
+@sms_client.route('/<int:client_id>/profile')
+def profile(client_id):
+
+    # require sms access
+    if not current_user.is_sms:
+        flash('You need messaging access for this.','error')
+        return redirect(url_for('main.index'))
+
+    client = SMSClient.query.get_or_404(client_id)
+
+    return render_template('sms_client/profile.html', client=client)
+
 # and select narrows the list to a client or a select list
 @sms_client.route('/select', methods=('GET', 'POST'))
 def select():
@@ -149,25 +156,45 @@ def select():
         firstname = request.form['firstname']
         lastname  = request.form['lastname']
         dob_str   = request.form['dob']
-    
-    try: ###### we need to create a query here
-        clients = SMSClient.query.all()
-    except sql_error as e:
-        return redirect(url_for('errors.mysql_server', error = e)) 
+        if dob_str:
+            if not (bool(datetime.strptime(dob_str, '%m/%d/%Y'))):
+                flash('Date of birth is misformatted.','error')
+                return render_template('sms_client/select.html')
+            
+            dob_obj = datetime.strptime(dob_str, '%m/%d/%Y')
+        else:
+            dob_obj = None
+     
+     # clients where firstname sounds like firstname and lastname sounds like lastname -- or -- dob == dob 
+        if firstname and lastname:
+            name_query = "SOUNDEX(SMSClient.firstname)=SOUNDEX('"+ firstname +"') AND SOUNDEX(SMSClient.lastname)=SOUNDEX('"+ lastname +"')"
+            if dob_obj:
+                name_query += " OR SMSClient.dob ='"+str(dob_obj)+"'"
+        elif dob_obj:
+            name_query = "SMSClient.dob ='"+str(dob_obj)+"'"
+        else:
+            flash('Not enough information for search.','error')
+            return render_template('sms_client/select.html')
+        
+        try: 
+            clients = SMSClient.query.filter(text(name_query)).all()
+                                                    
+        except sql_error as e:
+            return redirect(url_for('errors.mysql_server', error = e))  
 
-    # if only one
-        return render_template('sms_client/profile.html', client=client)
-
-    # else we have a list
-        return render_template('sms_client/list.html', clients=clients)
+        if clients:
+            if len(clients) == 1:     # if only one
+                return render_template('sms_client/profile.html', client=clients[0])
+            else:                     # else we have a list
+                return render_template('sms_client/list.html', clients=clients)
     
     return render_template('sms_client/select.html')
 
 # since they have no login, the clients can't make corrections themselves
 # but any use with a login can do it for them
 # an edit session always unblockes a blocked client
-@sms_client.route('/<int:sms_client_id>/edit/', methods=('GET', 'POST'))
 @login_required
+@sms_client.route('/<int:sms_client_id>/edit/', methods=('GET', 'POST'))
 def edit(sms_client_id):
 
     # require sms access
@@ -243,8 +270,8 @@ def edit(sms_client_id):
 # without an invitation to sign up
 # but this is for folks who violate the terms of use
 # probably nice people, but we can't SMS with them anymore
-@sms_client.post('/<int:client_id>/block/')
 @login_required
+@sms_client.post('/<int:client_id>/block/')
 def block(client_id):
 
     # require sms access
@@ -265,8 +292,8 @@ def block(client_id):
 
 # more of a clean up function
 # once deleted they can sign up again
-@sms_client.post('/<int:client_id>/delete/')
 @login_required
+@sms_client.post('/<int:client_id>/delete/')
 def delete(client_id):
 
     # require sms access

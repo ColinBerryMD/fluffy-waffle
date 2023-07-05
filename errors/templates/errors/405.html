@@ -1,0 +1,6 @@
+{% extends 'errors/errors.html' %}
+
+{% block error_content %}
+        <h1>{% block title %} 405 Method Not Allowed Error {% endblock %}</h1>
+        <p>Are you sure you didn't GET rather than POST?</p>
+{% endblock %}

@@ -6,11 +6,11 @@
         {% for client in clients %}
             <div class="sms_client">
                 <p class="name">{{ client.firstname }} {{ client.lastname }}</p>
-                </b>
+                <br/>
                 <p>{{ client.email }}</p>           
 
                 {% if client.dob %}
-                    <p>DOB: {{ client.dob.strftime('%m:%d%:%Y') }}</p>
+                    <p>DOB: {{ client.dob.strftime('%m:%d:%Y') }}</p>
                 {% endif %}         
 
                 <p>{{ client.phone }}</p>           

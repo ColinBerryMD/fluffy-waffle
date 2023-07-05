@@ -8,7 +8,7 @@ from sqlalchemy.sql import func, or_, and_
 from sqlalchemy import desc
 from twilio.request_validator import RequestValidator
 
-from cbmd.models import WebUser, SMSAccount
+from cbmd.models import WebUser, SMSAccount, User_Account_Link
 from cbmd.extensions import db, v_client, twilio_config, sql_error
 from cbmd.phonenumber import cleanphone
 from cbmd.auth.auth import login_required, current_user
@@ -40,7 +40,7 @@ def create():
             owner = WebUser.query.filter(WebUser.User == user_name).first()
                            
         except sql_error as e:   
-            return redirect(url_for(errors.mysql_server, error = e))    
+            return redirect(url_for('errors.mysql_server', error = e))    
         
         if not owner or not owner.is_sms:
             flash('That user is not allowed.','error')
@@ -53,7 +53,7 @@ def create():
 #                                                         SMSAccount.sid   == sid )).first()
 #                           
 #        except sql_error as e:   
-#            return redirect(url_for(errors.mysql_server, error = e))
+#            return redirect(url_for('errors.mysql_server', error = e))
 
         # if this returns an account we are creating a duplicate
         if existing_account : 
@@ -72,7 +72,7 @@ def create():
             db.session.commit()
             new = SMSAccount.query.filter(SMSAccount.name == account_name).first()
         except sql_error as e: 
-            return redirect(url_for(errors.mysql_server, error = e))
+            return redirect(url_for('errors.mysql_server', error = e))
 
         # make this our active account
         session['current_account_id'] = new.id
@@ -85,6 +85,105 @@ def create():
     # Handle GET requests
     return render_template('account/create.html')
 
+@login_required
+@account.route('/<int:account_id>/edit', methods=('GET','POST'))
+def edit(account_id):
+    # require admin access
+    if not current_user.is_admin:
+        flash('You need administrative access for this.','error')
+        return redirect(url_for('main.index'))
+
+    if request.method == 'POST':
+        owner_user_name = request.form.get('owner_user_name')
+        account_name = request.form.get('account_name')
+        comment = request.form.get('comment')
+        number = cleanphone(request.form.get('number'))
+        sid = request.form.get('sid')
+
+        if not user_name or not account_name or not number or not sid:
+            flash('Need complete information to continue.','error')
+            return render_template('account/edit.html')
+
+        try:
+            owner = WebUser.query.filter(WebUser.User == user_name).first()
+                           
+        except sql_error as e:   
+            return redirect(url_for('errors.mysql_server', error = e))    
+        
+        if not owner or not owner.is_sms:
+            flash('That user is not allowed.','error')
+            return render_template('account/edit.html')
+
+        existing_account=False  #for testing
+#        try:
+#           existing_account = SMSAccount.query.filter(or_(
+#                                                         SMSAccount.name  == account_name, 
+#                                                         SMSAccount.number== number,
+#                                                         SMSAccount.sid   == sid 
+#                                                         )
+#                                                      and_(not_( SMSAccount.id == account_id))
+#                                                      ).first()
+#                           
+#        except sql_error as e:   
+#            return redirect(url_for('errors.mysql_server', error = e))
+
+        # if this returns an account we are creating a duplicate
+        if existing_account : 
+            flash('Conflict with existing account','error')
+            return render_template('account/edit.html')
+
+        updated_account = SMSAccount (
+                                        owner_id = owner.id,
+                                        name = account_name, 
+                                        comment = comment,
+                                        number = number,
+                                        sid = sid )
+
+        # add the new account to the database
+        try:
+            db.session.add(updated_account)
+            db.session.commit()
+            new = SMSAccount.query.filter(SMSAccount.name == account_name).first()
+        except sql_error as e: 
+            return redirect(url_for('errors.mysql_server', error = e))
+
+        # make this our active account
+        session['current_account_id'] = new.id
+        session['account_name'] = new.name
+        
+        # announce success
+        flash(account_name + ' updated.','info')
+        return redirect(url_for('main.index'))        
+
+    # Handle GET requests
+    return render_template('account/edit.html')
+
+# Make this our active account
+@login_required
+@account.post('/<int:account_id>/activate')
+def activate(account_id):
+    # limit access to sms users on the account or owner or admin
+    try:
+        account = SMSAccount.query.get(account_id)
+        is_auth_user = db.session.query(
+            WebUser.is_sms
+            ).join(
+            User_Account_Link, WebUser.id == User_Account_Link.user_id
+            ).filter( 
+            User_Account_Link.account_id == account.id
+            ).first()
+    except sql_error as e:
+        return redirect(url_for('errors.mysql_server', error = e))
+
+
+    if not (current_user.is_admin or current_user.id == account.owner_id or is_auth_user):
+        flash(account.name + ' is not available to you.','error')
+        return redirect(url_for('main.index'))
+
+    session['current_account_id'] = account.id
+    session['account_name'] = account.name
+    return redirect(url_for('main.index'))
+
 # Veiw SMS Account details
 @login_required
 @account.route('/<int:account_id>/profile')
@@ -92,14 +191,18 @@ def profile(account_id):
 
     try: 
         account = SMSAccount.query.get(account_id)
-        query = db.session.query(WebUser.id, WebUser.first, Webuser.last,\
-                                 User_Account_Link.user_id, User_Account_Link.account_id)
-        query = query.join(Webuser).join(User_Account_Link)
-        users = query.filter(User_Account_Link.account_id == account_id).all()
+        owner = WebUser.query.get(account.owner_id)
+        users = db.session.query(
+            WebUser.first, WebUser.last
+            ).join(
+            User_Account_Link, WebUser.id == User_Account_Link.user_id
+            ).filter( 
+            User_Account_Link.account_id == account_id
+            ).all()
     except sql_error as e:
-        return redirect(url_for(errors.mysql_server, error = e))        
+        return redirect(url_for('errors.mysql_server', error = e))        
 
-    return render_template("account/profile.html", account=account, users=users)
+    return render_template("account/profile.html", account=account, owner=owner, users=users)
 
 # list all accounts
 @login_required
@@ -114,7 +217,7 @@ def list():
         accounts = SMSAccount.query.all()
     except (MySQLdb.Error, MySQLdb.Warning) as e:
         print(e)
-        return redirect(url_for(errors.mysql_server, error = e))
+        return redirect(url_for('errors.mysql_server', error = e))
 
     return render_template('account/list.html', accounts=accounts )
 
@@ -140,7 +243,7 @@ def select():
         accounts = SMSAccount.query.all()
     except (MySQLdb.Error, MySQLdb.Warning) as e:
         print(e)
-        return redirect(url_for(errors.mysql_server, error = e))
+        return redirect(url_for('errors.mysql_server', error = e))
 
     return render_template("account/select.html", accounts=accounts)
 
@@ -175,7 +278,7 @@ def add_user():
                                 )
                              ).first()
         except sql_error as e:
-            return redirect(url_for(errors.mysql_server, error = e))
+            return redirect(url_for('errors.mysql_server', error = e))
         
         if link_exists:
             flash('That user is already on the account.','info')
@@ -187,7 +290,7 @@ def add_user():
             db.session.delete(link_to_add)
             db.session.commit()
         except sql_error as e:
-            return redirect(url_for(errors.mysql_server, error = e))
+            return redirect(url_for('errors.mysql_server', error = e))
         
         # announce success
         flash(user_to_add.name +' added to account.','info')
@@ -214,7 +317,7 @@ def delete_user():
     try:
         user_to_delete = WebUser.query.filter(WebUser.User == user_name).first()
     except sql_error as e:
-        return redirect(url_for(errors.mysql_server, error = e))
+        return redirect(url_for('errors.mysql_server', error = e))
 
     # attempt to delete owner can't work
     if user_to_delete.id == current_account.owner_id:
@@ -233,7 +336,7 @@ def delete_user():
         db.session.delete(link_to_delete)
         db.session.commit()
     except sql_error as e:
-        return redirect(url_for(errors.mysql_server, error = e))
+        return redirect(url_for('errors.mysql_server', error = e))
 
     # announce success
     flash(user_to_delete.name +' deleted from account.','info')
@@ -255,7 +358,7 @@ def delete_account():
         db.session.delete(account_to_delete)
         db.session.commit()
     except sql_error as e:
-        return redirect(url_for(errors.mysql_server, error = e))
+        return redirect(url_for('errors.mysql_server', error = e))
 
     # We will need to unlink users with account access here
 

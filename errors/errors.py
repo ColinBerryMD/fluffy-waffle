@@ -6,6 +6,10 @@ errors = Blueprint('errors', __name__, url_prefix='/errors',template_folder='tem
 def page_not_found(error):
     return render_template('errors/404.html'), 404
 
+@errors.app_errorhandler(405)
+def page_not_found(error):
+    return render_template('errors/405.html'), 405
+
 @errors.app_errorhandler(500)
 def server_error(error):
     return render_template('errors/500.html'), 500

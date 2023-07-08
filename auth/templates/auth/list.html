@@ -2,6 +2,7 @@
 
 {% block content %}
     <div class="content">
+        <h3 class="title">{% block title %}List Users{% endblock %}</h3>
         {% if users %}
             <hr>
             {% for user in users %}

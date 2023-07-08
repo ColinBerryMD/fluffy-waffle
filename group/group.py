@@ -174,8 +174,8 @@ def add_client(client_id):
 
 # delete a client from the current group
 @login_required
-@group.post('/<int:client_id>/<:int:group_id>/remove_client')
-def delete_client(client_id):
+@group.post('/<int:client_id>/<int:group_id>/delete_client')
+def delete_client(client_id,group_id):
     # require sms access
     if not current_user.is_sms:
         flash('You need messaging access for this.','error')

@@ -52,8 +52,8 @@ def create_app(config_class=Config):
     from .sms_client.sms_client import sms_client as sms_client_blueprint
     app.register_blueprint(sms_client_blueprint) 
 
-    from .groups.groups import groups as groups_blueprint
-    app.register_blueprint(groups_blueprint) 
+    from .group.group import group as group_blueprint
+    app.register_blueprint(group_blueprint) 
 
     from .message.message import message as message_blueprint
     app.register_blueprint(message_blueprint) 

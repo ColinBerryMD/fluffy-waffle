@@ -3,12 +3,14 @@
 <div>
     <p>Group Name: {{ group.name }}</p>
     <b/>
-    <p>Associated Account: {{ account.name }}</p>
+    <p>{{ group.comment }}</p>
+    <b/>
+    <p>Associated Account: {{&nbsp + account.name }}</p>
         {% if clients %}
             <ul>
-            {% for c in clients %}
-            <li>{{ c.SMSClient.first +&ndsp+c.SMSClient.last }}</li>
-            <form method="POST" class='button-row' action="{{ url_for('account.delete_client', client_id=c.SMSClient.id) }}">   
+            {% for client in clients %}
+            <li>{{ client.first +&nbsp+client.last }}</li>
+            <form method="POST" class='button-row' action="{{ url_for('account.delete_client', client_id=client.id) }}">   
             <input type="submit" value="Delete Client"
                onclick="return confirm('Are you sure you want to remove this client from the group?')"/>
             </form>

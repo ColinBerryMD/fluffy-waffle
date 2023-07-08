@@ -9,6 +9,11 @@
             SMS Account: &nbsp{{ session['account_name'] }} 
         {% endif %}
     </span>
+    <span class="navbar-item">
+        {% if session['group_name'] %}
+            Client Group: &nbsp{{ session['group_name'] }} 
+        {% endif %}
+    </span>
     <div class="container">
         <div id="navbarMenuHeroA" class="navbar-menu">
             <div class="navbar-end">

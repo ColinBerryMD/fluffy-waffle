@@ -1,12 +1,12 @@
 <nav class="navbar">
-    <span class="navbar-text align-baseline">
+    <span class="navbar-item">
         {% if current_user.is_authenticated %}
-            Current User: &nbsp {{ current_user.User }} &nbsp
+            Current User: &nbsp{{ current_user.User }}
         {% endif %}
     </span>
-    <span class="navbar-text align-baseline">
+    <span class="navbar-item">
         {% if session['account_name'] %}
-            SMS: &nbsp {{ session['account_name'] }} &nbsp
+            SMS Account: &nbsp{{ session['account_name'] }} 
         {% endif %}
     </span>
     <div class="container">

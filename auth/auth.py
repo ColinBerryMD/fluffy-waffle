@@ -324,12 +324,56 @@ def change_password(user_id):
     # handle GET request
     return render_template('auth/change_password.html',user=user)
 
+# search for a user by name -- narrows the list to one user or a select list
+@auth.route('/select', methods=('GET', 'POST'))
+def select():
+    if request.method == 'POST':
+        firstname = request.form['firstname']
+        lastname  = request.form['lastname']
+     
+        if firstname and lastname:
+            name_query = "SOUNDEX(WebUser.first)=SOUNDEX('"+ firstname +"') AND SOUNDEX(WebUser.last)=SOUNDEX('"+ lastname +"')"
+        else:
+            flash('Not enough information for search.','error')
+            return render_template('auth/select.html')
+        
+        try: 
+            users = WebUser.query.filter(text(name_query)).all()
+                                                    
+        except sql_error as e:
+            return redirect(url_for('errors.mysql_server', error = e))  
+
+        if users:
+            if len(clients) == 1:     # if only one
+                return render_template('auth/profile.html', user=users[0])
+            else:                     # else we have a list
+                return render_template('auth/list.html', users=users)
+    
+    return render_template('sms_auth/select.html')
+
 # veiw one user account
 @auth.route('/<int:user_id>/profile')
 def profile(user_id):
     user = WebUser.query.get_or_404(user_id) 
     return render_template('auth/profile.html',user=user)
 
+# list all users
+@login_required
+@auth.route('/list')
+def list():
+    # require admin access
+    if not current_user.is_admin:
+        flash('You need administrative access for this.','error')
+        return redirect(url_for('main.index'))
+
+    try:
+        users = WebUser.query.all()
+    except (MySQLdb.Error, MySQLdb.Warning) as e:
+        print(e)
+        return redirect(url_for(errors.mysql_server, error = e))
+
+    return render_template('auth/list.html', users=users)
+    
 @login_required
 @auth.route('/<int:user_id>/edit/', methods=('GET', 'POST'))
 def edit(user_id):
@@ -388,22 +432,6 @@ def edit(user_id):
 
 
 
-# list all users
-@login_required
-@auth.route('/list')
-def list():
-    # require admin access
-    if not current_user.is_admin:
-        flash('You need administrative access for this.','error')
-        return redirect(url_for('main.index'))
-
-    try:
-        users = WebUser.query.all()
-    except (MySQLdb.Error, MySQLdb.Warning) as e:
-        print(e)
-        return redirect(url_for(errors.mysql_server, error = e))
-
-    return render_template('auth/list.html', users=users)
 
 # logout
 @auth.route('/logout')

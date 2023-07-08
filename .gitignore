@@ -2,3 +2,4 @@ private_config
 env/
 __pycache__/
 flask_session/
+database.db

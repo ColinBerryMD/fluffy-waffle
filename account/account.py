@@ -75,7 +75,7 @@ def create():
             return redirect(url_for('errors.mysql_server', error = e))
 
         # make this our active account
-        session['current_account_id'] = new.id
+        session['account_id'] = new.id
         session['account_name'] = new.name
         
         # announce success
@@ -88,9 +88,22 @@ def create():
 @login_required
 @account.route('/<int:account_id>/edit', methods=('GET','POST'))
 def edit(account_id):
-    # require admin access
-    if not current_user.is_admin:
-        flash('You need administrative access for this.','error')
+    try: 
+        account = SMSAccount.query.get(account_id)
+        owner = WebUser.query.get(account.owner_id)
+        users = db.session.query(
+            WebUser.id, WebUser.first, WebUser.last
+            ).join(
+            User_Account_Link, WebUser.id == User_Account_Link.user_id
+            ).filter( 
+            User_Account_Link.account_id == account_id
+            ).all()
+    except sql_error as e:
+        return redirect(url_for('errors.mysql_server', error = e))        
+
+    # require admin or owner access
+    if not (current_user.is_admin or current_user.id == owner.id):
+        flash('You need administrative or owner access for this.','error')
         return redirect(url_for('main.index'))
 
     if request.method == 'POST':
@@ -102,7 +115,7 @@ def edit(account_id):
 
         if not user_name or not account_name or not number or not sid:
             flash('Need complete information to continue.','error')
-            return render_template('account/edit.html')
+            return render_template('account/edit.html',account=account)
 
         try:
             owner = WebUser.query.filter(WebUser.User == user_name).first()
@@ -112,7 +125,7 @@ def edit(account_id):
         
         if not owner or not owner.is_sms:
             flash('That user is not allowed.','error')
-            return render_template('account/edit.html')
+            return render_template('account/edit.html', account=account)
 
         existing_account=False  #for testing
 #        try:
@@ -130,7 +143,7 @@ def edit(account_id):
         # if this returns an account we are creating a duplicate
         if existing_account : 
             flash('Conflict with existing account','error')
-            return render_template('account/edit.html')
+            return render_template('account/edit.html', account=account)
 
         updated_account = SMSAccount (
                                         owner_id = owner.id,
@@ -148,7 +161,7 @@ def edit(account_id):
             return redirect(url_for('errors.mysql_server', error = e))
 
         # make this our active account
-        session['current_account_id'] = new.id
+        session['account_id'] = new.id
         session['account_name'] = new.name
         
         # announce success
@@ -156,7 +169,8 @@ def edit(account_id):
         return redirect(url_for('main.index'))        
 
     # Handle GET requests
-    return render_template('account/edit.html')
+
+    return render_template('account/edit.html', account=account, owner=owner, users=users)
 
 # Make this our active account
 @login_required
@@ -180,7 +194,7 @@ def activate(account_id):
         flash(account.name + ' is not available to you.','error')
         return redirect(url_for('main.index'))
 
-    session['current_account_id'] = account.id
+    session['account_id'] = account.id
     session['account_name'] = account.name
     return redirect(url_for('main.index'))
 
@@ -193,7 +207,7 @@ def profile(account_id):
         account = SMSAccount.query.get(account_id)
         owner = WebUser.query.get(account.owner_id)
         users = db.session.query(
-            WebUser.first, WebUser.last
+            WebUser.id, WebUser.first, WebUser.last
             ).join(
             User_Account_Link, WebUser.id == User_Account_Link.user_id
             ).filter( 
@@ -222,6 +236,7 @@ def list():
     return render_template('account/list.html', accounts=accounts )
 
 
+# select account from a radio button list
 @login_required
 @account.route('/select', methods=('GET', 'POST'))
 def select():
@@ -232,17 +247,19 @@ def select():
     
     if request.method == 'POST':
         current_account_id = request.form['selection']
-        session['current_account_id'] = current_account_id
+        session['account_id'] = current_account_id
         account_selected = SMSaccount.query.get_or_404(current_account_id)
         session['account_name'] = account_selected.name
 
         return redirect(url_for('main.index'))
 
     try: # get the list of current accounts
-         # need to modify this to only accounts for this user by filter
-        accounts = SMSAccount.query.all()
-    except (MySQLdb.Error, MySQLdb.Warning) as e:
-        print(e)
+        if current_user.is_admin:
+            accounts = SMSAccount.query.all()
+        else:
+            accounts = User_Account_Link.query.filter( User_Account_Link.user_id == current_user.id ).all()
+
+    except sql_error as e:
         return redirect(url_for('errors.mysql_server', error = e))
 
     return render_template("account/select.html", accounts=accounts)
@@ -250,15 +267,10 @@ def select():
 # having created an account or otherwise made it active
 # we can add users to the active account
 @login_required
-@account.route('/add_user', methods=('GET', 'POST'))
-def add_user():
-    # we need an active account
-    if not current_account.owner_id:
-        flash('Current SMS Account not set.','error')
-        return redirect(url_for('main.index'))
-
+@account.route('/add_user_by_name', methods=('GET', 'POST'))
+def add_user_by_name():
     # restrict access
-    current_account = SMSaccount.query.get_or_404(session['current_account_id'])
+    current_account = SMSAccount.query.get_or_404(session['current_account_id'])
     if not current_user.is_admin and not current_user.id == current_account.owner_id:
         flash('You need admin access or account ownership for this.','error')
         return redirect(url_for('main.index'))
@@ -268,18 +280,18 @@ def add_user():
         user_name = request.form['user_name']
         if not user_name:
                 flash('Need a user name to continue.','error')
-                return render_template('account/add_user.html')
+                return render_template('account/add_user_by_name.html')
         try:
             user_to_add = WebUser.query.filter(WebUser.User == user_name).first()
             link_exists = User_Account_Link.query.filter(
                              and_(\
                                 User_Account_Link.user_id     == user_to_add.id, 
                                 User_Account_Link.account_id  == current_account.id
-                                )
-                             ).first()
+                                 )
+                              ).first()
         except sql_error as e:
             return redirect(url_for('errors.mysql_server', error = e))
-        
+        link_exists = False
         if link_exists:
             flash('That user is already on the account.','info')
             return redirect(url_for('main.index'))  
@@ -287,38 +299,63 @@ def add_user():
         # create and add the link
         link_to_add = User_Account_Link(user_id = user_to_add.id,account_id = current_account.id )
         try:
-            db.session.delete(link_to_add)
+            db.session.add(link_to_add)
             db.session.commit()
         except sql_error as e:
             return redirect(url_for('errors.mysql_server', error = e))
         
         # announce success
-        flash(user_to_add.name +' added to account.','info')
+        flash(user_to_add.User +' added to account.','info')
         return redirect(url_for('main.index'))
     
     # GET request
-    return render_template("account/add_user.html")
-    
+    return render_template("account/add_user_by_name.html")
+
+# add user -- from a link
+@login_required
+@account.post('/<int:user_id>/add_user')
+def add_user(user_id):
+    # restrict access
+    current_account = SMSAccount.query.get_or_404(session['account_id'])
+    if not current_user.is_admin and not current_user.id == current_account.owner_id:
+        flash('You need admin access or account ownership for this.','error')
+        return redirect(url_for('main.index'))
+
+    user_name = WebUser.query.get_or_404(user_id).User
+    link_exists = User_Account_Link.query.filter(
+                         and_(\
+                            User_Account_Link.user_id     == user_id, 
+                            User_Account_Link.account_id  == current_account.id
+                            )
+                         ).first()
+    if link_exists:
+        flash( user_name +' is already on account: ' + current_account.name, 'error' )
+        return redirect(url_for('main.index'))
+
+    link_to_add = User_Account_Link( user_id=user_id, account_id=current_account.id )
+    try:
+        db.session.add(link_to_add)
+        db.session.commit()
+    except sql_error as e:
+        return redirect(url_for('errors.mysql_server', error = e))
+
+    # announce success
+    flash(user_name +' added to account: '+ current_account.name,'info')
+    return redirect(url_for('main.index'))
+
 # here the owner of an SMS account can remove a user from that account
 @login_required
-@account.post('/delete_user')
-def delete_user():
+@account.post('/<int:user_id>/<int:account_id>/delete_user')
+def delete_user(user_id,account_id):
     # restrict access
-    current_account = SMSaccount.query.get_or_404(session['current_account_id'])
+    current_account = SMSAccount.query.get_or_404(account_id)
     if not current_user.is_admin and not current_user.id == current_account.owner_id:
         flash('You need admin access or account ownership for this.','error')
         return redirect(url_for('main.index'))
 
     # get user; check for empties
-    user_name = request.form['user_name']
-    if not user_name:
-            flash('Need a user name to continue.','error')
-            return render_template('account/add_user.html')
-    try:
-        user_to_delete = WebUser.query.filter(WebUser.User == user_name).first()
-    except sql_error as e:
-        return redirect(url_for('errors.mysql_server', error = e))
-
+    user_to_delete = WebUser.query.get_or_404(user_id)
+    
     # attempt to delete owner can't work
     if user_to_delete.id == current_account.owner_id:
         flash('You cannot unlink the owner from an account','error')
@@ -339,28 +376,34 @@ def delete_user():
         return redirect(url_for('errors.mysql_server', error = e))
 
     # announce success
-    flash(user_to_delete.name +' deleted from account.','info')
+    flash(user_to_delete.User +' deleted from account.','info')
     return redirect(url_for('main.index'))
 
 # and finally, the admin or owner of an account can delete the account
 @login_required
-@account.post('/delete_account')
-def delete_account():
+@account.post('/<int:account_id>/delete_account')
+def delete_account(account_id):
     # restrict access
-    current_account = SMSaccount.query.get_or_404(session['current_account_id'])
+    current_account = SMSAccount.query.get_or_404(account_id)
     if not current_user.is_admin and not current_user.id == current_account.owner_id:
         flash('You need admin access or account ownership for this.','error')
         return redirect(url_for('main.index'))
 
-    sms_account_id = request.form['selection']
     try:
-        account_to_delete = SMSaccount.query.get(sms_account_id)
+        account_to_delete = SMSAccount.query.get(account_id)
         db.session.delete(account_to_delete)
         db.session.commit()
     except sql_error as e:
         return redirect(url_for('errors.mysql_server', error = e))
 
     # We will need to unlink users with account access here
+    try:
+        links_to_delete = User_Account_Link.query.filter(User_Account_Link.account_id == account_id).all()
+        if links_to_delete:
+            db.session.delete(links_to_delete)
+            db.session.commit()
+    except sql_error as e:
+        return redirect(url_for('errors.mysql_server', error = e))
 
     flash(account_to_delete.name +'('+account_to_delete.number+') '+' deleted.','info')
     return redirect(url_for('main.index'))

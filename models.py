@@ -15,6 +15,8 @@ class WebUser(UserMixin,db.Model):
     voice = db.Column(db.String(12))
     is_admin = db.Column( db.Boolean() )
     is_sms = db.Column( db.Boolean() )
+    default_account = db.Column(db.Integer)
+    default_group = db.Column(db.Integer)
     translate = db.Column( db.Boolean() )
     two_fa_expires = db.Column( db.DateTime() )
 
@@ -34,8 +36,7 @@ class Client_Group_Link(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     client_id = db.Column(db.Integer)
     group_id = db.Column(db.Integer)
-    owner_id = db.Column(db.Integer)
-    is_default = db.Column(db.Boolean)
+    account_id = db.Column(db.Integer)
 
 class SMSGroup(db.Model):
     __tablename__ ="SMSGroup"
@@ -58,7 +59,6 @@ class User_Account_Link(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer)
     account_id = db.Column(db.Integer)
-    is_default = db.Column(db.Boolean)
 
 class Message(db.Model):
     __tablename__ ="Message"

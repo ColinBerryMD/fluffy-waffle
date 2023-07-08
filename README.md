@@ -65,17 +65,17 @@ there should be some other tools for them), one for clients to enroll and maybe 
 - message: send and recieve sms messages with the active account
 	
 - sms_client		
-		- welcome -- the landing spot for someone who texts us before they sign up
-		- create -- enter a client profile
-		- terms -- use two factor auth to veiw terms and conditions and prove your humanity
-		- list -- all cllients
-		- profile -- a client
-		- edit -- clients dont have a login, so corrections will need to be made by authorized users in their stead
-		- select -- search for a single client. Hopefully there will be far too many to just look down a list.
-		- block -- deleting a client wont help (they can just create a new client profile). Here we keep them in the DB in a blocked status.
-		- delete -- a client
+	- welcome -- the landing spot for someone who texts us before they sign up
+	- create -- enter a client profile
+	- terms -- use two factor auth to veiw terms and conditions and prove your humanity
+	- list -- all cllients
+	- profile -- a client
+	- edit -- clients dont have a login, so corrections will need to be made by authorized users in their stead
+	- select -- search for a single client. Hopefully there will be far too many to just look down a list.
+	- block -- deleting a client wont help (they can just create a new client profile). Here we keep them in the DB in a blocked status.
+	- delete -- a client
 
-As of today, groups and messages are primitive; veiw is non-existant. Groups will be easy. Messages has already been worked out
+As of today message is primitive; veiw is non-existant. Messages has already been worked out
 in a free standing script, but to bring it on board I will need to move away from flask's development server to some combination 
 of gunicorn, redis and nginx (none of which I understand that well).
 

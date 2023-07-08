@@ -14,9 +14,9 @@ Error tracking is fine. Some Twilio situations break the program rather than thr
 We now have the ability to create named client groups.
 
 Working on the ability to juggle multiple phone numbers and accounts. This kicks the complexity up a couple notches.
-	* Each account has an owner (assigned at creation) and multiple users who are added on later. A client can message any account they like.
-	* On login, a user's account or default account will be 'activated' -- session['active_account'] = .... Those with multiple accounts can 
-	'select' another.
+- Each account has an owner (assigned at creation) and multiple users who are added on later. A client can message any account they like.
+- On login, a user's account or default account will be 'activated' -- session['active_account'] = .... Those with multiple accounts can 
+'select' another.
 
 A note on directory structure. The blueprint layout is after https://realpython.com/flask-blueprint/. 
 The root (cbmd) has app.py and the other backend modules. main.py is pretty limited to a 'hello-world' index page at this point.

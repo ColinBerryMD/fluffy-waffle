@@ -21,12 +21,12 @@
 
                 {% if client.blocked %}
                 <p>This client is blocked.(Edit unblocks)</p>
-                {% endif %}
-                <form method="POST" class='button-row' action="{{ url_for('groups.add_client', client_id=client.id) }}">   
-                    <input type="submit" value="Add to {{ session['current_group_name'] }}"/>
-                </form>      
+                {% endif %}     
                 <form method="GET" class='button-row' action="{{ url_for('sms_client.edit', sms_client_id=client.id) }}"> 
                     <input type="submit" value="Edit Client"/>
+                </form>
+                <form method="POST" class='button-row' action="{{ url_for('group.add_client', client_id=client.id) }}"> 
+                    <input type="submit" value="Add Client to {{ session['group_name'] }}"/>
                 </form>
                 <form method="POST" class='button-row' action="{{ url_for('sms_client.delete', client_id=client.id) }}">   
                     <input type="submit" value="Delete Client"

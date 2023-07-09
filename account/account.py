@@ -32,12 +32,12 @@ def create():
         number = cleanphone(request.form.get('number'))
         sid = request.form.get('sid')
 
-        if not user_name or not account_name or not number or not sid:
+        if not owner_user_name or not account_name or not number or not sid:
             flash('Need complete information to continue.','error')
             return render_template('account/create.html')
 
         try:
-            owner = WebUser.query.filter(WebUser.User == user_name).first()
+            owner = WebUser.query.filter(WebUser.User == owner_user_name).first()
                            
         except sql_error as e:   
             return redirect(url_for('errors.mysql_server', error = e))    
@@ -74,6 +74,14 @@ def create():
         except sql_error as e: 
             return redirect(url_for('errors.mysql_server', error = e))
 
+        # add the owner as first user account to the database
+        owner_link = User_Account_Link( user_id = owner.id, is_owner = True, account_id = new.id )
+        try:
+            db.session.add(owner_link)
+            db.session.commit()
+        except sql_error as e: 
+            return redirect(url_for('errors.mysql_server', error = e))
+
         # make this our active account
         session['account_id'] = new.id
         session['account_name'] = new.name
@@ -90,7 +98,13 @@ def create():
 def edit(account_id):
     try: 
         account = SMSAccount.query.get(account_id)
-        owner = WebUser.query.get(account.owner_id)
+        initial_owner = db.session.query(
+            WebUser.id, WebUser.first, WebUser.last
+            ).join(
+            User_Account_Link, WebUser.id == User_Account_Link.user_id
+            ).filter( 
+            User_Account_Link.is_owner 
+            ).first()
         users = db.session.query(
             WebUser.id, WebUser.first, WebUser.last
             ).join(
@@ -102,7 +116,7 @@ def edit(account_id):
         return redirect(url_for('errors.mysql_server', error = e))        
 
     # require admin or owner access
-    if not (current_user.is_admin or current_user.id == owner.id):
+    if not (current_user.is_admin or current_user.id == initial_owner.id):
         flash('You need administrative or owner access for this.','error')
         return redirect(url_for('main.index'))
 
@@ -113,12 +127,12 @@ def edit(account_id):
         number = cleanphone(request.form.get('number'))
         sid = request.form.get('sid')
 
-        if not user_name or not account_name or not number or not sid:
+        if not owner_user_name or not account_name or not number or not sid:
             flash('Need complete information to continue.','error')
             return render_template('account/edit.html',account=account)
 
         try:
-            owner = WebUser.query.filter(WebUser.User == user_name).first()
+            owner = WebUser.query.filter(WebUser.User == owner_user_name).first()
                            
         except sql_error as e:   
             return redirect(url_for('errors.mysql_server', error = e))    
@@ -145,9 +159,7 @@ def edit(account_id):
             flash('Conflict with existing account','error')
             return render_template('account/edit.html', account=account)
 
-        updated_account = SMSAccount (
-                                        owner_id = owner.id,
-                                        name = account_name, 
+        updated_account = SMSAccount (  name = account_name, 
                                         comment = comment,
                                         number = number,
                                         sid = sid )
@@ -156,13 +168,30 @@ def edit(account_id):
         try:
             db.session.add(updated_account)
             db.session.commit()
-            new = SMSAccount.query.filter(SMSAccount.name == account_name).first()
+            update = SMSAccount.query.filter(SMSAccount.name == account_name).first()
         except sql_error as e: 
             return redirect(url_for('errors.mysql_server', error = e))
 
+        # add the owner as first user account to the database
+        try:
+            current_link = User_Account_Link.query.filter(and_(
+                User_Account_Link.user_id == owner.id_user_name,
+                User_Account_Link.account_id == update.id 
+                )).first()
+            if current_link:
+                db.session.delete(current_link)
+                db.session.commit()
+            
+            owner_link = User_Account_Link( user_id = owner.id, is_owner = True, account_id = update.id )
+            db.session.add(owner_link)
+            db.session.commit()
+
+        except sql_error as e: 
+            return redirect(url_for('errors.mysql_server', error = e))
+            
         # make this our active account
-        session['account_id'] = new.id
-        session['account_name'] = new.name
+        session['account_id'] = update.id
+        session['account_name'] = update.name
         
         # announce success
         flash(account_name + ' updated.','info')

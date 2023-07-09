@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
-
+{% block content %}
 <div>
-    <p>Group Name: {{ group.name }}</p>
+    <h3>{% block title %}Group Name: {{ group.name }}{% endblock %}</p>
     <b/>
     <p>{{ group.comment }}</p>
     <b/>
-    <p>Associated Account: {{&nbsp + account.name }}</p>
+    <p>Associated Account: &nbsp{{ account.name }}</p>
         {% if clients %}
             <ul>
             {% for client in clients %}
-            <li>{{ client.first +&nbsp+client.last }}</li>
-            <form method="POST" class='button-row' action="{{ url_for('account.delete_client', client_id=client.id) }}">   
+            <li>{{ client.firstname }} &nbsp {{ client.lastname }}</li>
+            <form method="POST" class='button-row' action="{{ url_for('group.delete_client', client_id=client.id, group_id=group.id) }}">   
             <input type="submit" value="Delete Client"
                onclick="return confirm('Are you sure you want to remove this client from the group?')"/>
             </form>
@@ -26,3 +26,4 @@
     
     <hr>
 </div>
+{% endblock %}

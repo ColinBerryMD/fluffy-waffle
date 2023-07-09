@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func, or_, and_
 
 from cbmd.extensions import  db, sql_error
-from cbmd.models import SMSClient, Client_Group_Link, SMSGroup
+from cbmd.models import SMSClient, User_Account_Link, Client_Group_Link, SMSGroup, SMSAccount, WebUser
 from cbmd.auth.auth import login_required, current_user
 
 group = Blueprint('group', __name__, url_prefix='/group',template_folder='templates')
@@ -15,6 +15,12 @@ def create():
     if not current_user.is_sms:
         flash('You need messaging access for this.','error')
         return redirect(url_for('main.index'))
+
+    # require an active account
+    if not session['account_id']:
+        flash('You need an active account for this.','error')
+        return redirect(url_for('main.index'))
+
 
     if request.method == 'POST':
         
@@ -37,7 +43,7 @@ def create():
             flash('Group with this name already exists','error')
             return render_template('group/create.html')
         
-        new_group = SMSGroup (name = name, comment = comment)
+        new_group = SMSGroup (name = name, comment = comment, account_id = session['account_id'])
         try:            # add to database on success
             db.session.add(new_group)
             db.session.commit()
@@ -62,17 +68,32 @@ def select():
         flash('You need messaging access for this.','error')
         return redirect(url_for('main.index'))
     
+    #######
+
+#    clients = db.session.query(
+#            SMSClient
+#            ).join(
+#            Client_Group_Link, SMSClient.id == Client_Group_Link.client_id
+#            ).filter(
+#            Client_Group_Link.group_id == group_id
+#            ).all()
+
+    ########
     try: # get the list of  groups in accounts of this user
-        groups = SMSGroup.query(
+        groups = db.session.query(
             SMSGroup
             ).join(
-            SMSGroup.account_id, User_Account_Link.account_id
-            ).filter(
-            User_Account_Link.user_id == current_user.id
-            ).all()
-    except (MySQLdb.Error, MySQLdb.Warning) as e:
-        print(e)
-        return redirect(url_for('errors.mysql_server', error = e))
+            SMSAccount, SMSGroup.account_id == SMSAccount.id
+            ).join(
+            SMSAccount, SMSAccount.owner_id == current_user.id
+            ).join(
+            User_Account_Link, SMSAccount.id == User_Account_Link.account_id
+            ).filter(or_(
+                User_Account_Link.user_id == current_user.id,
+                SMSAccount.owner_id == current_user.id
+            )).all()
+    except sql_error as e: 
+            return redirect(url_for('errors.mysql_server', error = e))
  
     if request.method == 'POST':
         selected_group_id = request.form['selection']
@@ -83,7 +104,7 @@ def select():
         
         return redirect(url_for('group.profile',group_id=selected_group_id))
 
-
+    # handle GET requests
     return render_template("group/select.html", groups=groups)
 
 # Veiw group details
@@ -96,25 +117,25 @@ def profile(group_id):
     # limit access to users of the relevant account
     try:
         has_access = db.session.query(
-            WebUser.id
-            ).join(
-            User_Account_Link.user_id, User_Account_Link.account_id
+            User_Account_Link.user_id
             ).filter(
             User_Account_Link.account_id == account.id
+            ).filter(
+            User_Account_Link.user_id == current_user.id
             ).first()
     except sql_error as e:
         return redirect(url_for('errors.mysql_server', error = e))
     
-    if not has_access:
+    if not (has_access or current_user.is_admin):
         flash('You need access to account: '+ account.name + ' for this.','error')
         return redirect(url_for('main.index'))
 
     # link name from SMSClient to this group via Client_Group_link Join for a list of clients
     try:
         clients = db.session.query(
-            SMSClient.client_id, SMSClient.firstname, SMSClient.lastname
+            SMSClient
             ).join(
-            Client_Group_Link.client_id, Client_Group_Link.group_id
+            Client_Group_Link, SMSClient.id == Client_Group_Link.client_id
             ).filter(
             Client_Group_Link.group_id == group_id
             ).all()
@@ -128,16 +149,31 @@ def profile(group_id):
 @group.post('/<int:group_id>/activate')
 def activate(group_id):
     # limit access to sms users 
-    group = SMSAccount.query.get_or_404(group_id)
+    group = SMSGroup.query.get_or_404(group_id)
 
     if not current_user.is_sms:
         flash('Group selection is not available to you.','error')
         return redirect(url_for('main.index'))
 
-    session['group_id'] = account.id
-    session['group_name'] = account.name
+    session['group_id'] = group.id
+    session['group_name'] = group.name
     return redirect(url_for('main.index'))
 
+# list all groups
+@login_required
+@group.route('/list')
+def list():
+    # require admin access
+    if not current_user.is_admin:
+        flash('You need administrative access for this.','error')
+        return redirect(url_for('main.index'))
+
+    try:
+        groups = SMSGroup.query.all()
+    except sql_error as e:
+        return redirect(url_for('errors.mysql_server', error = e))
+
+    return render_template('group/list.html', groups=groups)
 
 # add a client the current group
 @login_required
@@ -153,13 +189,20 @@ def add_client(client_id):
     try:
         group = SMSGroup.query.get(session['group_id'])
         has_access = User_Account_Link.query.filter(and_(
-                                    user_id == current_user.id, 
-                                    account_id == group.account_id )).first()
+                                    User_Account_Link.user_id == current_user.id, 
+                                    User_Account_Link.account_id == group.account_id )).first()
+        already_enrolled = Client_Group_Link.query.filter(and_(
+                                    Client_Group_Link.client_id == client_id, 
+                                    Client_Group_Link.group_id == group.id )).first()
     except sql_error as e:
         return redirect(url_for('errors.mysql_server', error = e))
     
-    if not has_access:
+    if not ( has_access or current_user.is_admin):
         flash('You need access to account: '+ session['account_name'] + ' for this.','error')
+        return redirect(url_for('main.index'))
+
+    if already_enrolled:
+        flash('That client is already enrolled.','info')
         return redirect(url_for('main.index'))
 
     new_link = Client_Group_Link(client_id = client_id, group_id = group.id)
@@ -211,9 +254,10 @@ def delete(group_id):
 
     # unlink the group from its clients
     try:
-        links = Client_Group_Link.filter(Client_Group_Link.group_id == group_id)
-        db.session.delete(links)
-        db.session.commit()
+        links = Client_Group_Link.query.filter(Client_Group_Link.group_id == group_id).all()
+        if links:
+            db.session.delete(links)
+            db.session.commit()
     except sql_error as e:
         return redirect(url_for('errors.mysql_server', error = e))
 

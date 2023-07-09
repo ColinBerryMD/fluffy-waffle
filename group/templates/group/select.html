@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="column is-4 is-offset-4">
-    <h3 class="title">Select Current Client Group</h3>
+    <h3 class="title">{% block title %}Select Current Client Group{% endblock %}</h3>
     <div class="box">
         <form method="POST" action="{{ url_for('group.select') }}">
             <div class="field">
@@ -19,11 +19,6 @@
                 </div>
             </div>
             <button class="button is-block is-info is-large is-fullwidth">Select</button>
-            <br/>
-            <input type='submit' formmethod="POST" formaction="{{ url_for('group.delete') }}"
-                   class="button is-block is-info is-large is-fullwidth" 
-                   onclick="return confirm('Are you sure you want to delete this group?')"
-                   value ='Delete' />
             <br/>
             <input type='submit' formmethod="GET" formaction="{{ url_for('main.index') }}"
                    class="button is-block is-info is-large is-fullwidth" 

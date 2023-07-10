@@ -19,11 +19,11 @@ Working on the ability to juggle multiple phone numbers and accounts. This kicks
 'select' another.
 
 A note on directory structure. The blueprint layout is after https://realpython.com/flask-blueprint/. 
-The root (cbmd) has app.py and the other backend modules. main.py is pretty limited to a 'hello-world' index page at this point.
-The other blueprints were constructed to test functionality during development. They were born unstyled. I suppose many will remain that way 
-unless they prove to have a purpose in the production environment. 'veiw' is the exception. It was written last, with its focus on an attractive
-front end. I plan for it to revolve around four dashboards: one for admin, one for a user who mostly needs to work with messages (but someday
+The root (cbmd) has app.py and the other backend modules. main.py has the veiws for our front end. It was written last, with its focus on attractive
+styling. I plan for it to revolve around four dashboards: one for admin, one for a user who mostly needs to work with messages (but someday
 there should be some other tools for them), one for clients to enroll and maybe browse around, and one for visitors -- mostly a billboard. 
+The other blueprints were constructed to test functionality during development. They were born unstyled. I suppose many will remain that way 
+unless they prove to have a purpose in the production environment.  
 	
 - account: 
 	- create -- a new sms twilio account

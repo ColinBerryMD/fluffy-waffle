@@ -4,7 +4,7 @@
 <div class="column is-4 is-offset-4">
     <h3 class="title">{% block title %}Update Twilio Account{% endblock %}</h3>
     <div class="box">
-        <form method="POST" action="{{ url_for('account.edit',account_id=account.id) }}">
+        <form formmethod="POST" formaction="{{ url_for('account.edit',account_id=account.id) }}">
             <div class="field">
                 <div class="control">
                     <label for="owner_user_name">Owner</label>
@@ -17,7 +17,6 @@
                     <input class="input is-large" type="text" name="account_name" value='{{ account.name }}' autofocus=""/>
                 </div>
             </div>
-
             <div class="field">
                 <div class="control">
                     <label for="number">SMS Number</label>
@@ -30,31 +29,25 @@
                     <input class="input is-large" type="text" name="sid" value='{{ account.sid }}' autofocus=""/>
                 </div>
             </div>
-            <button class="button is-block is-info is-large is-fullwidth">Submit</button>
-        </form>
             {% if users %}
                 <ul>
                     {% for user in users %}
                         <li>
-                            <div>
-                                {{ user.first  }}&nbsp{{ user.last  }}
-                                {% if user.id == owner.id %}(owner){%endif%}
-                            </div>
-                            <div>
-                                <form method="POST" class='button-row' 
-                                    action="{{ url_for('account.delete_user', user_id=user.id,account_id=account.id) }}">   
-                                    <input type="submit" value="Delete User"
-                                           onclick="return confirm('Are you sure you want to delete this user?')"/>
-                                </form>
-                            </div>
+                            {{ user.first  }}&nbsp{{ user.last  }}
+                            {% if user.id == owner.id %}(owner){%endif%}
                         </li>
+                        <form formmethod="POST" class='button-row' 
+                              formaction="{{ url_for('account.delete_user', user_id=user.id,account_id=account.id) }}">   
+                                <input type="submit" value="Delete User" onclick="return confirm('Are you sure you want to delete this user?')"/>
+                        </form>
                     {% endfor %} 
                 </ul>    
             {% endif %}
-
+            <button class="button is-block is-info is-large is-fullwidth">Submit</button>
+        </form>
         <br/>
-        <form method="GET" action="{{ url_for('main.index') }}"> 
-            <input type="submit" value="Cancel" class="button is-block is-info is-large is-fullwidth"/>
+        <form formmethod="GET" formaction="{{ url_for('main.index') }}"> 
+            <button class="button is-block is-info is-large is-fullwidth">Cancel</button>
         </form>
     </div>
 </div>

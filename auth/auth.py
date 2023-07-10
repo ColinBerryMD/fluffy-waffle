@@ -2,9 +2,7 @@
 # authorize logins
 # CB 6/23
 
-from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
-from flask_login import login_user, login_required, logout_user, current_user
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # database models
 from cbmd.models import WebUser, OldPasswords
@@ -14,8 +12,12 @@ from cbmd.phonenumber import cleanphone
 from .cleanpassword import cleanpassword
 
 #app factory products
-from cbmd.extensions import db, bcrypt, v_client, twilio_config, sql_error
-from cbmd.app import password_lifetime, two_fa_lifetime
+from cbmd.extensions import Blueprint, render_template, redirect, url_for, request, flash,\
+                            current_app, db, v_client, twilio_config, sql_error, environ,\
+                            login_user, login_required, logout_user, current_user, bcrypt
+
+password_lifetime = timedelta( days = int(environ['PASSWORD_LIFE_IN_DAYS']))
+two_fa_lifetime   = timedelta( days = int(environ['TWO_FA_LIFE_IN_DAYS']))
 
 auth = Blueprint('auth', __name__, url_prefix='/auth', template_folder='templates')
 
@@ -358,8 +360,8 @@ def profile(user_id):
     return render_template('auth/profile.html',user=user)
 
 # list all users
-@login_required
 @auth.route('/list')
+@login_required
 def list():
     # require admin access
     if not current_user.is_admin:
@@ -374,8 +376,8 @@ def list():
 
     return render_template('auth/list.html', users=users)
     
-@login_required
 @auth.route('/<int:user_id>/edit/', methods=('GET', 'POST'))
+@login_required
 def edit(user_id):
     user = WebUser.query.get_or_404(user_id)
 

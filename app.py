@@ -1,19 +1,13 @@
-from flask import Flask, Blueprint
+from flask import Flask
 from config import Config
-from datetime import datetime, timedelta
-#import logging
+#from datetime import datetime, timedelta
 
-from .extensions import db, bcrypt, login_manager, current_user, environ
+from .extensions import db, bcrypt, login_manager, current_user, environ, Blueprint
 from .models import WebUser
 
-#logging.basicConfig(filename='record.log', level=logging.DEBUG, format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
-
-password_lifetime = timedelta( days = int(environ['PASSWORD_LIFE_IN_DAYS']))
-two_fa_lifetime   = timedelta( days = int(environ['TWO_FA_LIFE_IN_DAYS']))
    
 def create_app(config_class=Config):
     app = Flask(__name__)  
-    #app.config['EXPLAIN_TEMPLATE_LOADING'] = True
     
 # Get essential configuration from environment
 
@@ -30,8 +24,7 @@ def create_app(config_class=Config):
 
     app.config['SQLALCHEMY_DATABASE_URI'] = db_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SQLALCHEMY_ECHO'] = True
-
+    #app.config['SQLALCHEMY_ECHO'] = True
 
 # initialize extensions
     

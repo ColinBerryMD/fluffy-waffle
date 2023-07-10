@@ -17,10 +17,13 @@ def create():
         return redirect(url_for('main.index'))
 
     # require an active account
-    if not session['account_id']:
+    try:
+        account_active = session['account_id']
+    except KeyError:
+        account_active = False
+    if not account_active:
         flash('You need an active account for this.','error')
         return redirect(url_for('main.index'))
-
 
     if request.method == 'POST':
         
@@ -68,30 +71,17 @@ def select():
         flash('You need messaging access for this.','error')
         return redirect(url_for('main.index'))
     
-    #######
-
-#    clients = db.session.query(
-#            SMSClient
-#            ).join(
-#            Client_Group_Link, SMSClient.id == Client_Group_Link.client_id
-#            ).filter(
-#            Client_Group_Link.group_id == group_id
-#            ).all()
-
-    ########
     try: # get the list of  groups in accounts of this user
         groups = db.session.query(
             SMSGroup
             ).join(
             SMSAccount, SMSGroup.account_id == SMSAccount.id
             ).join(
-            SMSAccount, SMSAccount.owner_id == current_user.id
-            ).join(
-            User_Account_Link, SMSAccount.id == User_Account_Link.account_id
-            ).filter(or_(
-                User_Account_Link.user_id == current_user.id,
-                SMSAccount.owner_id == current_user.id
-            )).all()
+            User_Account_Link, User_Account_Link.account_id == SMSAccount.id
+            ).filter(
+            User_Account_Link.user_id == current_user.id
+            ).all()
+            
     except sql_error as e: 
             return redirect(url_for('errors.mysql_server', error = e))
  

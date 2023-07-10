@@ -49,7 +49,6 @@ class SMSAccount(db.Model):
     __tablename__ ="SMSAccount"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(40))
-    comment = db.Column(db.String(160))
     number = db.Column(db.String(12))
     sid = db.Column(db.String(36))
 

@@ -1,15 +1,12 @@
-from flask import Flask, Blueprint, render_template, request, url_for, flash, redirect, session
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.sql import func, or_, and_
+from cbmd.extensions import  db, sql_error, Blueprint, render_template, request, url_for, flash, redirect,\
+                             session, login_required, current_user, func, or_, and_
 
-from cbmd.extensions import  db, sql_error
 from cbmd.models import SMSClient, User_Account_Link, Client_Group_Link, SMSGroup, SMSAccount, WebUser
-from cbmd.auth.auth import login_required, current_user
 
 group = Blueprint('group', __name__, url_prefix='/group',template_folder='templates')
 
-@login_required
 @group.route('/create', methods=('GET', 'POST'))
+@login_required
 def create():
     # require sms access
     if not current_user.is_sms:
@@ -28,7 +25,6 @@ def create():
     if request.method == 'POST':
         
         name = request.form['name']
-        comment  = request.form['comment']
                           
         # check for empty fields
         if not name:
@@ -46,7 +42,7 @@ def create():
             flash('Group with this name already exists','error')
             return render_template('group/create.html')
         
-        new_group = SMSGroup (name = name, comment = comment, account_id = session['account_id'])
+        new_group = SMSGroup (name = name, account_id = session['account_id'])
         try:            # add to database on success
             db.session.add(new_group)
             db.session.commit()
@@ -63,8 +59,8 @@ def create():
 # we expect a small number of groups
 # so this veiw constructs a radio button based list 
 # to combine the list and select tools in other blueprints
-@login_required
 @group.route('/select', methods=('GET', 'POST'))
+@login_required
 def select():
     # require sms access
     if not current_user.is_sms:
@@ -98,8 +94,8 @@ def select():
     return render_template("group/select.html", groups=groups)
 
 # Veiw group details
-@login_required
 @group.route('/<int:group_id>/profile')
+@login_required
 def profile(group_id):
     group = SMSGroup.query.get(group_id)
     account = SMSAccount.query.get(group.account_id)
@@ -135,8 +131,8 @@ def profile(group_id):
     return render_template("group/profile.html", group=group, account=account, clients=clients)
 
 # Make this our active group
-@login_required
 @group.post('/<int:group_id>/activate')
+@login_required
 def activate(group_id):
     # limit access to sms users 
     group = SMSGroup.query.get_or_404(group_id)
@@ -149,9 +145,24 @@ def activate(group_id):
     session['group_name'] = group.name
     return redirect(url_for('main.index'))
 
-# list all groups
+# Close our active group
+@group.post('/close')
 @login_required
+def close():
+    # limit access to sms users 
+    if not current_user.is_sms:
+        flash('Group selection is not available to you.','error')
+        return redirect(url_for('main.index'))
+
+    group_name=session['group_name']
+    session['group_id'] = None
+    session['group_name'] = None
+    flash('Group :'+group_name+' closed.','info')
+    return redirect(url_for('main.index'))
+
+# list all groups
 @group.route('/list')
+@login_required
 def list():
     # require admin access
     if not current_user.is_admin:
@@ -166,8 +177,8 @@ def list():
     return render_template('group/list.html', groups=groups)
 
 # add a client the current group
-@login_required
 @group.post('/<int:client_id>/add_client')
+@login_required
 def add_client(client_id):
     # require sms access
     if not current_user.is_sms:
@@ -206,8 +217,8 @@ def add_client(client_id):
     return redirect(url_for('main.index'))
 
 # delete a client from the current group
-@login_required
 @group.post('/<int:client_id>/<int:group_id>/delete_client')
+@login_required
 def delete_client(client_id,group_id):
     # require sms access
     if not current_user.is_sms:
@@ -227,8 +238,8 @@ def delete_client(client_id,group_id):
     return redirect(url_for('main.index'))
 
 # delete a whole client group
-@login_required
 @group.post('/<int:group_id>/delete/')
+@login_required
 def delete(group_id):
     # require sms access
     if not current_user.is_sms:

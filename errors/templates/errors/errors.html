@@ -6,6 +6,8 @@
         {% block error_content %}
         {% endblock %}
     <form method="GET" action="{{ url_for('main.index') }}"> 
-        <button class="button is-block is-info is-large">Home</button>
+        <div class="w3-center">
+            <button class="w3-button w3-round-xlarge w3-large">Take Me Home</button>
+        </div> 
     </form>
     {% endblock %}

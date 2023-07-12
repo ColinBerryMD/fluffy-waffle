@@ -1,6 +1,5 @@
 from flask import Flask
 from config import Config
-#from datetime import datetime, timedelta
 
 from .extensions import db, bcrypt, login_manager, current_user, environ, Blueprint
 from .models import WebUser

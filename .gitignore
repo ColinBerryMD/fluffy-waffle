@@ -3,3 +3,4 @@ env/
 __pycache__/
 flask_session/
 database.db
+record.log

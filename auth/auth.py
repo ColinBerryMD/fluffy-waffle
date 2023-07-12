@@ -271,7 +271,7 @@ def two_factor(user_id):
         db.session.commit()
 
         flash('Pass Code Accepted.','info')
-        return redirect(url_for('auth.profile',user=user))
+        return redirect(url_for('auth.profile',user_id=user_id))
 
     # handle GET request
     return render_template('auth/two_factor.html',user=user)

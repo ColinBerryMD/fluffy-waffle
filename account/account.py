@@ -1,15 +1,15 @@
 # account.py
 # routes for creating and maintaning Twilio messaging accounts
 
-from datetime import datetime
-from flask import Flask, render_template, request, url_for, flash, redirect, Blueprint, abort, session
+#from datetime import datetime
+#from flask import Flask, render_template, request, url_for, flash, redirect, Blueprint, abort, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func, or_, and_
 from sqlalchemy import desc
 from twilio.request_validator import RequestValidator
 
 from cbmd.models import WebUser, SMSAccount, User_Account_Link
-from cbmd.extensions import db, v_client, twilio_config, sql_error
+from cbmd.extensions import db, v_client, twilio_config, sql_error, render_template, request, url_for, flash, redirect, Blueprint, abort, session
 from cbmd.phonenumber import cleanphone
 from cbmd.auth.auth import login_required, current_user
 
@@ -104,10 +104,11 @@ def edit(account_id):
         owner = db.session.query(
             WebUser.id, WebUser.User, WebUser.first, WebUser.last, WebUser.is_sms
             ).join(
-            User_Account_Link, WebUser.id == User_Account_Link.user_id
-            ).filter(
-            User_Account_Link.is_owner == True
-            ).first()
+            User_Account_Link, User_Account_Link.user_id == WebUser.id
+            ).filter(and_(
+            User_Account_Link.is_owner,
+            User_Account_Link.account_id == account.id
+            )).first() 
         users = db.session.query(
             WebUser.id, WebUser.first, WebUser.last
             ).join(
@@ -226,16 +227,37 @@ def activate(account_id):
     session['account_name'] = account.name
     return redirect(url_for('main.index'))
 
+# Close our active account
+@account.post('/close')
+@login_required
+def close():
+    # limit access to sms users 
+    if not current_user.is_sms:
+        flash('Group selection is not available to you.','error')
+        return redirect(url_for('main.index'))
+
+    account_name=session['account_name']
+    session['account_id'] = None
+    session['account_name'] = None
+    flash('Account: '+account_name+' closed.','info')
+    return redirect(url_for('main.index'))
+
 # Veiw SMS Account details
 @login_required
 @account.route('/<int:account_id>/profile')
 def profile(account_id):
-
     try: 
         account = SMSAccount.query.get(account_id)
-        owner = WebUser.query.get(account.owner_id)
+        owner = db.session.query(
+            WebUser.id
+            ).join(
+            User_Account_Link, WebUser.id == User_Account_Link.user_id
+            ).filter(and_(
+            User_Account_Link.is_owner,
+            User_Account_Link.account_id == account_id
+            )).first()        
         users = db.session.query(
-            WebUser.id, WebUser.first, WebUser.last
+            WebUser.id, WebUser.first, WebUser.last, User_Account_Link.is_owner
             ).join(
             User_Account_Link, WebUser.id == User_Account_Link.user_id
             ).filter( 
@@ -244,7 +266,7 @@ def profile(account_id):
     except sql_error as e:
         return redirect(url_for('errors.mysql_server', error = e))        
 
-    return render_template("account/profile.html", account=account, owner=owner, users=users)
+    return render_template("account/profile.html", account=account,owner=owner, users=users)
 
 # list all accounts
 @login_required
@@ -276,16 +298,22 @@ def select():
     if request.method == 'POST':
         current_account_id = request.form['selection']
         session['account_id'] = current_account_id
-        account_selected = SMSaccount.query.get_or_404(current_account_id)
+        account_selected = SMSAccount.query.get_or_404(current_account_id)
         session['account_name'] = account_selected.name
 
         return redirect(url_for('main.index'))
 
     try: # get the list of current accounts
-        if current_user.is_admin:
-            accounts = SMSAccount.query.all()
-        else:
-            accounts = User_Account_Link.query.filter( User_Account_Link.user_id == current_user.id ).all()
+        #if current_user.is_admin:
+#            accounts = SMSAccount.query.all()
+#        else:
+        accounts = db.session.query(
+            SMSAccount
+            ).join(
+            User_Account_Link, User_Account_Link.account_id == SMSAccount.id
+            ).filter(
+            User_Account_Link.user_id == current_user.id
+            ).all()
 
     except sql_error as e:
         return redirect(url_for('errors.mysql_server', error = e))

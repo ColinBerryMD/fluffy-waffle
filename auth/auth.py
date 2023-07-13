@@ -330,11 +330,16 @@ def change_password(user_id):
 @auth.route('/select', methods=('GET', 'POST'))
 def select():
     if request.method == 'POST':
+        user_name = request.form['username']
         firstname = request.form['firstname']
         lastname  = request.form['lastname']
      
         if firstname and lastname:
             name_query = "SOUNDEX(WebUser.first)=SOUNDEX('"+ firstname +"') AND SOUNDEX(WebUser.last)=SOUNDEX('"+ lastname +"')"
+            if user_name:
+                name_query += " OR WebUser.User ='"+user_name+"'"
+        elif user_name:
+            name_query = "WebUser.User ='"+user_name+"'"
         else:
             flash('Not enough information for search.','error')
             return render_template('auth/select.html')
@@ -346,12 +351,12 @@ def select():
             return redirect(url_for('errors.mysql_server', error = e))  
 
         if users:
-            if len(clients) == 1:     # if only one
+            if len(users) == 1:     # if only one
                 return render_template('auth/profile.html', user=users[0])
             else:                     # else we have a list
                 return render_template('auth/list.html', users=users)
     
-    return render_template('sms_auth/select.html')
+    return render_template('auth/select.html')
 
 # veiw one user account
 @auth.route('/<int:user_id>/profile')

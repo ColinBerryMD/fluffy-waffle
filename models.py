@@ -68,6 +68,7 @@ class Message(db.Model):
     Body = db.Column(db.String(160))
     Outgoing = db.Column(db.Boolean)
     Completed = db.Column(db.Boolean)
+    Confirmed = db.Column(db.Boolean)
     Account = db.Column(db.Integer)
 
 class BadPasswords(db.Model):

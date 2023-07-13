@@ -177,9 +177,9 @@ def list():
     return render_template('group/list.html', groups=groups)
 
 # add a client the current group
-@group.post('/<int:client_id>/add_client')
+@group.post('/<int:client_id>/<int:group_id>/add')
 @login_required
-def add_client(client_id):
+def add(client_id,group_id):
     # require sms access
     if not current_user.is_sms:
         flash('You need messaging access for this.','error')
@@ -188,7 +188,7 @@ def add_client(client_id):
     # limit access to users of the relevant account
 
     try:
-        group = SMSGroup.query.get(session['group_id'])
+        group = SMSGroup.query.get(group_id)
         has_access = User_Account_Link.query.filter(and_(
                                     User_Account_Link.user_id == current_user.id, 
                                     User_Account_Link.account_id == group.account_id )).first()

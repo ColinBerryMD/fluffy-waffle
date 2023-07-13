@@ -38,11 +38,11 @@
                 <a class="w3-bar-item w3-button w3-left w3-hide-large w3-hover-white w3-large w3-theme-l1">
                     <i class="fa fa-bars"></i>
                 </a>
-                <a href="href="{{ url_for('/') }}"" 
+                <a href="{{ url_for('main.index') }}" 
                    class="w3-bar-item w3-button w3-theme-l1"><i class='fas fa-home'></i></a>
 
                 {% if current_user.is_admin %}
-                <a href="{{ url_for('admin') }}"
+                <a href="{{ url_for('main.admin') }}"
                    class="w3-bar-item w3-button w3-hide-small w3-hover-white"><i class="fa fa-gear"></i></a>
                 {% endif %}
                 {% if current_user.is_authenticated %}
@@ -68,64 +68,66 @@
                 </div>
                 {% endif %}
 
-                {% if session['account_id'] %}
-                <div class="w3-dropdown-hover">
-                    <a class="w3-bar-item w3-button w3-hide-small w3-hover-white">
-                        Account: &nbsp{{ session['account_name'] }}
-                        <i class="fa fa-caret-down"></i>
-                    </a>
-                    <div class="w3-dropdown-content w3-bar-block w3-card-4">
-                        <a href="{{ url_for('account.close') }}" 
-                           class="w3-bar-item w3-button w3-hide-small w3-hover-white">
-                            Close Account
+                {% if current_user.is_sms %}
+                    {% if session['account_id'] %}
+                    <div class="w3-dropdown-hover">
+                        <a class="w3-bar-item w3-button w3-hide-small w3-hover-white">
+                            Account: &nbsp{{ session['account_name'] }}
+                            <i class="fa fa-caret-down"></i>
                         </a>
-                        <a href="{{ url_for('account.select') }}" 
-                           class="w3-bar-item w3-button w3-hide-small w3-hover-white">
-                            Change Account
-                        </a>
-                        <a href="{{ url_for('account.profile',account_id=session['account_id']) }}" 
-                           class="w3-bar-item w3-button w3-hide-small w3-hover-white">
-                            Account Profile
-                        </a>
-                        <a href="{{ url_for('account.add',account_id=session['account_id']) }}" 
-                           class="w3-bar-item w3-button w3-hide-small w3-hover-white">
-                            Add User to Account
-                        </a>
+                        <div class="w3-dropdown-content w3-bar-block w3-card-4">
+                            <a href="{{ url_for('account.close') }}" 
+                               class="w3-bar-item w3-button w3-hide-small w3-hover-white">
+                                Close Account
+                            </a>
+                            <a href="{{ url_for('account.select') }}" 
+                               class="w3-bar-item w3-button w3-hide-small w3-hover-white">
+                                Change Account
+                            </a>
+                            <a href="{{ url_for('account.profile',account_id=session['account_id']) }}" 
+                               class="w3-bar-item w3-button w3-hide-small w3-hover-white">
+                                Account Profile
+                            </a>
+                            <a href="{{ url_for('auth.select') }}" 
+                               class="w3-bar-item w3-button w3-hide-small w3-hover-white">
+                                Add User to Account
+                            </a>
+                        </div>
                     </div>
-                </div>
-                {% else %}
-                <a href="{{ url_for('account.select') }}"  
-                   class="w3-bar-item w3-button w3-right w3-hide-small w3-hide-medium w3-hover-white">Select Account</a>
-                {% endif %}
-
-                {% if session['group_id'] %}
-                <div class="w3-dropdown-hover">
-                    <a class="w3-bar-item w3-button w3-hide-small w3-hover-white">
-                        Group:&nbsp{{ session['group_name'] }}
-                        <i class="fa fa-caret-down"></i>
-                    </a>
-                    <div class="w3-dropdown-content w3-bar-block w3-card-4">
-                        <a href="{{ url_for('group.close') }}" 
-                           class="w3-bar-item w3-button w3-hide-small w3-hover-white">
-                            Close Group
+                    {% else %}
+                    <a href="{{ url_for('account.select') }}"  
+                       class="w3-bar-item w3-button w3-hide-small w3-hide-medium w3-hover-white">Select Account</a>
+                    {% endif %}
+                
+                    {% if session['group_id'] %}
+                    <div class="w3-dropdown-hover">
+                        <a class="w3-bar-item w3-button w3-hide-small w3-hover-white">
+                            Group:&nbsp{{ session['group_name'] }}
+                            <i class="fa fa-caret-down"></i>
                         </a>
-                        <a href="{{ url_for('group.select') }}" 
-                           class="w3-bar-item w3-button w3-hide-small w3-hover-white">
-                            Change Group
-                        </a>
-                        <a href="{{ url_for('group.profile',group_id=session['group_id']) }}" 
-                           class="w3-bar-item w3-button w3-hide-small w3-hover-white">
-                            Group Profile
-                        </a>
-                        <a href="{{ url_for('group.add',group_id=session['group_id']) }}" 
-                           class="w3-bar-item w3-button w3-hide-small w3-hover-white">
-                            Add Client to Group
-                        </a>
+                        <div class="w3-dropdown-content w3-bar-block w3-card-4">
+                            <a href="{{ url_for('group.close') }}" 
+                               class="w3-bar-item w3-button w3-hide-small w3-hover-white">
+                                Close Group
+                            </a>
+                            <a href="{{ url_for('group.select') }}" 
+                               class="w3-bar-item w3-button w3-hide-small w3-hover-white">
+                                Change Group
+                            </a>
+                            <a href="{{ url_for('group.profile',group_id=session['group_id']) }}" 
+                               class="w3-bar-item w3-button w3-hide-small w3-hover-white">
+                                Group Profile
+                            </a>
+                            <a href="{{ url_for('sms_client.select') }}" 
+                               class="w3-bar-item w3-button w3-hide-small w3-hover-white">
+                                Add Client to Group
+                            </a>
+                        </div>
                     </div>
-                </div>
-                {% else %}
-                <a href="{{ url_for('group.select') }}"  
-                   class="w3-bar-item w3-button w3-right w3-hide-small w3-hide-medium w3-hover-white">Select Client Group</a>
+                    {% else %}
+                    <a href="{{ url_for('group.select') }}"  
+                       class="w3-bar-item w3-button w3-hide-small w3-hide-medium w3-hover-white">Select Client Group</a>
+                    {% endif %}
                 {% endif %}
 
                 {% if current_user.is_authenticated %}
@@ -135,10 +137,10 @@
                 <a href="{{ url_for('auth.login') }}" 
                    class="w3-bar-item w3-button w3-right w3-hide-small w3-hide-medium w3-hover-white">Login</a>
 
-                <a href="{{ url_for('group.add',group_id=session['group_id']) }}" 
+                <a href="{{ url_for('sms_client.create') }}" 
                    class="w3-bar-item w3-button w3-right w3-hide-small w3-hover-white">Registration</a>
 
-                <a href="{{ url_for('contact') }}" 
+                <a href="{{ url_for('main.contact') }}" 
                    class="w3-bar-item w3-button w3-right w3-hide-small w3-hover-white">Contact Us</a>
                 {% endif %}
             </div>

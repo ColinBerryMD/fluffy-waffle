@@ -1,17 +1,21 @@
 from datetime import datetime
-from flask import Flask, render_template, request, url_for, flash, redirect, Blueprint, abort, session
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.sql import func, or_, and_
-from sqlalchemy import desc
+#import json
+#from flask_sse import sse
+
+#from sqlalchemy import desc
 from twilio.request_validator import RequestValidator
 from twilio.twiml.messaging_response import MessagingResponse
 
 from cbmd.models import Message, WebUser, SMSAccount
-from cbmd.extensions import db, v_client, twilio_config, sql_error
+from cbmd.extensions import db, v_client, twilio_config, sql_error,\
+                            render_template, request, url_for, flash, redirect,\
+                            Blueprint, abort, session, func, or_, and_
+
 from cbmd.phonenumber import cleanphone
 from cbmd.auth.auth import login_required, current_user
 
 message = Blueprint('message', __name__,url_prefix='/message', template_folder='templates')
+
 
 # the whole point of the project is this messaging dashboard
 # it will have tabs for each active chatting client
@@ -46,6 +50,27 @@ def selection():
         return redirect(url_for('errors.mysql_server', error = e)) 
 
     return render_template('message/list.html', messages=messages)
+
+@message.route('/send_sms', methods=('GET','POST'))
+def send_sms():
+    if request.method == 'POST':
+        SentTo   = cleanphone(request.form['SentTo'  ])
+        Body = request.form['Body']
+        SentAt = mountain_time(datetime.now())
+        
+
+        message = Message(SentFrom = "+12343455678", 
+                          SentTo = SentTo, 
+                          SentAt = SentAt, 
+                          Body = Body,
+                          Outgoing = True)
+
+        message_json = message_schema.dump(message)
+        sse.publish(message_json, type='sms_message')
+
+        return render_template('create.html')
+
+    return render_template('create.html')
 
 # send an sms message
 @message.route('/send', methods=('GET','POST'))
@@ -147,4 +172,3 @@ def recieve():
 
     print('SMS recieved at '+ message.SentAt +'.')
     return("<Response/>")
-

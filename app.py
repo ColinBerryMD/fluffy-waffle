@@ -1,10 +1,11 @@
 from flask import Flask
 from config import Config
 
-from .extensions import db, bcrypt, login_manager, current_user, environ, Blueprint
+from .extensions import db, bcrypt, login_manager, current_user, environ, Blueprint, session
 from .models import WebUser
 
    
+
 def create_app(config_class=Config):
     app = Flask(__name__)  
     
@@ -24,6 +25,8 @@ def create_app(config_class=Config):
     app.config['SQLALCHEMY_DATABASE_URI'] = db_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     #app.config['SQLALCHEMY_ECHO'] = True
+
+    #app.config["REDIS_URL"] = "redis://localhost"
 
 # initialize extensions
     
@@ -57,6 +60,7 @@ def create_app(config_class=Config):
     from .errors.errors import errors as errors_blueprint
     app.register_blueprint(errors_blueprint) 
 
+    #app.register_blueprint(sse, url_prefix='/stream')
 
 # Login manager
     @login_manager.user_loader

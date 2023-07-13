@@ -15,6 +15,11 @@ main = Blueprint('main', __name__,template_folder="templates")
 def index():
     return render_template('index.html')
 
+# our contact information
+@main.route('/contact/')
+def contact():
+    return render_template('contact.html')
+
 # an sms from a potential client (ie not registered) generates a response
 # with a link to this
 @main.route('/client/')

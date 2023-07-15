@@ -1,23 +1,18 @@
 {% extends "base.html" %}
 
+{% block title %}One Time Password{% endblock %}
 {% block content %}
-<div class="column is-4 is-offset-4">
-    <h3 class="title">New One Time Pass Code for Username: {{ user.User }}</h3>
-    <div class="box">
-        <form method="POST" action="{{ url_for('auth.two_factor', user_id = user.id) }}">
-            <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="text" name="one_time_pass_code" 
-                           placeholder="One Time Pass Code">
-                </div>
-            </div>
-            
-            <button class="button is-block is-info is-large is-fullwidth">Submit</button>
-        </form>
-        <br/>
-        <form method="GET" action="{{ url_for('main.index') }}"> 
-            <button class="button is-block is-info is-large is-fullwidth">Cancel</button>
-        </form>
-    </div>
+<div class="w3-container">
+    <h1 class='w3-padding-16' style="margin-top: 32px;">New One Time Pass Code for Username: {{ user.User }}</h1>
+    <form method="POST" action="{{ url_for('auth.two_factor', user_id = user.id) }}">
+        <div>
+            <input class="input is-large" type="text" name="one_time_pass_code" 
+                               placeholder="One Time Pass Code">
+        </div>
+        <div class="w3-bar w3-padding-16">
+            <button type='submit' class="w3-button w3-black">Login</button>
+            <a href="{{ url_for('main.index') }}" class="w3-button w3-black">Cancel</a>
+        </div>
+    </form>
 </div>
 {% endblock %}

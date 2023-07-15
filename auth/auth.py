@@ -11,9 +11,8 @@ from cbmd.models import WebUser, OldPasswords
 from cbmd.phonenumber import cleanphone
 from .cleanpassword import cleanpassword
 
-#app factory products
 from cbmd.extensions import Blueprint, render_template, redirect, url_for, request, flash,\
-                            current_app, db, v_client, twilio_config, sql_error, environ,\
+                            current_app, db, v_client, twilio_config, sql_error, environ, sql_text,\
                             login_user, login_required, logout_user, current_user, bcrypt
 
 password_lifetime = timedelta( days = int(environ['PASSWORD_LIFE_IN_DAYS']))
@@ -97,7 +96,7 @@ def create():
         try:
             current = WebUser.query.filter_by(User=user_name).first() 
         except sql_error as e: 
-            return redirect(url_for(errors.mysql_server, error = e))
+            return redirect(url_for("errors.mysql_server", error = e))
 
         if current: 
             flash('That user already exists. ','error')
@@ -111,7 +110,7 @@ def create():
             db.session.add(new_user)
             db.session.commit()
         except sql_error as e: 
-            return redirect(url_for(errors.mysql_server, error = e))
+            return redirect(url_for("errors.mysql_server", error = e))
 
         flash('User '+ user_name + ' created.','info')
         return redirect(url_for('main.index'))        
@@ -142,7 +141,7 @@ def lookup():
         try:
             found = WebUser.query.filter_by(User=user_name).first() 
         except sql_error as e: 
-            return redirect(url_for(errors.mysql_server, error = e))
+            return redirect(url_for("errors.mysql_server", error = e))
 
         if found: # if a user is found, we want to redirect to register route to create their profile
             return redirect(url_for('auth.register',user_id=found.id))
@@ -158,6 +157,10 @@ def lookup():
 @auth.route('/<int:user_id>/register', methods=('GET','POST'))
 def register(user_id):
     user = WebUser.query.get_or_404(user_id)
+    if user.email: 
+        flash('That username has already been registered.', 'error')
+        return redirect(url_for('main.index'))
+
 
     # handle PUT request
     if request.method == 'POST':
@@ -203,7 +206,7 @@ def register(user_id):
         try:
             existing_user = WebUser.query.filter_by(email=email).first() # if this returns a user, then the email already exists in database
         except sql_error as e: 
-            return redirect(url_for(errors.mysql_server, error = e))
+            return redirect(url_for("errors.mysql_server", error = e))
 
         if existing_user : 
             flash('That email address is in use already.', 'error')
@@ -223,7 +226,7 @@ def register(user_id):
             db.session.add(user)
             db.session.commit()
         except sql_error as e: 
-            return redirect(url_for(errors.mysql_server, error = e))
+            return redirect(url_for("errors.mysql_server", error = e))
 
         # store old password to prevent re-use
         try:
@@ -231,7 +234,7 @@ def register(user_id):
             db.session.add(old_password)
             db.session.commit()
         except sql_error as e: 
-            return redirect(url_for(errors.mysql_server, error = e))
+            return redirect(url_for("errors.mysql_server", error = e))
         
         # time to log in
         return redirect(url_for('auth.login'))
@@ -312,14 +315,14 @@ def change_password(user_id):
             db.session.add(user)
             db.session.commit()
         except sql_error as e: 
-            return redirect(url_for(errors.mysql_server, error = e))
+            return redirect(url_for("errors.mysql_server", error = e))
             
         try:
             old_password = OldPasswords(oldie = user.password, created = datetime.now())
             db.session.add(old_password)
             db.session.commit()
         except sql_error as e: 
-            return redirect(url_for(errors.mysql_server, error = e))
+            return redirect(url_for("errors.mysql_server", error = e))
         
         return redirect(url_for('auth.profile',user_id=user.id))
 
@@ -330,32 +333,42 @@ def change_password(user_id):
 @auth.route('/select', methods=('GET', 'POST'))
 def select():
     if request.method == 'POST':
-        user_name = request.form['username']
-        firstname = request.form['firstname']
-        lastname  = request.form['lastname']
-     
-        if firstname and lastname:
-            name_query = "SOUNDEX(WebUser.first)=SOUNDEX('"+ firstname +"') AND SOUNDEX(WebUser.last)=SOUNDEX('"+ lastname +"')"
-            if user_name:
-                name_query += " OR WebUser.User ='"+user_name+"'"
-        elif user_name:
-            name_query = "WebUser.User ='"+user_name+"'"
+        if request.form.get('select_all') == 'on':
+            try: 
+                users = WebUser.query.all()
+                                                        
+            except sql_error as e:
+                return redirect(url_for('errors.mysql_server', error = e)) 
         else:
-            flash('Not enough information for search.','error')
-            return render_template('auth/select.html')
-        
-        try: 
-            users = WebUser.query.filter(text(name_query)).all()
-                                                    
-        except sql_error as e:
-            return redirect(url_for('errors.mysql_server', error = e))  
+            user_name = request.form['username']
+            firstname = request.form['firstname']
+            lastname  = request.form['lastname']
+         
+            if firstname and lastname:
+                name_query = "SOUNDEX(WebUser.first)=SOUNDEX('"+ firstname +"') AND SOUNDEX(WebUser.last)=SOUNDEX('"+ lastname +"')"
+                if user_name:
+                    name_query += " OR WebUser.User LIKE '%"+user_name+"%'"
+            elif user_name:
+                name_query = "WebUser.User LIKE '%"+user_name+"%'"
+            else:
+                flash('Not enough information for search.','error')
+                return render_template('auth/select.html')
+            
+            try: 
+                users = WebUser.query.filter(sql_text(name_query)).all()
+                                                        
+            except sql_error as e:
+                return redirect(url_for('errors.mysql_server', error = e))  
 
         if users:
             if len(users) == 1:     # if only one
-                return render_template('auth/profile.html', user=users[0])
+                return redirect(url_for('auth.profile', user_id=users[0].id ))
             else:                     # else we have a list
                 return render_template('auth/list.html', users=users)
-    
+        else:
+            flash('No users found.','info')
+            return render_template('auth/select.html')
+
     return render_template('auth/select.html')
 
 # veiw one user account
@@ -364,10 +377,10 @@ def profile(user_id):
     user = WebUser.query.get_or_404(user_id) 
     return render_template('auth/profile.html',user=user)
 
-# list all users
-@auth.route('/list')
+# display all users
+@auth.route('/all')
 @login_required
-def list():
+def all():
     # require admin access
     if not current_user.is_admin:
         flash('You need administrative access for this.','error')
@@ -377,9 +390,30 @@ def list():
         users = WebUser.query.all()
     except (MySQLdb.Error, MySQLdb.Warning) as e:
         print(e)
-        return redirect(url_for(errors.mysql_server, error = e))
+        return redirect(url_for("errors.mysql_server", error = e))
 
+    return render_template('auth/list.html',users=users)
+
+# send selection to profile
+@auth.post('/get_profile')
+@login_required
+def get_profile():
+
+    user_id = request.form.get('selection')
+    return redirect( url_for( 'auth.profile',user_id=user_id ))
+
+# list all users
+@auth.post('/list')
+@login_required
+def list():
+
+    user_id = request.form.get('selection')
+    if user_id:
+        return redirect( url_for( 'auth.profile',user_id=user_id ))
+
+    users = request.form.get('users')
     return render_template('auth/list.html', users=users)
+        
     
 @auth.route('/<int:user_id>/edit/', methods=('GET', 'POST'))
 @login_required
@@ -462,7 +496,8 @@ def delete(user_id):
         db.session.commit()
     except (MySQLdb.Error, MySQLdb.Warning) as e:
         print(e)
-        return redirect(url_for(errors.mysql_server, error = e))
+        return redirect(url_for("errors.mysql_server", error = e))
 
     flash('User '+ u.User + ' deleted.','info')
     return redirect(url_for('main.index'))
+

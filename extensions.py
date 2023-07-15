@@ -7,6 +7,7 @@ from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError as sql_error
 from sqlalchemy.sql import func, or_, and_
+from sqlalchemy import text as sql_text
 
 from twilio.rest import Client as TwilioClient
 

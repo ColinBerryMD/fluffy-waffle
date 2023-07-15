@@ -1,12 +1,11 @@
 {% extends 'base.html' %}
 
+{% block title %}{{ user.first }} &nbls {{ user.last }}{% endblock %}
 {% block content %}
-<div class="user">
-    <p>Username: {{ user.User }}</p>
-    <b/>
+<div class="w3-container">
+    <h1 class='w3-padding-16' style="margin-top: 32px">{{ user.first }} {{ user.last }}</h1>
     {% if user.email %}
-        <p class="name">{{ user.first }} {{ user.last }}</p>
-        <b/>
+        <p>Username: {{ user.User }}</p>
         <p>Email: {{ user.email }}</p>
         <p>SMS: {{ user.sms }}</p>
         <p>Voice Phone: {{ user.voice }}</p>
@@ -20,16 +19,16 @@
             <p>Has administration privileges.</p>
         {% endif %} 
     {% endif %}
-    <form method="GET" class='button-row' action="{{ url_for('auth.edit', user_id=user.id) }}">	
-        <input type="submit" value="Edit User"/>
-    </form>
-    <form method="POST" class='button-row' action="{{ url_for('auth.delete', user_id=user.id) }}">   
-        <input type="submit" value="Delete User"
-               onclick="return confirm('Are you sure you want to delete this user?')"/>
-    </form>
-    <form method="GET" class='button-row' action="{{ url_for('main.index') }}"> 
-        <input type="submit" value="Close"/>
-    </form>
-    <hr>
+    @account.post('/<int:user_id>/add_user')
+    {% if session['account_name'] %}
+    <a href="{{ url_for('account.add_user', user_id = user.id ) }}" 
+                   class="w3-bar-item w3-button w3-theme-l1">Add to {{session['account_name']}} Account</i></a>
+    {% endif %}
+    <a href="{{ url_for('auth.edit', user_id = user.id ) }}" 
+                   class="w3-bar-item w3-button w3-theme-l1"><i class='fas fa-pencil-square-o'></i></a>
+    <a href="{{ url_for('auth.delete', user_id = user.id ) }}" 
+                   class="w3-bar-item w3-button w3-theme-l1"><i class='fas fa fa-trash'></i></a>
+    <a href="{{ url_for('main.index' ) }}" 
+                   class="w3-bar-item w3-button w3-theme-l1">Cancel</a>
 </div>
 {% endblock %}

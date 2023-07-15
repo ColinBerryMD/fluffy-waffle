@@ -3,13 +3,15 @@
 
 #from datetime import datetime
 #from flask import Flask, render_template, request, url_for, flash, redirect, Blueprint, abort, session
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.sql import func, or_, and_
-from sqlalchemy import desc
+#from flask_sqlalchemy import SQLAlchemy
+#from sqlalchemy.sql import func, or_, and_
+#from sqlalchemy import desc
 from twilio.request_validator import RequestValidator
 
 from cbmd.models import WebUser, SMSAccount, User_Account_Link
-from cbmd.extensions import db, v_client, twilio_config, sql_error, render_template, request, url_for, flash, redirect, Blueprint, abort, session
+from cbmd.extensions import db, v_client, twilio_config, sql_error, render_template, request,\
+                            url_for, flash, redirect, Blueprint, abort, session, func, or_, and_
+
 from cbmd.phonenumber import cleanphone
 from cbmd.auth.auth import login_required, current_user
 
@@ -93,12 +95,6 @@ def create():
 @login_required
 @account.route('/<int:account_id>/edit', methods=('GET','POST'))
 def edit(account_id):
-
-    # require admin or owner access
-    if not (current_user.is_admin or current_user.id == owner.id):
-        flash('You need administrative or owner access for this.','error')
-        return redirect(url_for('main.index'))
-    
     try: 
         account = SMSAccount.query.get(account_id)
         owner = db.session.query(
@@ -119,6 +115,11 @@ def edit(account_id):
     except sql_error as e:
         return redirect(url_for('errors.mysql_server', error = e)) 
 
+    # require admin or owner access
+    if not (current_user.is_admin or current_user.id == owner.id):
+        flash('You need administrative or owner access for this.','error')
+        return redirect(url_for('main.index'))
+    
     if request.method == 'POST':
         old_owner = owner.id
         owner_user_name = request.form.get('owner_user_name')
@@ -191,6 +192,7 @@ def edit(account_id):
         # make this our active account
         session['account_id'] = update.id
         session['account_name'] = update.name
+        session['account_owner']= new_owner.id
         
         # announce success
         flash(account_name + ' updated.','info')
@@ -209,22 +211,25 @@ def activate(account_id):
     try:
         account = SMSAccount.query.get(account_id)
         is_auth_user = db.session.query(
-            WebUser.is_sms
+            WebUser.is_sms, WebUser.id
             ).join(
             User_Account_Link, WebUser.id == User_Account_Link.user_id
-            ).filter( 
+            ).filter(and_(
+            User_Account_Link.is_owner,
             User_Account_Link.account_id == account.id
-            ).first()
+            )).first()
     except sql_error as e:
         return redirect(url_for('errors.mysql_server', error = e))
 
 
-    if not (current_user.is_admin or current_user.id == account.owner_id or is_auth_user):
+    if not (current_user.is_admin or  is_auth_user):
         flash(account.name + ' is not available to you.','error')
         return redirect(url_for('main.index'))
 
     session['account_id'] = account.id
     session['account_name'] = account.name
+    session['account_owner']= is_auth_user.id
+
     return redirect(url_for('main.index'))
 
 # Close our active account
@@ -239,6 +244,8 @@ def close():
     account_name=session['account_name']
     session['account_id'] = None
     session['account_name'] = None
+    session['account_owner']= None
+
     flash('Account: '+account_name+' closed.','info')
     return redirect(url_for('main.index'))
 
@@ -373,9 +380,6 @@ def add_user_by_name():
 def add_user(user_id):
     # restrict access
     current_account = SMSAccount.query.get_or_404(session['account_id'])
-    if not current_user.is_admin and not current_user.id == current_account.owner_id:
-        flash('You need admin access or account ownership for this.','error')
-        return redirect(url_for('main.index'))
 
     user_name = WebUser.query.get_or_404(user_id).User
     link_exists = User_Account_Link.query.filter(
@@ -384,11 +388,23 @@ def add_user(user_id):
                             User_Account_Link.account_id  == current_account.id
                             )
                          ).first()
+    is_auth_user= User_Account_Link.query.filter(
+                         and_(\
+                            User_Account_Link.user_id     == current_user.id, 
+                            User_Account_Link.account_id  == current_account.id,
+                            User_Account_Link.is_owner
+                            )
+                         ).first()
+
+    if not current_user.is_admin and not is_auth_user:
+        flash('You need admin access or account ownership for this.','error')
+        return redirect(url_for('main.index'))
+
     if link_exists:
         flash( user_name +' is already on account: ' + current_account.name, 'error' )
         return redirect(url_for('main.index'))
 
-    link_to_add = User_Account_Link( user_id=user_id, account_id=current_account.id )
+    link_to_add = User_Account_Link( user_id=user_id, account_id = current_account.id )
     try:
         db.session.add(link_to_add)
         db.session.commit()
@@ -403,18 +419,31 @@ def add_user(user_id):
 @login_required
 @account.post('/<int:user_id>/<int:account_id>/delete_user')
 def delete_user(user_id,account_id):
-    # restrict access
-    current_account = SMSAccount.query.get_or_404(account_id)
-    if not current_user.is_admin and not current_user.id == current_account.owner_id:
-        flash('You need admin access or account ownership for this.','error')
-        return redirect(url_for('main.index'))
 
-    # get user; check for empties
+    # get user
     user_to_delete = WebUser.query.get_or_404(user_id)
     
+
+    # need authorization to edit account
+    owner = db.select.query(
+        Webuser.id
+        ).link(
+        User_Account_Link
+        ).filter(and_(\
+            User_Account_Link.user_id     == current_user.id, 
+            User_Account_Link.account_id  == current_account.id,
+            User_Account_Link.is_owner
+        )).first()
+
+    current_account = SMSAccount.query.get_or_404(account_id)
+
     # attempt to delete owner can't work
-    if user_to_delete.id == current_account.owner_id:
+    if user_to_delete.id == owner.id:
         flash('You cannot unlink the owner from an account','error')
+        return redirect(url_for('main.index'))
+    
+    if not current_user.is_admin and not current_user.id == owner.id:
+        flash('You need admin access or account ownership for this.','error')
         return redirect(url_for('main.index'))
 
     # find and remove the link
@@ -439,14 +468,24 @@ def delete_user(user_id,account_id):
 @login_required
 @account.post('/<int:account_id>/delete_account')
 def delete_account(account_id):
-    # restrict access
-    current_account = SMSAccount.query.get_or_404(account_id)
-    if not current_user.is_admin and not current_user.id == current_account.owner_id:
+    account_to_delete = SMSAccount.query.get_or_404(account_id)
+
+    # need authorization to edit account
+    owner = db.select.query(
+        Webuser.id
+        ).link(
+        User_Account_Link
+        ).filter(and_(\
+            User_Account_Link.user_id     == current_user.id, 
+            User_Account_Link.account_id  == account_to_delete.id,
+            User_Account_Link.is_owner
+        )).first()
+    
+    if not current_user.is_admin and not current_user.id == owner.id:
         flash('You need admin access or account ownership for this.','error')
         return redirect(url_for('main.index'))
 
     try:
-        account_to_delete = SMSAccount.query.get(account_id)
         db.session.delete(account_to_delete)
         db.session.commit()
     except sql_error as e:

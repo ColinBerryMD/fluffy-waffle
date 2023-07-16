@@ -1,29 +1,26 @@
 {% extends "base.html" %}
 
+{% block title %}Select SMS Account{% endblock %}
 {% block content %}
-<div class="column is-4 is-offset-4">
-    <h3 class="title">Select Current SMS Account</h3>
-    <div class="box">
-        <form method="POST" action="{{ url_for('account.select') }}">
-            <div class="field">
-                <div class="control">
-                    {% if accounts %}
-                        {% for account in accounts %}
-                            <input class"input is-large" type="radio" id="choice_{{ account.id }}"
-                                   name="selection" value="{{ account.id }}">
-                            <label for="choice_{{ account.id }}">{{ account.name }}"("{{account.number}}")"</label>
-                            <br/>
-                        {%endfor%}
-                    {% else %}
-                        <p>No accounts available</p>
-                    {% endif %}
-                </div>
-            </div>
-            <button class="button is-block is-info is-large is-fullwidth">Select</button>
-            <input type='submit' formmethod="GET" formaction="{{ url_for('main.index') }}"
-                   class="button is-block is-info is-large is-fullwidth" 
-                   value ='Cancel' />
-        </form> 
-    </div>
+<div class="w3-container">
+    <h1 class='w3-padding-16' style="margin-top: 32px;">Select SMS Account</h1>
+    <form method="POST" action="{{ url_for('account.select') }}">
+        <div>
+        {% if accounts %}
+            {% for account in accounts %}
+            <input type="radio" id="choice_{{ account.id }}"
+                    name="selection" value="{{ account.id }}">
+            <label for="choice_{{ account.id }}">{{ account.name }}"("{{account.number}}")"</label>
+            <br/>
+        {%endfor%}
+        {% else %}
+            <p>No accounts available</p>
+        {% endif %}
+        </div>
+        <div class="w3-bar w3-padding-16">
+           <button type='submit' class="w3-button w3-black">Select</button>
+           <a href="{{ url_for('main.index') }}" class="w3-button w3-black">Cancel</a>
+       </div>
+    </form> 
 </div>
 {% endblock %}

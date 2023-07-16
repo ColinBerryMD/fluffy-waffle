@@ -1,11 +1,6 @@
 # account.py
 # routes for creating and maintaning Twilio messaging accounts
 
-#from datetime import datetime
-#from flask import Flask, render_template, request, url_for, flash, redirect, Blueprint, abort, session
-#from flask_sqlalchemy import SQLAlchemy
-#from sqlalchemy.sql import func, or_, and_
-#from sqlalchemy import desc
 from twilio.request_validator import RequestValidator
 
 from cbmd.models import WebUser, SMSAccount, User_Account_Link
@@ -165,7 +160,7 @@ def edit(account_id):
         except sql_error as e: 
             return redirect(url_for('errors.mysql_server', error = e))
 
-        if not owner.User == owner_user_name:
+        if not owner.User == owner_user_name: # getting a new owner
             try: # break current ownership link (remains a user)
                 old_owner_link = User_Account_Link.query(and_( user_id == owner.id, account_id == update.id ))
                 old_owner_link.is_owner = False
@@ -176,8 +171,8 @@ def edit(account_id):
                 return redirect(url_for('errors.mysql_server', error = e))
                 print("mysql error on delete ownership link")
         
-            try: # create current ownership link
-                new_owner = WebUser.query( WebUser.User == owner_user_name )
+            try: # create new ownership link
+                owner = WebUser.query( WebUser.User == owner_user_name )
                 new_owner_link = User_Account_Link.query(and_( user_id == new_owner.id, account_id == update.id ))
                 if new_owner_link: # update an current account member
                     new_owner_link.is_owner = True
@@ -192,7 +187,7 @@ def edit(account_id):
         # make this our active account
         session['account_id'] = update.id
         session['account_name'] = update.name
-        session['account_owner']= new_owner.id
+        session['account_owner']= owner.id
         
         # announce success
         flash(account_name + ' updated.','info')
@@ -233,7 +228,7 @@ def activate(account_id):
     return redirect(url_for('main.index'))
 
 # Close our active account
-@account.post('/close')
+@account.route('/close')
 @login_required
 def close():
     # limit access to sms users 
@@ -302,28 +297,45 @@ def select():
         flash('You need messaging access for this.','error')
         return redirect(url_for('main.index'))
     
-    if request.method == 'POST':
-        current_account_id = request.form['selection']
-        session['account_id'] = current_account_id
-        account_selected = SMSAccount.query.get_or_404(current_account_id)
-        session['account_name'] = account_selected.name
-
-        return redirect(url_for('main.index'))
-
     try: # get the list of current accounts
-        #if current_user.is_admin:
-#            accounts = SMSAccount.query.all()
-#        else:
-        accounts = db.session.query(
-            SMSAccount
-            ).join(
-            User_Account_Link, User_Account_Link.account_id == SMSAccount.id
-            ).filter(
-            User_Account_Link.user_id == current_user.id
-            ).all()
+        if current_user.is_admin:
+            accounts = SMSAccount.query.all()
+        else:
+            accounts = db.session.query(
+                SMSAccount
+                ).join(
+                User_Account_Link, User_Account_Link.account_id == SMSAccount.id
+                ).filter(
+                User_Account_Link.user_id == current_user.id
+                ).all()
 
     except sql_error as e:
         return redirect(url_for('errors.mysql_server', error = e))
+  
+    if request.method == 'POST':
+        current_account_id = request.form.get('selection')
+
+        if not current_account_id:
+            flash('You need to select an account.','info')
+            return redirect(url_for('account.select'))
+
+        try:
+            session['account_id'] = current_account_id
+            account_selected = SMSAccount.query.get_or_404(current_account_id)
+            session['account_name'] = account_selected.name
+            owner = db.session.query(
+                            User_Account_Link.user_id
+                            ).filter(and_(
+                                User_Account_Link.account_id  == account_selected.id,
+                                User_Account_Link.is_owner
+                                )
+                             ).first()
+            session['account_owner'] = owner.user_id
+        except sql_error as e:
+            return redirect(url_for('errors.mysql_server', error = e))
+        
+        return redirect(url_for('main.index'))
+
 
     return render_template("account/select.html", accounts=accounts)
 
@@ -376,7 +388,7 @@ def add_user_by_name():
 
 # add user -- from a link
 @login_required
-@account.post('/<int:user_id>/add_user')
+@account.route('/<int:user_id>/add_user')
 def add_user(user_id):
     # restrict access
     current_account = SMSAccount.query.get_or_404(session['account_id'])
@@ -417,25 +429,24 @@ def add_user(user_id):
 
 # here the owner of an SMS account can remove a user from that account
 @login_required
-@account.post('/<int:user_id>/<int:account_id>/delete_user')
+@account.route('/<int:user_id>/<int:account_id>/delete_user')
 def delete_user(user_id,account_id):
 
-    # get user
+    # get user and account
     user_to_delete = WebUser.query.get_or_404(user_id)
+    current_account = SMSAccount.query.get_or_404(account_id)
     
 
     # need authorization to edit account
-    owner = db.select.query(
-        Webuser.id
-        ).link(
-        User_Account_Link
-        ).filter(and_(\
-            User_Account_Link.user_id     == current_user.id, 
+    owner = db.session.query(
+        WebUser.id
+        ).join(
+        User_Account_Link, WebUser.id == current_user.id
+        ).filter(and_(
             User_Account_Link.account_id  == current_account.id,
             User_Account_Link.is_owner
         )).first()
 
-    current_account = SMSAccount.query.get_or_404(account_id)
 
     # attempt to delete owner can't work
     if user_to_delete.id == owner.id:
@@ -449,7 +460,7 @@ def delete_user(user_id,account_id):
     # find and remove the link
     try:
         link_to_delete = User_Account_Link.query.filter(
-                         and_(\
+                         and_(
                             User_Account_Link.user_id     == user_to_delete.id, 
                             User_Account_Link.account_id  == current_account.id
                             )

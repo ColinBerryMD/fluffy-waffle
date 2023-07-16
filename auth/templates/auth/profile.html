@@ -19,7 +19,6 @@
             <p>Has administration privileges.</p>
         {% endif %} 
     {% endif %}
-    @account.post('/<int:user_id>/add_user')
     {% if session['account_name'] %}
     <a href="{{ url_for('account.add_user', user_id = user.id ) }}" 
                    class="w3-bar-item w3-button w3-theme-l1">Add to {{session['account_name']}} Account</i></a>

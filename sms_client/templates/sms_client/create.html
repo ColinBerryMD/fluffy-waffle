@@ -1,48 +1,35 @@
 {% extends 'base.html' %}
 
+{% block title %}New Messaging Client{% endblock %}
 {% block content %}
-<div class="column is-4 is-offset-4">
-    <h1 style="width: 100%">{% block title %} Add a New Text Message Client {% endblock %}</h1>
-    <div class="box">
-        <form method="POST" action='{{ url_for('sms_client.create') }}'>
-            <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="text" name="firstname" placeholder="First Name"/>
-                </div>
-            </div>
-            <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="text" name="lastname" placeholder="Last Name"/>
-                </div>
-            </div> 
-            <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="text" name="dob" placeholder="Date of Birth"/>
-                </div>
-            </div>          
-            <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="email" name="email" placeholder="Client Email"/>
-                </div>
-            </div>
-            <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="text" name="phone" placeholder="Cell Number"/>
-                </div>
-            </div>
-            <div class="field">
-                <div class="control">
-                    <label for="translate">Traducir español al inglés</label>
-                    <input type="checkbox" name="translate"/>
-                </div>
-            </div>
-            <p>To review and send a one time passcode to your phone, press Sign Up.</p>
-            <button class="button is-block is-info is-large is-fullwidth">Sign Up</button>
-        </form>
-        <br/>
-        <form method="GET" action="{{ url_for('main.index') }}"> 
-            <button class="button is-block is-info is-large is-fullwidth">Cancel</button>
-        </form>
-    </div>
+<div class="w3-container">
+    <h1 class='w3-padding-16' style="margin-top: 32px;">New Messaging Client</h1>
+    <form method="POST" action='{{ url_for('sms_client.create') }}'>
+        <p>This information is to add you to our contacts list and prove that you are not a robot.</p>
+        <div>
+            <input type="text" name="firstname" placeholder="First Name"/>
+        </div>
+        <div>
+            <input type="text" name="lastname" placeholder="Last Name"/>
+        </div> 
+        <div>
+            <input class="input is-large" type="text" name="dob" placeholder="Date of Birth"/>
+        </div>          
+        <div>
+            <input class="input is-large" type="email" name="email" placeholder="Client Email"/>
+        </div>
+        <div>
+            <input class="input is-large" type="text" name="phone" placeholder="Cell Number"/>
+        </div>
+        <div>
+            <label for="translate">Traducir español al inglés</label>
+            <input type="checkbox" name="translate"/>
+        </div>
+        <p>To review and send a one time passcode to your phone, press Sign Up.</p>
+        <div class="w3-bar w3-padding-16">
+            <button type='submit' class="w3-button w3-black">Sign Up</button>
+            <a href="{{ url_for('main.index') }}" class="w3-button w3-black">Cancel</a>
+        </div>
+    </form>
 </div>
 {% endblock %}

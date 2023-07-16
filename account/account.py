@@ -1,14 +1,12 @@
 # account.py
 # routes for creating and maintaning Twilio messaging accounts
 
-from twilio.request_validator import RequestValidator
-
 from cbmd.models import WebUser, SMSAccount, User_Account_Link
 from cbmd.extensions import db, v_client, twilio_config, sql_error, render_template, request,\
-                            url_for, flash, redirect, Blueprint, abort, session, func, or_, and_
+                            url_for, flash, redirect, Blueprint, abort, session, func, or_, and_,\
+                            login_required, current_user
 
 from cbmd.phonenumber import cleanphone
-from cbmd.auth.auth import login_required, current_user
 
 account = Blueprint('account', __name__, url_prefix='/account', template_folder='templates')
 
@@ -270,24 +268,6 @@ def profile(account_id):
 
     return render_template("account/profile.html", account=account,owner=owner, users=users)
 
-# list all accounts
-@login_required
-@account.route('/list')
-def list():
-    # require admin access
-    if not current_user.is_admin:
-        flash('You need administrative access for this.','error')
-        return redirect(url_for('main.index'))
-
-    try:
-        accounts = SMSAccount.query.all()
-    except (MySQLdb.Error, MySQLdb.Warning) as e:
-        print(e)
-        return redirect(url_for('errors.mysql_server', error = e))
-
-    return render_template('account/list.html', accounts=accounts )
-
-
 # select account from a radio button list
 @login_required
 @account.route('/select', methods=('GET', 'POST'))
@@ -339,54 +319,8 @@ def select():
 
     return render_template("account/select.html", accounts=accounts)
 
-# having created an account or otherwise made it active
-# we can add users to the active account
-@login_required
-@account.route('/add_user_by_name', methods=('GET', 'POST'))
-def add_user_by_name():
-    # restrict access
-    current_account = SMSAccount.query.get_or_404(session['current_account_id'])
-    if not current_user.is_admin and not current_user.id == current_account.owner_id:
-        flash('You need admin access or account ownership for this.','error')
-        return redirect(url_for('main.index'))
-    
-    if request.method == 'POST':
-        # get user; check for empties; avoid duplicates
-        user_name = request.form['user_name']
-        if not user_name:
-                flash('Need a user name to continue.','error')
-                return render_template('account/add_user_by_name.html')
-        try:
-            user_to_add = WebUser.query.filter(WebUser.User == user_name).first()
-            link_exists = User_Account_Link.query.filter(
-                             and_(\
-                                User_Account_Link.user_id     == user_to_add.id, 
-                                User_Account_Link.account_id  == current_account.id
-                                 )
-                              ).first()
-        except sql_error as e:
-            return redirect(url_for('errors.mysql_server', error = e))
-        link_exists = False
-        if link_exists:
-            flash('That user is already on the account.','info')
-            return redirect(url_for('main.index'))  
 
-        # create and add the link
-        link_to_add = User_Account_Link(user_id = user_to_add.id,account_id = current_account.id )
-        try:
-            db.session.add(link_to_add)
-            db.session.commit()
-        except sql_error as e:
-            return redirect(url_for('errors.mysql_server', error = e))
-        
-        # announce success
-        flash(user_to_add.User +' added to account.','info')
-        return redirect(url_for('main.index'))
-    
-    # GET request
-    return render_template("account/add_user_by_name.html")
-
-# add user -- from a link
+# add user -- to current active account
 @login_required
 @account.route('/<int:user_id>/add_user')
 def add_user(user_id):

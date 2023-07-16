@@ -1,20 +1,13 @@
-import os
 from datetime import datetime
-from flask import Flask, Blueprint, render_template, request, url_for, flash, redirect, session
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.sql import func, or_, and_, text
+
+from cbmd.models import SMSClient
+from cbmd.extensions import v_client, twilio_config, db, sql_error, login_required, current_user, session,\
+                            func, or_, and_, Blueprint, render_template, request, url_for, flash, redirect
 
 from cbmd.phonenumber import cleanphone
 
-from cbmd.extensions import v_client, twilio_config, db, environ, sql_error
-from cbmd.models import SMSClient
-from cbmd.auth.auth import login_required, current_user
-
 sms_client = Blueprint('sms_client', __name__, url_prefix='/sms_client', template_folder='templates')
 
-@sms_client.route('/welcome')
-def welcome():
-    return render_template('sms_client/welcome.html')
 
 @sms_client.route('/create', methods=('GET', 'POST'))
 def create():

@@ -1,52 +1,38 @@
 {% extends 'base.html' %}
 
+{% block title %}Client:&nbsp{{ client.firstname }}&nbsp{{ client.lastname }}{% endblock %}
 {% block content %}
-<div class="column is-4 is-offset-4">
-    <h3 class="title">Edit {{ client.firstname }} {{ client.lastname }}</h3>
-    <div class="box">
-        <form method="POST" action="{{ url_for('sms_client.edit', sms_client_id = client.id, dob_str=dob_str) }}">
-            <div class="field">
-                <div class="control">
-                <label for="firstname">First Name</label>
-                    <input class="input is-large" type="text" name="firstname" value={{ client.firstname }} />
-                </div>
-            </div>
-            <div class="field">
-                <div class="control">
-                    <label for="lastname">Last Name</label>
-                    <input class="input is-large" type="text" name="lastname" value={{ client.lastname }} />
-                </div>
-            </div>
-            <div class="field">
-                <div class="control">
-                    <label for="dob_str">Date of Birth</label>
-                    <input class="input is-large" type="text" name="dob_str" value={{ dob_str }} />
-                </div>
-            </div>
-            <div class="field">
-                <div class="control">
-                    <label for="email">Email</label>
-                    <input class="input is-large" type="text" name="email" value={{ client.email }} />
-                </div>
-            </div>
-            <div class="field">
-                <div class="control">
-                    <label for="phone">Cell Phone</label>
-                    <input class="input is-large" type="text" name="phone" value={{ client.phone }} />
-                </div>
-            </div>
-            <div class="control">
-                <div class="field">
-                    <label for="translate">Translate from English to Spanish</label>
-                    <input type="checkbox" name="translate" checked="{{ client.translate }}"/>
-                </div>
-            </div>
-            <button class="button is-block is-info is-large is-fullwidth">Submit</button>
-            <br/>
-        </form>
-        <form method="GET" action="{{ url_for('main.index') }}"> 
-            <button class="button is-block is-info is-large is-fullwidth">Cancel</button>
-        </form>
-    </div>
+<div class="w3-container">
+    <h1 class='w3-padding-16' style="margin-top: 32px">Edit:&nbsp{{ client.firstname }}&nbsp{{ client.lastname }}</h1>
+    <form method="POST" action="{{ url_for('sms_client.edit', sms_client_id = client.id, dob_str=dob_str) }}">
+        <div>
+            <input class="input is-large" type="text" name="firstname" value={{ client.firstname }} />
+            <label for="firstname">First Name</label>
+        </div>
+        <div>
+            <input class="input is-large" type="text" name="lastname" value={{ client.lastname }} />
+            <label for="lastname">Last Name</label>
+        </div>
+        <div>
+            <input class="input is-large" type="text" name="dob_str" value={{ dob_str }} />
+            <label for="dob_str">Date of Birth</label>
+        </div>
+        <div>
+            <input class="input is-large" type="text" name="email" value={{ client.email }} />
+            <label for="email">Email</label>
+        </div>
+        <div>
+            <input class="input is-large" type="text" name="phone" value={{ client.phone }} />
+            <label for="phone">Cell Phone</label>
+        </div>
+        <div>
+            <input type="checkbox" name="translate" checked="{{ client.translate }}"/>
+            <label for="translate">Translate from English to Spanish</label>
+        </div>
+        <div class="w3-bar w3-padding-16">
+            <button type='submit' class="w3-button w3-black">Submit</button>
+            <a href="{{ url_for('main.index') }}" class="w3-button w3-black">Cancel</a>
+        </div>
+    </form>
 </div>
 {% endblock %}

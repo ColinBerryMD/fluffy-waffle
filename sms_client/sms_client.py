@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from cbmd.models import SMSClient
-from cbmd.extensions import v_client, twilio_config, db, sql_error, login_required, current_user, session,\
+from cbmd.extensions import v_client, twilio_config, db, sql_error, sql_text, login_required, current_user, session,\
                             func, or_, and_, Blueprint, render_template, request, url_for, flash, redirect
 
 from cbmd.phonenumber import cleanphone
@@ -87,7 +87,7 @@ def terms():
 
         # check OTP with Twilio and flash on error
         try: 
-            verification_check = v_client.verify.v2.services( twilio_config.otp_sid ).verification_checks \
+            verification_check = v_client.verify.v2.services( twilio_config.otp_sid ).verification_checks\
                                   .create(to= new_sms_client.phone, code=OTP)
     
         except: # delayed entry, tried twice, and never sent -- all those errors throw the same untracable exception
@@ -95,7 +95,7 @@ def terms():
             return redirect(url_for('sms_client.terms'))
 
         if not verification_check.status == 'approved':  # I don't think this can happen
-            flash('One time code verification failed.','error')
+            flash('One time code verification not approved.','error')
             return redirect(url_for('sms_client.terms'))
 
         try:            # add to database on success
@@ -108,26 +108,21 @@ def terms():
         flash('Passcode accepted.','info')
         flash('You can close the page any time.','info')
         flash('Send us that text message now.','info')
-        return redirect(url_for('sms_client.welcome'))
+        return redirect(url_for('main.client'))
 
     return render_template('sms_client/terms.html')
 
 # as in the other blueprints, list lists all the clients
+@sms_client.post('/list')
 @login_required
-@sms_client.route('/list')
 def list():
 
-    # require sms access
-    if not current_user.is_sms:
-        flash('You need messaging access for this.','error')
-        return redirect(url_for('main.index'))
+    client_id = request.form.get('selection')
+    if client_id:
+        return redirect( url_for( 'sms_client.profile', client_id = client_id ))
 
-    try:
-        clients = SMSClient.query.all()
-    except sql_error as e: 
-        return redirect(url_for(errors.mysql_server, error = e))
-
-    return render_template('sms_client/list.html', clients=clients)
+    clients = request.form.get('clients')
+    return render_template('sms_client/list.html', clients = clients )
 
 @login_required
 @sms_client.route('/<int:client_id>/profile')
@@ -140,46 +135,57 @@ def profile(client_id):
 
     client = SMSClient.query.get_or_404(client_id)
 
-    return render_template('sms_client/profile.html', client=client)
+    return render_template('sms_client/profile.html', client = client )
 
 # and select narrows the list to a client or a select list
 @sms_client.route('/select', methods=('GET', 'POST'))
 def select():
     if request.method == 'POST':
-        firstname = request.form['firstname']
-        lastname  = request.form['lastname']
-        dob_str   = request.form['dob']
-        if dob_str:
-            if not (bool(datetime.strptime(dob_str, '%m/%d/%Y'))):
-                flash('Date of birth is misformatted.','error')
+        if request.form.get('select_all') == 'on':
+            try: 
+                clients = SMSClient.query.all()
+                                                        
+            except sql_error as e:
+                return redirect(url_for('errors.mysql_server', error = e)) 
+        else:
+            firstname = request.form['firstname']
+            lastname  = request.form['lastname']
+            dob_str   = request.form['dob']
+            if dob_str:
+                if not (bool(datetime.strptime(dob_str, '%m/%d/%Y'))):
+                    flash('Date of birth is misformatted.','error')
+                    return render_template('sms_client/select.html')
+                
+                dob_obj = datetime.strptime(dob_str, '%m/%d/%Y')
+            else:
+                dob_obj = None
+     
+         # clients where firstname sounds like firstname and lastname sounds like lastname -- or -- dob == dob 
+            if firstname and lastname:
+                name_query = "SOUNDEX(SMSClient.firstname)=SOUNDEX('"+ firstname +"') AND SOUNDEX(SMSClient.lastname)=SOUNDEX('"+ lastname +"')"
+                if dob_obj:
+                    name_query += " OR SMSClient.dob ='"+str(dob_obj)+"'"
+            elif dob_obj:
+                name_query = "SMSClient.dob ='"+str(dob_obj)+"'"
+            else:
+                flash('Not enough information for search.','error')
                 return render_template('sms_client/select.html')
             
-            dob_obj = datetime.strptime(dob_str, '%m/%d/%Y')
-        else:
-            dob_obj = None
-     
-     # clients where firstname sounds like firstname and lastname sounds like lastname -- or -- dob == dob 
-        if firstname and lastname:
-            name_query = "SOUNDEX(SMSClient.firstname)=SOUNDEX('"+ firstname +"') AND SOUNDEX(SMSClient.lastname)=SOUNDEX('"+ lastname +"')"
-            if dob_obj:
-                name_query += " OR SMSClient.dob ='"+str(dob_obj)+"'"
-        elif dob_obj:
-            name_query = "SMSClient.dob ='"+str(dob_obj)+"'"
-        else:
-            flash('Not enough information for search.','error')
-            return render_template('sms_client/select.html')
-        
-        try: 
-            clients = SMSClient.query.filter(text(name_query)).all()
-                                                    
-        except sql_error as e:
-            return redirect(url_for('errors.mysql_server', error = e))  
+            try: 
+                clients = SMSClient.query.filter(sql_text(name_query)).all()
+                                                        
+            except sql_error as e:
+                return redirect(url_for('errors.mysql_server', error = e))  
 
         if clients:
             if len(clients) == 1:     # if only one
                 return render_template('sms_client/profile.html', client=clients[0])
-            else:                     # else we have a list
+            elif len(clients) >1:                     # else we have a list
                 return render_template('sms_client/list.html', clients=clients)
+            else:
+                flash('Not enough information for search.','error')
+                return render_template('sms_client/select.html')
+
     
     return render_template('sms_client/select.html')
 

@@ -19,11 +19,10 @@ Working on the ability to juggle multiple phone numbers and accounts. This kicks
 'select' another.
 
 A note on directory structure. The blueprint layout is after https://realpython.com/flask-blueprint/. 
-The root (cbmd) has app.py and the other backend modules. main.py has the veiws for our front end. It was written last, with its focus on attractive
-styling. I plan for it to revolve around four dashboards: one for admin, one for a user who mostly needs to work with messages (but someday
+The root (cbmd) has app.py and the other backend modules. main.py has the veiws for our front end. It was written last, with its focus on styling. I plan for it to revolve around four dashboards: one for admin, one for a user who mostly needs to work with messages (but someday
 there should be some other tools for them), one for clients to enroll and maybe browse around, and one for visitors -- mostly a billboard. 
 The other blueprints were constructed to test functionality during development. They were born unstyled. I suppose many will remain that way 
-unless they prove to have a purpose in the production environment.  
+unless they prove to have a purpose in the production environment. I'll try and delete them as they outlive their utility.
 	
 - account: 
 	- create -- a new sms twilio account
@@ -33,7 +32,6 @@ unless they prove to have a purpose in the production environment.
 	- profile -- details of one account
 	- select -- for multi account users
 	- add_user -- to the current active account by user_id
-	- add_user_by_name -- to the current active account by entered user name
 	- delete_user -- remove from the current active account (see auth.delete() to actually delete a user)
 	- delete -- an account
 			
@@ -65,7 +63,6 @@ unless they prove to have a purpose in the production environment.
 - message: send and recieve sms messages with the active account
 	
 - sms_client		
-	- welcome -- the landing spot for someone who texts us before they sign up
 	- create -- enter a client profile
 	- terms -- use two factor auth to veiw terms and conditions and prove your humanity
 	- list -- all cllients
@@ -75,11 +72,14 @@ unless they prove to have a purpose in the production environment.
 	- block -- deleting a client wont help (they can just create a new client profile). Here we keep them in the DB in a blocked status.
 	- delete -- a client
 
-As of today message is primitive; veiw is non-existant. Messages has already been worked out
-in a free standing script, but to bring it on board I will need to move away from flask's development server to some combination 
-of gunicorn, redis and nginx (none of which I understand that well).
+As of today message is primitive. It has already been worked out in a free standing script, but to bring it on board I will need to move
+away from flask's development server to some combination of gunicorn, redis and nginx (none of which I understand that well).
 
-At that point what will remain is to develop the front end through the veiw blueprint. My current ambition is to use bootstrap
-for this. 
+At that point the front end is styled with w3css. Tried bootstrap, but div in div in div and too many people trying to sell me stuff
+rather than actually show how things are done... w3css proved much more elegant.
+
+The only local css is static/css/cbmd.css which has been kept very light.
+
+The only local js pertains to messages, so I put it in messages/static/javascript/....
 
 ## I would appreciate feedback regarding style, readability and potential security vulnerabilities. 

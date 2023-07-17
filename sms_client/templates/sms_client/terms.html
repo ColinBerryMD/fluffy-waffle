@@ -1,45 +1,37 @@
 {% extends 'base.html' %}
 {% block title %}Terms and Conditions{% endblock %}
 {% block content %}
-<div class="column is-4 is-offset-4">
-    <h2 style="width: 100%">{{ session['firstname'] }} {{ session['lastname'] }}</h2>
-    <b/>
-    <div class="box">
-        <div class="client">
+<div class="w3-container">
+    <h1 class='w3-padding-16' style="margin-top: 32px;">Terms and Conditions</h1>
+    <form method="POST" action="{{ url_for('sms_client.terms')}}">
+       <div class="client">
+            <h3 class="name">{{ session['firstname'] }} {{ session['lastname'] }}</h3>
+            {% if session['dob'] %}
+                <p>DOB: {{ session['dob'] }}</p>
+            {% endif %}
             <p>Email: {{ session['email'] }}</p>
             <p>SMS Phone: {{ session['phone'] }}</p>
             {% if session['translate'] %}
-        	   <p>Traducir español al inglés</p>
+               <p>Traducir español al inglés</p>
             {% endif %}
         </div>
-        <h3>Please actually read this. It isnt the usual boilerplate.</h3>
+        <h3>Please actually read this. It isn&apos;t the usual boilerplate.</h3>
+        {% include 'sms_client/t_and_c.html' %}
         <hr/>
-        <p>impacted and changed the perspective of what it’s like to be a cop, said McMonagle,
-        who is White and from Montgomery County, Pa., outside Philadelphia. People think
-        you’re a bad person if you want to be a cop.
-        </p>
+        <label for="OTP">
+            If your information above is correct and you accept these conditions,
+            please enter the password we sent to your phone. To resend or fix your 
+            information, use Try Again.
+        </label>
         <hr/>
-        <form method="post" action='{{ url_for('sms_client.terms') }}'>
-            <label for="OTP">If your information above is correct and you accept these conditions,
-		                     please enter the password we sent to your phone. To resend or fix your 
-                             information, use Try Again.</label>
-            <br/>
-            <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="text" name="one_time_password" placeholder="xxxx"></input>
-                </div>
-            </div>
-            <br/>
-            <button type="submit" class="button is-block is-info is-large is-fullwidth">Sign Up</button>
-        </form>
-        <br/>
-        <form method="GET" action="{{ url_for('sms_client.create') }}"> 
-            <button class="button is-block is-info is-large is-fullwidth">Try Again</button>
-        </form>
-        <br/>
-        <form method="GET" action="{{ url_for('main.index') }}"> 
-            <button class="button is-block is-info is-large is-fullwidth">Cancel</button>
-        </form>
-    </div>
+        <div>
+            <input type="text" name="one_time_password" placeholder="xxxx"></input>
+        </div>
+        <div class="w3-bar w3-padding-16">
+            <button type='submit' class="w3-button w3-black">Submit</button>
+            <a href="{{ url_for('sms_client.create') }}" class="w3-button w3-black">Try Again</a>
+            <a href="{{ url_for('main.index') }}" class="w3-button w3-black">Cancel</a>
+        </div>
+    </form>
 </div>
 {% endblock %}

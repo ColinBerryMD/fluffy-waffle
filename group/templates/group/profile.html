@@ -1,27 +1,29 @@
 {% extends 'base.html' %}
+
+{% block title %}{{ group.name }}{% endblock %}
 {% block content %}
-<div>
-    <h3>{% block title %}Group Name: {{ group.name }}{% endblock %}</p>
-    <b/>
-    <p>Associated Account: &nbsp{{ account.name }}</p>
-        {% if clients %}
-            <ul>
-            {% for client in clients %}
-            <li>{{ client.firstname }} &nbsp {{ client.lastname }}</li>
-            <form method="POST" class='button-row' action="{{ url_for('group.delete_client', client_id=client.id, group_id=group.id) }}">   
-            <input type="submit" value="Delete Client"
-               onclick="return confirm('Are you sure you want to remove this client from the group?')"/>
-            </form>
-        {% endfor %} 
+<div class="w3-container">
+    <h1 class='w3-padding-16' style="margin-top: 32px">{{ group.name }}</h1>
+    <p>Associated Account:&nbsp{{ account.name }}</p>
+    {% if clients %}
+        {% for client in clients %}
+            <p>
+                {{ client.firstname }}&nbsp{{ client.lastname }}
+                <a href="{{ url_for('group.delete_client', client_id=client.id, group_id=group.id) }}" 
+                   class="w3-bar-item w3-button"><i class='fa fa-trash' aria-hidden="true"></i>
+               </a>
+            </p>    
+        {% endfor %}
+    {% else %} 
+            <p>No clients on this account</p>
     {% endif %}
-    <form method="POST" class='button-row' action="{{ url_for('group.delete', group_id=group.id) }}">   
-            <input type="submit" value="Delete Group"
-               onclick="return confirm('Are you sure you want to delete this group?')"/>
-            </form>
-    <form method="GET" class='button-row' action="{{ url_for('main.index') }}">	
-        <input type="submit" value="Close"/>
-    </form>
-    
-    <hr>
+    <div class="w3-bar w3-padding-16">
+        <a href="{{ url_for('group.activate', group_id = group.id ) }}" class="w3-bar-item w3-button w3-theme-l1">Select</a>
+        <a href="{{ url_for('group.delete', group_id = group.id ) }}" 
+           class="w3-bar-item w3-button w3-theme-l1" onclick="return confirm('Are you sure you want to delete this client group?')">
+                <i class='fas fa fa-trash'/></i>
+        </a>
+        <a href="{{ url_for('main.index' ) }}" class="w3-bar-item w3-button w3-theme-l1">Cancel</a>
+    </div>
 </div>
 {% endblock %}

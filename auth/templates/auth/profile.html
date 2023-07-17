@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ user.first }} &nbls {{ user.last }}{% endblock %}
+{% block title %}{{ user.first }}&nbsp{{ user.last }}{% endblock %}
 {% block content %}
 <div class="w3-container">
-    <h1 class='w3-padding-16' style="margin-top: 32px">{{ user.first }} {{ user.last }}</h1>
+    <h1 class='w3-padding-16' style="margin-top: 32px">{{ user.first }}&nbsp{{ user.last }}</h1>
     {% if user.email %}
         <p>Username: {{ user.User }}</p>
         <p>Email: {{ user.email }}</p>

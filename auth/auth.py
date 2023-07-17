@@ -363,11 +363,11 @@ def select():
         if users:
             if len(users) == 1:     # if only one
                 return redirect(url_for('auth.profile', user_id=users[0].id ))
-            else:                     # else we have a list
+            elif len(users) > 1:                     # else we have a list
                 return render_template('auth/list.html', users=users)
-        else:
-            flash('No users found.','info')
-            return render_template('auth/select.html')
+            else:
+                flash('No users found.','info')
+                return render_template('auth/select.html')
 
     return render_template('auth/select.html')
 
@@ -389,7 +389,6 @@ def all():
     try:
         users = WebUser.query.all()
     except (MySQLdb.Error, MySQLdb.Warning) as e:
-        print(e)
         return redirect(url_for("errors.mysql_server", error = e))
 
     return render_template('auth/list.html',users=users)
@@ -400,7 +399,11 @@ def all():
 def get_profile():
 
     user_id = request.form.get('selection')
-    return redirect( url_for( 'auth.profile',user_id=user_id ))
+    if user_id:
+        return redirect( url_for( 'auth.profile',user_id=user_id ))
+
+    flash('You need need to select a user.','error')
+    return redirect(url_for('auth.list'),code=307)
 
 # list all users
 @auth.post('/list')

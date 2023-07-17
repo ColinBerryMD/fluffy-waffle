@@ -83,8 +83,9 @@ def select():
  
     if request.method == 'POST':
         selected_group_id = request.form['selection']
-        session['group_id'] = selected_group_id
         group_selected = SMSGroup.query.get_or_404(selected_group_id)
+  
+        session['group_id'] = selected_group_id
         session['group_name'] = group_selected.name
 
         
@@ -160,21 +161,6 @@ def close():
     flash('Group :'+group_name+' closed.','info')
     return redirect(url_for('main.index'))
 
-# list all groups
-@group.route('/list')
-@login_required
-def list():
-    # require admin access
-    if not current_user.is_admin:
-        flash('You need administrative access for this.','error')
-        return redirect(url_for('main.index'))
-
-    try:
-        groups = SMSGroup.query.all()
-    except sql_error as e:
-        return redirect(url_for('errors.mysql_server', error = e))
-
-    return render_template('group/list.html', groups=groups)
 
 # add a client the current group
 @group.post('/<int:client_id>/<int:group_id>/add')

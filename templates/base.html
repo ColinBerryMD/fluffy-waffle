@@ -12,6 +12,11 @@
         <script src="https://kit.fontawesome.com/a5c38f1ae2.js" crossorigin="anonymous"></script> 
         <link rel="stylesheet" href="{{ url_for('static', filename='css/cbmd.css') }}">
     </head>
+    <style>
+        .cb-under-navbar {
+            margin-top: 48px;
+        }
+    </style>
     <body>
 
 <!-- Navbar -->
@@ -158,17 +163,21 @@
 <!-- Flash messages -->
 {% with messages = get_flashed_messages( with_categories = True ) %}
     {% if messages %}
-        <div class="w3-container" style="margin-top: 32px;">
+        <div class="w3-display-container cb-under-navbar" style="z-index: 10;">
         {% for category, msg in messages %}
             {% if category == 'error' %}
             <div class="w3-panel w3-pale-red w3-border">
-                <span onclick="this.parentElement.style.display='none'" class="w3-button w3-large w3-display-topright">&times;</span>
-                <p>{{ msg }}</p>
+                <p>
+                    <span onclick="this.parentElement.style.display='none'" class="w3-button w3-large w3-display-topright">&times;</span>
+                    {{ msg }}
+                </p>
             </div>
             {% else %}
-            <div class="w3-panel w3-pale-blue w3-border">
-                <span onclick="this.parentElement.style.display='none'" class="w3-button w3-large w3-display-topright">&times;</span>
-                <p>{{ msg }}</p>
+            <div class="w3-panel w3-pale-blue w3-border" >
+                <p>
+                    <span onclick="this.parentElement.style.display='none'" class="w3-button w3-large w3-display-topright">&times</span>
+                    {{ msg }}
+                </p>   
             </div>
             {% endif %}
         </div>

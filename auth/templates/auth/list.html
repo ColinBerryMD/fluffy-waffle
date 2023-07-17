@@ -4,7 +4,7 @@
 {% block content %}
 <div class="w3-container">
     <h1 class='w3-padding-16' style="margin-top: 32px;">User List</h1>
-    <form method="POST" action="{{ url_for('auth.get_profile') }}">
+    <form method="POST" action="{{ url_for('auth.list') }}">
         {% if users %}
             {% for user in users %}
                 <div>

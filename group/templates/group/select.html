@@ -1,29 +1,24 @@
 {% extends "base.html" %}
 
+{% block title %}Select Client Group{% endblock %}
 {% block content %}
-<div class="column is-4 is-offset-4">
-    <h3 class="title">{% block title %}Select Current Client Group{% endblock %}</h3>
-    <div class="box">
-        <form method="POST" action="{{ url_for('group.select') }}">
-            <div class="field">
-                <div class="control">
-                    {% if groups %}
-                        {% for group in groups %}
-                            <input class"input is-large" type="radio" id="choice_{{ group.id }}"
-                                   name="selection" value="{{ group.id }}">
-                            <label for="choice_{{ group.id }}">{{ group.name }}</label><br>
-                        {%endfor%}
-                    {% else %}
-                        <p>No groups available</p>
-                    {% endif %}
-                </div>
-            </div>
-            <button class="button is-block is-info is-large is-fullwidth">Select</button>
-            <br/>
-            <input type='submit' formmethod="GET" formaction="{{ url_for('main.index') }}"
-                   class="button is-block is-info is-large is-fullwidth" 
-                   value ='Cancel' />
-        </form> 
-    </div>
+<div class="w3-container">
+    <h1 class='w3-padding-16' style="margin-top: 32px;">Select Client Group</h1>
+    <form method="POST" action="{{ url_for('group.select') }}">
+        <div>
+        {% if groups %}
+            {% for group in groups %}
+                <input type="radio" id="choice_{{ group.id }}" name="selection" value="{{ group.id }}">
+                <label for="choice_{{ group.id }}">{{ group.name }}</label><br>
+            {%endfor%}
+        {% else %}
+                <p>No groups available</p>
+        {% endif %}
+        </div>
+        <div class="w3-bar w3-padding-16">
+           <button type='submit' class="w3-button w3-black">Select</button>
+           <a href="{{ url_for('main.index') }}" class="w3-button w3-black">Cancel</a>
+       </div>
+    </form> 
 </div>
 {% endblock %}

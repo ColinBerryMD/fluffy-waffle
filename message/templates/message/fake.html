@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+<!-- Make a bunch of fake text messages to test the DB and front end -->
+
+{% block title %}Fake Text Message{% endblock %}
+{% block content %}
+<div class="w3-container">
+    <h1 class='w3-padding-16' style="margin-top: 32px;">Fake Text Message</h1>
+    <form method="POST" action="{{ url_for('message.fake')}}">
+        <div >
+            <input type="text" name="SentFrom" placeholder="SentFrom" autofocus="">
+        </div>
+        <div >
+           <input type="text" name="SentTo" placeholder="SentTo" autofocus="">
+       </div>
+       <div >
+           <input type="text" name="Body" placeholder="Body" autofocus="">
+       </div>
+       <div >
+           <input type="checkbox" name="Outgoing">
+           <label for="Outgoing">Outgoing</label>
+       </div>
+       <div >
+           <input type="text" name="Account" placeholder="Account" autofocus="">
+       </div>
+       <div >
+           <input type="text" name="Client" placeholder="Client" autofocus="">
+       </div>
+
+       <div class="w3-bar w3-padding-16">
+           <button type='submit' class="w3-button w3-black">Submit</button>
+           <a href="{{ url_for('main.index') }}" class="w3-button w3-black">Cancel</a>
+       </div>
+    </form>
+</div>
+
+<!--class Message(db.Model):
+    __tablename__ ="Message"
+    id = db.Column(db.Integer, primary_key=True)
+    SentFrom = db.Column(db.String(14))
+    SentTo = db.Column(db.String(14))
+    SentAt =db.Column(db.String(50))
+    Body = db.Column(db.String(160))
+    Outgoing = db.Column(db.Boolean)
+    Completed = db.Column(db.Boolean)
+    Confirmed = db.Column(db.Boolean)
+    Account = db.Column(db.Integer)
+    Client = db.Column(db.Integer)
+-->
+{% endblock %}

@@ -20,7 +20,7 @@
     <p>This client is blocked.(Edit unblocks)</p>
     {% endif %}
     {% if session['group_name'] %}
-    <a href="{{ url_for('group.add_client', client_id = client.id ) }}" 
+    <a href="{{ url_for('group.add_client', client_id = client.id, group_id=session['group_id'] ) }}" 
                    class="w3-bar-item w3-button w3-theme-l1">Add to {{session['group_name']}} Group</i></a>
     {% endif %}
     <a href="{{ url_for('sms_client.edit', sms_client_id = client.id ) }}" 

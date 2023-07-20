@@ -6,7 +6,7 @@ from datetime import datetime
 from twilio.request_validator import RequestValidator
 from twilio.twiml.messaging_response import MessagingResponse
 
-from cbmd.models import Message, WebUser, SMSAccount
+from cbmd.models import Message, WebUser, SMSAccount, SMSGroup, SMSClient, Client_Group_Link
 from cbmd.extensions import db, v_client, twilio_config, sql_error,\
                             render_template, request, url_for, flash, redirect,\
                             Blueprint, abort, session, func, or_, and_
@@ -21,8 +21,8 @@ message = Blueprint('message', __name__,url_prefix='/message', template_folder='
 # it will have tabs for each active chatting client
 # a display of the client in focus's messages
 # and a display of our current client group (ie the days patient list)
-@ login_required
 @ message.route('/dashboard')
+@ login_required
 def dashboard():
     # require sms access
     if not current_user.is_sms:
@@ -30,16 +30,76 @@ def dashboard():
         return redirect(url_for('main.index'))
 
     return render_template('message/dashboard.html') 
+
+# fake an sms message to test db and styling
+@message.route('/fake', methods=('GET','POST'))
+def fake():
+    if request.method == 'POST':
+        SentFrom   = cleanphone(request.form['SentFrom'])
+        SentTo   = cleanphone(request.form['SentTo'  ])
+        SentAt = datetime.now()
+        Body   = request.form['Body'  ]
+        
+        if request.form.get('Outgoing') == 'on':
+            Outgoing   = True
+        else:
+            Outgoing = False
+
+        Account = request.form['Account']
+        Client = request.form['Client']
+
+        # insert into database
+        message = Message(SentFrom = SentFrom,
+                          SentTo = SentTo, 
+                          SentAt = SentAt, 
+                          Body = Body,
+                          Outgoing = Outgoing,
+                          Account = Account,
+                          Client = Client )
+
+        try:
+            db.session.add(message)
+            db.session.commit()
+        except sql_error as e:
+            return redirect(url_for('errors.mysql_server', error = e)) 
+
+        flash("SMS Message Faked.","info")
+        return render_template('message/fake.html')
+
+    return render_template('message/fake.html')
+
        
 # list all messages
 @message.route('/list')
 def list():
     try:
-        messages = Message.query.all()
+        group_id = session['group_id']
+    except KeyError:
+        group_id = None
+
+    try:
+        messages = db.session.query(
+                            Message,SMSClient
+                            ).join(
+                            SMSClient, Message.Client == SMSClient.id
+                            ).all()
+        if group_id:
+            group = db.session.query(
+                            SMSClient
+                            ).join(
+                            Client_Group_Link, SMSClient.id == Client_Group_Link.client_id
+                            ).join(
+                            SMSGroup, Client_Group_Link.group_id == SMSGroup.id
+                            ).filter(
+                            SMSGroup.id == session['group_id']
+                            ).all()
+        else:
+            group = None
+
     except sql_error as e:
         return redirect(url_for('errors.mysql_server', error = e)) 
 
-    return render_template('message/list.html', messages=messages)
+    return render_template('message/list.html', messages = messages, group = group )
 
 # identical to list; but creates a selection
 @message.route('/selection')

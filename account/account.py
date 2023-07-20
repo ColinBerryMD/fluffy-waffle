@@ -91,7 +91,7 @@ def edit(account_id):
     try: 
         account = SMSAccount.query.get(account_id)
         owner = db.session.query(
-            WebUser.id, WebUser.User, WebUser.first, WebUser.last, WebUser.is_sms
+            WebUser.id, WebUser.User, WebUser.first, WebUser.last
             ).join(
             User_Account_Link, User_Account_Link.user_id == WebUser.id
             ).filter(and_(
@@ -126,7 +126,7 @@ def edit(account_id):
         
         if not owner or not owner.is_sms:
             flash('That user is not allowed to own account.','error')
-            return render_template('account/edit.html', account=account)
+            return render_template('account/edit.html', account=account,owner=owner,users=users)
 
         existing_account=False  #for testing
 #        try:
@@ -247,26 +247,19 @@ def close():
 @account.route('/<int:account_id>/profile')
 def profile(account_id):
     try: 
-        account = SMSAccount.query.get(account_id)
-        owner = db.session.query(
-            WebUser.id
-            ).join(
-            User_Account_Link, WebUser.id == User_Account_Link.user_id
-            ).filter(and_(
-            User_Account_Link.is_owner,
-            User_Account_Link.account_id == account_id
-            )).first()        
-        users = db.session.query(
+       account = SMSAccount.query.get(account_id)
+       users = db.session.query(
             WebUser.id, WebUser.first, WebUser.last, User_Account_Link.is_owner
             ).join(
             User_Account_Link, WebUser.id == User_Account_Link.user_id
             ).filter( 
             User_Account_Link.account_id == account_id
             ).all()
+
     except sql_error as e:
         return redirect(url_for('errors.mysql_server', error = e))        
 
-    return render_template("account/profile.html", account=account,owner=owner, users=users)
+    return render_template("account/profile.html", account=account, users=users)
 
 # select account from a radio button list
 @login_required
@@ -308,14 +301,16 @@ def select():
                             ).filter(and_(
                                 User_Account_Link.account_id  == account_selected.id,
                                 User_Account_Link.is_owner
-                                )
-                             ).first()
-            session['account_owner'] = owner.user_id
+                            )).first()
         except sql_error as e:
             return redirect(url_for('errors.mysql_server', error = e))
         
+        if owner:
+            session['account_owner'] = owner.user_id
+        else: 
+            flash('Selected account has no owner.','error')
+            return redirect(url_for('main.index'))
         return redirect(url_for('main.index'))
-
 
     return render_template("account/select.html", accounts=accounts)
 

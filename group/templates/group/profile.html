@@ -18,7 +18,10 @@
             <p>No clients on this account</p>
     {% endif %}
     <div class="w3-bar w3-padding-16">
-        <a href="{{ url_for('group.activate', group_id = group.id ) }}" class="w3-bar-item w3-button w3-theme-l1">Select</a>
+        {% if not session['group_id']==group.id %}
+            <a href="{{ url_for('group.activate', group_id = group.id ) }}" class="w3-bar-item w3-button w3-theme-l1">Select</a>
+        {% endif %}
+        <a href="{{ url_for('sms_client.select') }}" class="w3-bar-item w3-button w3-theme-l1">Add Clients</a>
         <a href="{{ url_for('group.delete', group_id = group.id ) }}" 
            class="w3-bar-item w3-button w3-theme-l1" onclick="return confirm('Are you sure you want to delete this client group?')">
                 <i class='fas fa fa-trash'/></i>

@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+
+{% block title %} Messages {% endblock %}
+{% block content %}
+<div class="w3-row">
+    <div class="w3-col s4 m3 l2"> 
+        <div id="tab_parent" class="w3-container chat-tab">
+            {% if messages %}
+                <h1 class='w3-padding-16 w3-center cb-under-navbar'>Active Senders</h1>
+                {% for sender, their_messages in messages | groupby('SMSClient.id') %}
+                    {% with client = their_messages[0].SMSClient %}
+                        <button class="w3-button w3-border w3-block w3-right-align tablink" 
+                                onclick="openTab(event,'sms_{{ sender }}')" >
+                            {{ client.firstname }}&nbsp{{ client.lastname }}
+                        </button>
+                    {% endwith %}
+                {% endfor %}
+            {% else %}
+                <h1 class='w3-padding-16 w3-center cb-under-navbar'>No Senders</h1>
+            {% endif %}
+        </div>
+    </div>
+    <div class="w3-col s8 m6 l6">
+
+        <div id="chat_parent" class="w3-container">
+            <h1 class='w3-padding-16 w3-center cb-under-navbar'>Current Messages</h1>
+            {% if messages %}
+                {% for sender, their_messages in messages | groupby('SMSClient.id') %}
+                    <div id="sms_{{ sender }}" class="w3-container tabcontent" style="display: none;">
+                        {% for m in their_messages %}
+                            {% if m.Message.Outgoing %}
+                            <div id="chat_child" class="chat-container chat-msg-right">
+                                <p>To:&nbsp{{m.SMSClient.firstname}}&nbsp{{m.SMSClient.lastname}}&nbsp({{ m.Message.SentTo }})</p>
+                                <p>{{ m.Message.Body }}</p>
+                                <span class="chat-time-right">{{ m.Message.SentAt }}</span>
+                            </div>
+                            {% else %}
+                            <div id="chat_child" class="chat-container chat-msg-left chat-darker">
+                                <p>From:&nbsp{{m.SMSClient.firstname}}&nbsp{{m.SMSClient.lastname}}&nbsp({{ m.Message.SentFrom }})</p>
+                                <p>{{ m.Message.Body }}</p>
+                                <span class="chat-time-left">{{ m.Message.SentAt }}</span>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                    <div id="chat_placeholder" class="chat-container">
+                        <p >No messages yet.</p>
+                    </div> 
+            {% endif%}
+        </div>
+    </div>
+    <div class="w3-col s12 m3 l4">
+        {% if group %}
+            <h1 class='w3-padding-16 w3-center cb-under-navbar'>Group</h1>
+            {% for member in group %}
+                <div class="w3-container w3-border">
+                    <p>{{ member.firstname }}&nbsp{{ member.lastname }}</p>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

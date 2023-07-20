@@ -70,6 +70,7 @@ class Message(db.Model):
     Completed = db.Column(db.Boolean)
     Confirmed = db.Column(db.Boolean)
     Account = db.Column(db.Integer)
+    Client = db.Column(db.Integer)
 
 class BadPasswords(db.Model):
     __tablename__ = 'BadPasswords'

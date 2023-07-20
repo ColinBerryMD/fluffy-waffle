@@ -47,7 +47,7 @@ def create():
             db.session.add(new_group)
             db.session.commit()
         except sql_error as e: 
-            return redirect(url_for('errors.mysql_server', error = e))        
+            return redirect(url_for('errors.mysql_server', error = e))     
 
         return redirect(url_for('main.index'))
     
@@ -132,7 +132,7 @@ def profile(group_id):
     return render_template("group/profile.html", group=group, account=account, clients=clients)
 
 # Make this our active group
-@group.post('/<int:group_id>/activate')
+@group.route('/<int:group_id>/activate')
 @login_required
 def activate(group_id):
     # limit access to sms users 
@@ -163,9 +163,9 @@ def close():
 
 
 # add a client the current group
-@group.post('/<int:client_id>/<int:group_id>/add')
+@group.route('/<int:client_id>/<int:group_id>/add_client')
 @login_required
-def add(client_id,group_id):
+def add_client(client_id,group_id):
     # require sms access
     if not current_user.is_sms:
         flash('You need messaging access for this.','error')

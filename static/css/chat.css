@@ -1,0 +1,56 @@
+
+/* Style the tab buttons */
+
+.chat-tab button {
+  cursor: pointer;
+  padding: 14px 16px;
+  margin-left: 20%;
+  transition: 0.3s;
+}
+
+/* Change background color of buttons on hover */
+.chat-tab button:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.chat-tab button.active {
+  background-color: #ccc;
+}
+
+.chat-container {
+  border: 2px solid #dedede;
+  background-color: #f1f1f1;
+  border-radius: 25px;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+.chat-darker {
+  border-color: #ccc;
+  background-color: #ddd;
+}
+
+.chat-container::after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+.chat-msg-right {
+  margin-left: 15%;
+}
+
+.chat-msg-left {
+  margin-right: 15%;
+}
+
+.chat-time-right {
+  float: right;
+  color: #aaa;
+}
+
+.chat-time-left {
+  float: left;
+  color: #999;
+}

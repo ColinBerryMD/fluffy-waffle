@@ -11,12 +11,11 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <script src="https://kit.fontawesome.com/a5c38f1ae2.js" crossorigin="anonymous"></script> 
         <link rel="stylesheet" href="{{ url_for('static', filename='css/cbmd.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename = 'css/chat.css') }}">
+
+        
+
     </head>
-    <style>
-        .cb-under-navbar {
-            margin-top: 48px;
-        }
-    </style>
     <body>
 
 <!-- Navbar -->
@@ -75,6 +74,10 @@
                             <a href="{{ url_for('account.profile',account_id=session['account_id']) }}" 
                                class="w3-bar-item w3-button w3-hide-small w3-hover-white">
                                 Account Profile
+                            </a>
+                            <a href="{{ url_for('account.edit',account_id=session['account_id']) }}" 
+                               class="w3-bar-item w3-button w3-hide-small w3-hover-white">
+                                Edit Account
                             </a>
                             <a href="{{ url_for('auth.select') }}" 
                                class="w3-bar-item w3-button w3-hide-small w3-hover-white">
@@ -163,17 +166,17 @@
 <!-- Flash messages -->
 {% with messages = get_flashed_messages( with_categories = True ) %}
     {% if messages %}
-        <div class="w3-display-container cb-under-navbar" style="z-index: 10;">
+        <div class="w3-display-container cb-under-navbar">
         {% for category, msg in messages %}
             {% if category == 'error' %}
-            <div class="w3-panel w3-pale-red w3-border">
+            <div class="w3-panel w3-pale-red" style="z-index: 8;">
                 <p>
                     <span onclick="this.parentElement.style.display='none'" class="w3-button w3-large w3-display-topright">&times;</span>
                     {{ msg }}
                 </p>
             </div>
             {% else %}
-            <div class="w3-panel w3-pale-blue w3-border" >
+            <div class="w3-panel w3-pale-blue" style="z-index: 8;">
                 <p>
                     <span onclick="this.parentElement.style.display='none'" class="w3-button w3-large w3-display-topright">&times</span>
                     {{ msg }}
@@ -191,6 +194,6 @@
 
 <!-- Template content -->
 {% block content %}{% endblock %}
-
     </body>
+    <script type="text/javascript" src = "{{ url_for('static', filename = 'javascript/sms.js') }}"/></script>
 </html>

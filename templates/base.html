@@ -196,4 +196,14 @@
 {% block content %}{% endblock %}
     </body>
     <script type="text/javascript" src = "{{ url_for('static', filename = 'javascript/sms.js') }}"/></script>
+  <script type="text/javascript">// listen for sse events or server problems
+  var source = new EventSource("{{ url_for('sse.stream') }}");
+  source.addEventListener('sms_message', function(event) {
+      var message = JSON.parse(event.data);
+      AddChatElement(message);
+  }, false);
+  source.addEventListener('error', function(event) {
+      alert("Failed to connect to event stream. Is Redis running?");
+  }, false);
+</script>
 </html>

@@ -25,38 +25,56 @@ function openTab(evt, tabId) {
   }
   function AddChatElement(smsMessage) // message is json of Class Message from .models
   {    
+    // does a tab for this client exist? if not create it
+    let linkId, tabLink
+    const tabParent = document.getElementById("tabParent");
+    if (tabParent.getElementById( linkId ) {
+      tabLink = tabParent.getElementById( linkId ); // need linkId from json
+    } else {
+      tabLink = document.createElement("button"); // need button attributes
+      tabParent.appendChild( tabLink );
+    }
 
     // find the parent <div id="chat_parent"> This contains the messages as child <div>'s
-    const parentDiv = document.getElementById("chat_parent"); 
+    const chatParent = document.getElementById("chat_parent"); 
+
+    let contentId, chatContent
+    // as above we may need to create a new tabcontent <div> or locate the one that exists for client
+    if (chatParent.getElementById( contentId ) {
+      chatContent = chatParent.getElementById( contentId ); // need contentId from json
+    } else {
+      chatContent = document.createElement("div"); // need div attributes
+      chatParent.appendChild( chatContent );
+    }
     
     // build our child <div>
-    const newDiv = document.createElement("div"); 
-    parentDiv.appendChild(newDiv);
+    const chatChild = document.createElement("div"); 
+    chatParent.appendChild(chatChild);
     
     // add id and class
     let divClass, spanClass, divId
 
     if (smsMessage.Outgoing) {
-      divClass = "container darker"
-      spanClass= "time-right"
+      divClass = "chat-container chat-darker chat-msg-right"
+      spanClass= "chat-time-right"
     } else {
-      divClass = "container"
-      spanClass="time-left"
+      divClass = "chat-container chat-msg-left"
+      spanClass="chat-time-left"
     }
     
     divId = "msg_" + String(smsMessage.id)
-    newDiv.setAttribute("id",divId);  
-    newDiv.setAttribute("class",divClass); 
+    chatChild.setAttribute("id",divId);  
+    chatChild.setAttribute("class",divClass); 
     
     // the <p> element containing the text itself
     const newPar = document.createElement("p"); 
-    newDiv.appendChild(newPar);
+    chatChild.appendChild(newPar);
     const newContent = document.createTextNode(smsMessage.Body);
     newPar.appendChild(newContent);
     
     // the <span> element with the time and date
     const newSpan = document.createElement("span"); 
-    newDiv.appendChild(newSpan);
+    chatChild.appendChild(newSpan);
     
     newSpan.setAttribute("class",spanClass);  // depends on incoming v. outgoing
     

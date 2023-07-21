@@ -10,7 +10,7 @@
                 <h1 class='w3-padding-16 w3-center cb-under-navbar'>Active Senders</h1>
                 {% for sender, their_messages in messages | groupby('SMSClient.id') %}
                     {% with client = their_messages[0].SMSClient %}
-                        <button class="w3-button w3-border w3-block w3-right-align tablink" 
+                        <button id="button_{{ sender }}" class="w3-button w3-border w3-block w3-right-align tablink" 
                                 onclick="openTab(event,'sms_{{ sender }}')" >
                             {{ client.firstname }}&nbsp{{ client.lastname }}
                         </button>

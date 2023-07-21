@@ -1,6 +1,7 @@
 from flask_login import UserMixin
+
 from datetime import datetime
-from .extensions import db
+from .extensions import db, ma
 
 class WebUser(UserMixin,db.Model):
     __tablename__="WebUser"
@@ -71,6 +72,12 @@ class Message(db.Model):
     Confirmed = db.Column(db.Boolean)
     Account = db.Column(db.Integer)
     Client = db.Column(db.Integer)
+
+class MessageSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Message
+        load_instance = True
+        sqla_session = db.session
 
 class BadPasswords(db.Model):
     __tablename__ = 'BadPasswords'

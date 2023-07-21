@@ -26,7 +26,7 @@ def create_app(config_class=Config):
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     #app.config['SQLALCHEMY_ECHO'] = True
 
-    #app.config["REDIS_URL"] = "redis://localhost"
+    app.config["REDIS_URL"] = "redis://localhost"
 
 # initialize extensions
     
@@ -60,7 +60,7 @@ def create_app(config_class=Config):
     from .errors.errors import errors as errors_blueprint
     app.register_blueprint(errors_blueprint) 
 
-    #app.register_blueprint(sse, url_prefix='/stream')
+    app.register_blueprint(sse, url_prefix='/stream')
 
 # Login manager
     @login_manager.user_loader

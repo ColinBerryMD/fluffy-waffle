@@ -1,21 +1,23 @@
 from datetime import datetime
-#import json
-#from flask_sse import sse
+import json
+from flask_sse import sse
 
 #from sqlalchemy import desc
 from twilio.request_validator import RequestValidator
 from twilio.twiml.messaging_response import MessagingResponse
 
-from cbmd.models import Message, WebUser, SMSAccount, SMSGroup, SMSClient, Client_Group_Link
-from cbmd.extensions import db, v_client, twilio_config, sql_error,\
-                            render_template, request, url_for, flash, redirect,\
-                            Blueprint, abort, session, func, or_, and_
+from cbmd.models import MessageSchema, Message, WebUser, SMSAccount, SMSGroup, SMSClient,\
+                        Client_Group_Link
+from cbmd.extensions import db, v_client, twilio_config, sql_error, login_required,\
+                            current_user, render_template, request, url_for, flash,\
+                            redirect, Blueprint, abort, session, func, or_, and_
 
 from cbmd.phonenumber import cleanphone
-from cbmd.auth.auth import login_required, current_user
+from cbmd.auth.auth import 
 
 message = Blueprint('message', __name__,url_prefix='/message', template_folder='templates')
 
+message_schema = MessageSchema()
 
 # the whole point of the project is this messaging dashboard
 # it will have tabs for each active chatting client
@@ -37,7 +39,7 @@ def fake():
     if request.method == 'POST':
         SentFrom   = cleanphone(request.form['SentFrom'])
         SentTo   = cleanphone(request.form['SentTo'  ])
-        SentAt = datetime.now()
+        SentAt = SentAt = mountain_time(datetime.now())
         Body   = request.form['Body'  ]
         
         if request.form.get('Outgoing') == 'on':
@@ -62,6 +64,9 @@ def fake():
             db.session.commit()
         except sql_error as e:
             return redirect(url_for('errors.mysql_server', error = e)) 
+
+        message_json = message_schema.dump(message)
+        sse.publish(message_json, type='sms_message')
 
         flash("SMS Message Faked.","info")
         return render_template('message/fake.html')

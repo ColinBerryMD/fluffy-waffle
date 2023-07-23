@@ -1,3 +1,13 @@
+//////////////////////////////////////////
+// Javascript for our sms web application
+// 
+// CB 7/2023
+
+// Process sse based response to twillio message status pending
+
+
+//////////////////////////////////////////
+// work with css to style tabbed layout
 function openTab(evt, tabId) {
   var i, tabcontent, tablinks;
 
@@ -17,39 +27,54 @@ function openTab(evt, tabId) {
   document.getElementById(tabId).style.display = "block";
   evt.currentTarget.className += " active";
 }
-
-// javascript to display sse driven messages dynamically
   function mysqlDatetoJs(mysqlTimeStamp){
       var t = mysqlTimeStamp.split(/[- :]/);
           return new Date(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
   }
-  function AddChatElement(smsMessage) // message is json of Class Message from .models
-  {    
+////////////////////////////////////////////
+// display sse driven messages dynamically
+// smsMessage is json of Class Message from .models
+// need to add in name attributes
+function AddChatElement(smsMessage){ 
+      
     // does a tab for this client exist? if not create it
-    let linkId, tabLink
+    let linkId, tabLink, buttonText
+
+    linkId = "button_"+String(smsMessage.Client)
     const tabParent = document.getElementById("tabParent");
     if (tabParent.getElementById( linkId ) {
-      tabLink = tabParent.getElementById( linkId ); // need linkId from json
+      tabLink = tabParent.getElementById( linkId ); 
     } else {
       tabLink = document.createElement("button"); // need button attributes
+      tabLink.setAttribute("id",linkId);
+      tabLink.setAttribute("class", "w3-button w3-border w3-block w3-right-align tablink");
+      tabLink.setAttribute("onclick", "openTab(event,'sms_"+String(smsMessage.Client)+"')");
+      const buttonContent = document.createTextNode(buttonText);
+      buttonContent = "Client: "+String(smsMessage.Client);  //// temp for now till we can get the name
+      tabLink.appendChild(buttonContent);
       tabParent.appendChild( tabLink );
     }
+    
 
     // find the parent <div id="chat_parent"> This contains the messages as child <div>'s
     const chatParent = document.getElementById("chat_parent"); 
 
     let contentId, chatContent
     // as above we may need to create a new tabcontent <div> or locate the one that exists for client
+    contentId = "sms_"+String(smsMessage.Client)
     if (chatParent.getElementById( contentId ) {
-      chatContent = chatParent.getElementById( contentId ); // need contentId from json
+      chatContent = chatParent.getElementById( contentId ); 
     } else {
-      chatContent = document.createElement("div"); // need div attributes
+      chatContent = document.createElement("div");
+      chatContent.setAttribute("id", contentId);
+      chatContent.setAttribute("class", "w3-container tabcontent");
+      chatContent.setAttribute("style", "display: none;");
       chatParent.appendChild( chatContent );
     }
     
     // build our child <div>
     const chatChild = document.createElement("div"); 
-    chatParent.appendChild(chatChild);
+    chatContent.appendChild(chatChild);
     
     // add id and class
     let divClass, spanClass, divId

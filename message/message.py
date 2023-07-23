@@ -13,11 +13,10 @@ from cbmd.extensions import db, v_client, twilio_config, sql_error, login_requir
                             redirect, Blueprint, abort, session, func, or_, and_
 
 from cbmd.phonenumber import cleanphone
-from cbmd.auth.auth import 
+# from cbmd.auth.auth import 
 
 message = Blueprint('message', __name__,url_prefix='/message', template_folder='templates')
 
-message_schema = MessageSchema()
 
 # the whole point of the project is this messaging dashboard
 # it will have tabs for each active chatting client
@@ -65,7 +64,13 @@ def fake():
         except sql_error as e:
             return redirect(url_for('errors.mysql_server', error = e)) 
 
+        # I need to insert client name in this as I create the json via dump
+        sms_client = SMSClient.query.get_or_404(message.Client)
+
+        message_schema = MessageSchema()
+
         message_json = message_schema.dump(message)
+
         sse.publish(message_json, type='sms_message')
 
         flash("SMS Message Faked.","info")

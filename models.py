@@ -73,11 +73,17 @@ class Message(db.Model):
     Account = db.Column(db.Integer)
     Client = db.Column(db.Integer)
 
+
 class MessageSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Message
         load_instance = True
         sqla_session = db.session
+
+    class Client:
+        def __init__(self, firstname, lastname ):
+            self.firstname = firstname
+            self.lastname  = lastname
 
 class BadPasswords(db.Model):
     __tablename__ = 'BadPasswords'

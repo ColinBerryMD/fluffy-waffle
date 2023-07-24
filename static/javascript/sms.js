@@ -31,6 +31,18 @@ function openTab(evt, tabId) {
       var t = mysqlTimeStamp.split(/[- :]/);
           return new Date(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
   }
+
+/////////////////////////////////////////////
+// style the send message popup
+
+function chatPopup( client ) {
+  document.getElementById("chatForm_"+String(client)).style.display = "block";
+}
+
+function closePopup( client ) {
+  document.getElementById("chatForm_"+String(client)).style.display = "none";
+}
+
 ////////////////////////////////////////////
 // display sse driven messages dynamically
 // smsMessage is json of Class Message from .models
@@ -41,9 +53,9 @@ function AddChatElement(smsMessage){
     let linkId, tabLink, buttonText
 
     linkId = "button_"+String(smsMessage.Client)
-    const tabParent = document.getElementById("tabParent");
-    if (tabParent.getElementById( linkId ) {
-      tabLink = tabParent.getElementById( linkId ); 
+    const tabParent = document.getElementById("tab_parent");
+    if (document.getElementById( linkId )){
+      tabLink = document.getElementById( linkId ); 
     } else {
       tabLink = document.createElement("button"); // need button attributes
       tabLink.setAttribute("id",linkId);
@@ -62,8 +74,8 @@ function AddChatElement(smsMessage){
     let contentId, chatContent
     // as above we may need to create a new tabcontent <div> or locate the one that exists for client
     contentId = "sms_"+String(smsMessage.Client)
-    if (chatParent.getElementById( contentId ) {
-      chatContent = chatParent.getElementById( contentId ); 
+    if (document.getElementById( contentId )) {
+      chatContent = document.getElementById( contentId ); 
     } else {
       chatContent = document.createElement("div");
       chatContent.setAttribute("id", contentId);

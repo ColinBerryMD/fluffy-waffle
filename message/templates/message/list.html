@@ -10,7 +10,8 @@
                 <h1 class='w3-padding-16 w3-center cb-under-navbar'>Active Senders</h1>
                 {% for sender, their_messages in messages | groupby('SMSClient.id') %}
                     {% with client = their_messages[0].SMSClient %}
-                        <button id="button_{{ sender }}" class="w3-button w3-border w3-block w3-right-align tablink" 
+                        <button id="button_{{ sender }}" 
+                                class="w3-button w3-border w3-block w3-right-align tablink" 
                                 onclick="openTab(event,'sms_{{ sender }}')" >
                             {{ client.firstname }}&nbsp{{ client.lastname }}
                         </button>
@@ -57,9 +58,26 @@
             <h1 class='w3-padding-16 w3-center cb-under-navbar'>Group</h1>
             {% for member in group %}
                 <div class="w3-container w3-border">
-                    <p>{{ member.firstname }}&nbsp{{ member.lastname }}</p>
+                    <a class="open-chat-popup" onclick="chatPopup({{member.id}})">
+                            {{ member.firstname }}&nbsp{{ member.lastname }}
+                            <i class='far fa-comment' style='font-size:24px'></i>
+                    </a>
+                </div>
+                
+
+                <div class="chat-popup" id="chatForm_{{member.id}}" style="display: none;">
+                  <form action="{{ url_for('message.send', client_id = member.id) }}" method="post" class="form-container">
+                    <h1>Chat</h1>               
+
+                    <label for="Body"><b>Message</b></label>
+                    <textarea placeholder="Type message.." name="Body" required></textarea>             
+
+                    <button type="submit" class="btn">Send</button>
+                    <button type="button" class="btn cancel" onclick="closePopup({{member.id}})">Close</button>
+                  </form>
                 </div>
             {% endfor %}
+            
         {% endif %}
     </div>
 </div>

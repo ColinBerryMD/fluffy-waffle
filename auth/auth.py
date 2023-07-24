@@ -5,13 +5,13 @@
 from datetime import datetime, timedelta
 
 # database models
-from cbmd.models import WebUser, OldPasswords
+from models import WebUser, OldPasswords
 
 # my own modules
-from cbmd.phonenumber import cleanphone
+from phonenumber import cleanphone
 from .cleanpassword import cleanpassword
 
-from cbmd.extensions import Blueprint, render_template, redirect, url_for, request, flash,\
+from extensions import Blueprint, render_template, redirect, url_for, request, flash,\
                             current_app, db, v_client, twilio_config, sql_error, environ, sql_text,\
                             login_user, login_required, logout_user, current_user, bcrypt
 

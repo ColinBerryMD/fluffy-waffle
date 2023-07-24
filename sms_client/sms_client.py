@@ -1,10 +1,10 @@
 from datetime import datetime
 
-from cbmd.models import SMSClient
-from cbmd.extensions import v_client, twilio_config, db, sql_error, sql_text, login_required, current_user, session,\
+from models import SMSClient
+from extensions import v_client, twilio_config, db, sql_error, sql_text, login_required, current_user, session,\
                             func, or_, and_, Blueprint, render_template, request, url_for, flash, redirect
 
-from cbmd.phonenumber import cleanphone
+from phonenumber import cleanphone
 
 sms_client = Blueprint('sms_client', __name__, url_prefix='/sms_client', template_folder='templates')
 

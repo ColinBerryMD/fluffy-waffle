@@ -1,7 +1,7 @@
 from flask_login import UserMixin
 
 from datetime import datetime
-from .extensions import db, ma
+from extensions import db, ma
 
 class WebUser(UserMixin,db.Model):
     __tablename__="WebUser"

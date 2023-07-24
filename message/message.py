@@ -6,81 +6,20 @@ from flask_sse import sse
 from twilio.request_validator import RequestValidator
 from twilio.twiml.messaging_response import MessagingResponse
 
-from cbmd.models import MessageSchema, Message, WebUser, SMSAccount, SMSGroup, SMSClient,\
+from models import MessageSchema, Message, WebUser, SMSAccount, SMSGroup, SMSClient,\
                         Client_Group_Link
-from cbmd.extensions import db, v_client, twilio_config, sql_error, login_required,\
+from extensions import db, v_client, twilio_config, sql_error, login_required, flask_response,\
                             current_user, render_template, request, url_for, flash,\
                             redirect, Blueprint, abort, session, func, or_, and_
 
-from cbmd.phonenumber import cleanphone
-# from cbmd.auth.auth import 
+from phonenumber import cleanphone
+from mountain_time import mountain_time
 
 message = Blueprint('message', __name__,url_prefix='/message', template_folder='templates')
 
-
-# the whole point of the project is this messaging dashboard
-# it will have tabs for each active chatting client
-# a display of the client in focus's messages
-# and a display of our current client group (ie the days patient list)
-@ message.route('/dashboard')
-@ login_required
-def dashboard():
-    # require sms access
-    if not current_user.is_sms:
-        flash('You need messaging access for this.','error')
-        return redirect(url_for('main.index'))
-
-    return render_template('message/dashboard.html') 
-
-# fake an sms message to test db and styling
-@message.route('/fake', methods=('GET','POST'))
-def fake():
-    if request.method == 'POST':
-        SentFrom   = cleanphone(request.form['SentFrom'])
-        SentTo   = cleanphone(request.form['SentTo'  ])
-        SentAt = SentAt = mountain_time(datetime.now())
-        Body   = request.form['Body'  ]
-        
-        if request.form.get('Outgoing') == 'on':
-            Outgoing   = True
-        else:
-            Outgoing = False
-
-        Account = request.form['Account']
-        Client = request.form['Client']
-
-        # insert into database
-        message = Message(SentFrom = SentFrom,
-                          SentTo = SentTo, 
-                          SentAt = SentAt, 
-                          Body = Body,
-                          Outgoing = Outgoing,
-                          Account = Account,
-                          Client = Client )
-
-        try:
-            db.session.add(message)
-            db.session.commit()
-        except sql_error as e:
-            return redirect(url_for('errors.mysql_server', error = e)) 
-
-        # I need to insert client name in this as I create the json via dump
-        sms_client = SMSClient.query.get_or_404(message.Client)
-
-        message_schema = MessageSchema()
-
-        message_json = message_schema.dump(message)
-
-        sse.publish(message_json, type='sms_message')
-
-        flash("SMS Message Faked.","info")
-        return render_template('message/fake.html')
-
-    return render_template('message/fake.html')
-
        
 # list all messages
-@message.route('/list')
+@message.route('/')
 def list():
     try:
         group_id = session['group_id']
@@ -121,50 +60,31 @@ def selection():
 
     return render_template('message/list.html', messages=messages)
 
-@message.route('/send_sms', methods=('GET','POST'))
-def send_sms():
-    if request.method == 'POST':
-        SentTo   = cleanphone(request.form['SentTo'  ])
-        Body = request.form['Body']
-        SentAt = mountain_time(datetime.now())
-        
-
-        message = Message(SentFrom = "+12343455678", 
-                          SentTo = SentTo, 
-                          SentAt = SentAt, 
-                          Body = Body,
-                          Outgoing = True)
-
-        message_json = message_schema.dump(message)
-        sse.publish(message_json, type='sms_message')
-
-        return render_template('create.html')
-
-    return render_template('create.html')
-
 # send an sms message
-@message.route('/send', methods=('GET','POST'))
-def send():
-    if request.method == 'POST':
-        SentTo   = cleanphone(request.form['SentTo'  ])
-        Body = request.form['Body']
+@message.post('/<int:client_id>/send')
+def send(client_id):
+    sms_client = SMSClient.query.get_or_404(client_id)
 
-        if not SentTo:
-            flash('Valid SMS Number is Required!','error')
-            return render_template('message/send_message.html')
+    Body = request.form['Body']
+    if not Body:
+        flash('Message content is required!','error')
+        return redirect( url_for('message.list'))
 
-        if not Body:
-            flash('Message content is required!','error')
-            return render_template('message/send_message.html')
+    account = SMSAccount.query.filter(SMSAccount.sid == session['account_id'] ).first()
+    if not account:
+        flash('Active account is required.','error')
+        return redirect( url_for('message.list'))
 
-        # post the message via twilio
-        try:
-            sms = v_client.messages.create(
-                 body=Body,
-                 messaging_service_sid=twilio_config.sms_sid,
-                 to=SentTo)
-        except:
-            return redirect(url_for('errors.twilio_server'))
+    # post the message via twilio
+
+    try:
+        sms = v_client.messages.create(
+             body = Body,
+             messaging_service_sid = account.sid,
+             to = sms_client.phone
+             )
+    except:
+        return redirect(url_for('errors.twilio_server'))
     
 # even undeliverable messages go out with an initial status of 'Sent' 
 # once SSE works we will need to use Status Call Back to know what really happened       
@@ -175,24 +95,34 @@ def send():
 #            print ('SMS failure with status: '+ sms.status )
 #            return redirect(url_for('errors.twilio_server'))
 
-        # insert into database
-        message = Message(SentFrom = twilio_config.twilio_phone,
-                          SentTo = SentTo, 
-                          SentAt = datetime.now(), 
-                          Body = Body)
-        try:
-            db.session.add(message)
-            db.session.commit()
-        except sql_error as e:
-            return redirect(url_for('errors.mysql_server', error = e)) 
+    # insert into database
+    message = Message(SentFrom = account.number,
+                      SentTo   = sms_client.phone, 
+                      SentAt   = mountain_time( datetime.now()), 
+                      Body     = Body,
+                      Outgoing = True,
+                      Completed= False,
+                      Confirmed= False,
+                      Account  = account.id,
+                      Client   = client_id 
+                      )
+    
+    try:
+        db.session.add(message)
+        db.session.commit()
+    except sql_error as e:
+        return redirect(url_for('errors.mysql_server', error = e)) 
+    
 
-        ####### publish SSE to message dashboard
+    # publish SSE to message list
+    # I need to insert client name in this as I create the json via dump
+    message_schema = MessageSchema()
+    message_json = message_schema.dump(message)
+    sse.publish(message_json, type='sms_message')
 
-        ####### return 200
+    
 
-        return redirect(url_for('message.list'))
-
-    return render_template('message/send_message.html')
+    return flask_response(status=204)
 
 # recieve a Twilio SMS message via webhook
 @message.route('/recieve', methods=['POST'])
@@ -207,6 +137,17 @@ def recieve():
     SentFrom = request.form.get('from')
     Body     = request.form.get('body')
     SentTo   = request.form.get('to')
+    message_sid = request.form.get('sid')
+
+    try:
+        account = SMSAccount.query.filter(SMSAccount.sid == message_sid ).first().id
+                           
+    except sql_error as e:   
+        return redirect(url_for(errors.mysql_server, error = e))
+
+    # no account found. Don't know how this can happen
+    if not account:
+        return redirect(url_for('errors.twilio_server'))
 
     # is this from a registered client?
     try:
@@ -230,15 +171,30 @@ def recieve():
         response.message(s)
         return str(response)
 
+
     # ok. this is a valid message
-    message = Message(SentFrom = SentFrom, SentTo = SentTo, SentAt = datetime.now(), Body = Body)
+    message = Message(
+        SentFrom  = SentFrom,
+        SentTo    = SentTo, 
+        SentAt    = mountain_time( datetime.now() ), 
+        Body      = Body,
+        Outgoing  = False,
+        Completed = False,
+        Confirmed = False,
+        Account   = account,
+        Client    = sms_client.id
+        )
+
     try: # add the message to the database
         db.session.add(message)
         db.session.commit()
     except sql_error as e:
         return redirect(url_for('errors.mysql_server', error = e)) 
 
-    ####### publish SSE to message dashboard
+    # publish SSE to message list
+    message_schema = MessageSchema()
+    message_json = message_schema.dump(message)
+    sse.publish(message_json, type='sms_message')
 
-    print('SMS recieved at '+ message.SentAt +'.')
+    #print('SMS recieved at '+ message.SentAt +'.')
     return("<Response/>")

@@ -5,7 +5,7 @@
 # These were written afterwards with the focus on style rather than development.
 # CB 7/2023
 
-from .extensions import Blueprint, render_template, redirect, url_for, flash,\
+from extensions import Blueprint, render_template, redirect, url_for, flash,\
                         login_required, current_user
 
 main = Blueprint('main', __name__,template_folder="templates")

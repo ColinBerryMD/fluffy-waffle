@@ -1,7 +1,7 @@
-from cbmd.extensions import  db, sql_error, Blueprint, render_template, request, url_for, flash, redirect,\
+from extensions import  db, sql_error, Blueprint, render_template, request, url_for, flash, redirect,\
                              session, login_required, current_user, func, or_, and_
 
-from cbmd.models import SMSClient, User_Account_Link, Client_Group_Link, SMSGroup, SMSAccount, WebUser
+from models import SMSClient, User_Account_Link, Client_Group_Link, SMSGroup, SMSAccount, WebUser
 
 group = Blueprint('group', __name__, url_prefix='/group',template_folder='templates')
 

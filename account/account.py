@@ -1,12 +1,12 @@
 # account.py
 # routes for creating and maintaning Twilio messaging accounts
 
-from cbmd.models import WebUser, SMSAccount, User_Account_Link
-from cbmd.extensions import db, v_client, twilio_config, sql_error, render_template, request,\
+from models import WebUser, SMSAccount, User_Account_Link
+from extensions import db, v_client, twilio_config, sql_error, render_template, request,\
                             url_for, flash, redirect, Blueprint, abort, session, func, or_, and_,\
                             login_required, current_user
 
-from cbmd.phonenumber import cleanphone
+from phonenumber import cleanphone
 
 account = Blueprint('account', __name__, url_prefix='/account', template_folder='templates')
 

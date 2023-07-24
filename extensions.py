@@ -1,6 +1,6 @@
 from os import environ
 #import os, sys; sys.path.append(os.path.dirname(os.path.realpath(__file__)))
-from flask import Blueprint, render_template, redirect, request, flash, url_for, abort, current_app, session
+from flask import Blueprint, render_template, redirect, request, flash, url_for, abort, current_app, session, Response as flask_response
 from flask_login import LoginManager,  login_required, login_user, current_user, logout_user
 from flask_bcrypt import Bcrypt
 from flask_marshmallow import Marshmallow

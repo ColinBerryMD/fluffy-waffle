@@ -1,10 +1,11 @@
+# to work this command string from python-source directory
 # gunicorn cbmd.app:app --bind 0.0.0.0:8000
 
 from flask import Flask
 from config import Config
 
-from .extensions import db, bcrypt, login_manager, current_user, environ, Blueprint, session
-from .models import WebUser
+from extensions import db, bcrypt, login_manager, current_user, environ, Blueprint, session
+from models import WebUser
    
 app = Flask(__name__)  
 
@@ -37,28 +38,28 @@ db.init_app(app)
 bcrypt.init_app(app)
 
 # Register blueprints here
-from .main import main as main_bp
+from main import main as main_bp
 app.register_blueprint(main_bp)
 
-from .auth.auth import auth as auth_blueprint
+from auth.auth import auth as auth_blueprint
 app.register_blueprint(auth_blueprint)
 
-from .sms_client.sms_client import sms_client as sms_client_blueprint
+from sms_client.sms_client import sms_client as sms_client_blueprint
 app.register_blueprint(sms_client_blueprint)
 
-from .group.group import group as group_blueprint
+from group.group import group as group_blueprint
 app.register_blueprint(group_blueprint)
 
-from .message.message import message as message_blueprint
+from message.message import message as message_blueprint
 app.register_blueprint(message_blueprint)
 
-from .account.account import account as account_blueprint
+from account.account import account as account_blueprint
 app.register_blueprint(account_blueprint)
 
-from .errors.errors import errors as errors_blueprint
+from errors.errors import errors as errors_blueprint
 app.register_blueprint(errors_blueprint)
 
-from .message.message import sse
+from message.message import sse
 app.register_blueprint(sse, url_prefix='/stream')
 
 # Login manager

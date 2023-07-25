@@ -80,11 +80,6 @@ class MessageSchema(ma.SQLAlchemyAutoSchema):
         load_instance = True
         sqla_session = db.session
 
-    class Client:
-        def __init__(self, firstname, lastname ):
-            self.firstname = firstname
-            self.lastname  = lastname
-
 class BadPasswords(db.Model):
     __tablename__ = 'BadPasswords'
     id = db.Column(db.Integer, primary_key=True) # primary keys are required by SQLAlchemy

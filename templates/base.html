@@ -121,6 +121,12 @@
                     <a href="{{ url_for('group.select') }}"  
                        class="w3-bar-item w3-button w3-hide-small w3-hide-medium w3-hover-white">Select Client Group</a>
                     {% endif %}
+                    {% if session['account_id'] %}
+                        <a href="{{ url_for('message.list') }}" 
+                               class="w3-bar-item w3-button w3-hide-small w3-hover-white">
+                                Open Messages
+                        </a>
+                    {% endif %}
                 {% endif %}
 
                 {% if current_user.is_authenticated %}

@@ -50,16 +50,6 @@ def list():
 
     return render_template('message/list.html', messages = messages, group = group )
 
-# identical to list; but creates a selection
-@message.route('/selection')
-def selection():
-    try:
-        messages = Message.query.all()
-    except sql_error as e:
-        return redirect(url_for('errors.mysql_server', error = e)) 
-
-    return render_template('message/list.html', messages=messages)
-
 # send an sms message
 @message.post('/<int:client_id>/send')
 def send(client_id):
@@ -70,7 +60,7 @@ def send(client_id):
         flash('Message content is required!','error')
         return redirect( url_for('message.list'))
 
-    account = SMSAccount.query.filter(SMSAccount.sid == session['account_id'] ).first()
+    account = SMSAccount.query.filter(SMSAccount.id == session['account_id'] ).first()
     if not account:
         flash('Active account is required.','error')
         return redirect( url_for('message.list'))
@@ -124,9 +114,9 @@ def send(client_id):
 
     return flask_response(status=204)
 
-# recieve a Twilio SMS message via webhook
-@message.route('/recieve', methods=['POST'])
-def recieve():
+# receive a Twilio SMS message via webhook
+@message.route('/receive', methods= ( 'GET','POST'))
+def receive():
 
     # make sure this is a valid twilio text message
     validator = RequestValidator(twilio_config.auth_token)
@@ -134,11 +124,11 @@ def recieve():
         abort(401)
 
     # get the parts we care about
-    SentFrom = request.form.get('from')
-    Body     = request.form.get('body')
-    SentTo   = request.form.get('to')
-    message_sid = request.form.get('sid')
-
+    SentFrom = request.form['From']
+    Body     = request.form['Body']
+    SentTo   = request.form['To']
+    message_sid = request.form['MessagingServiceSid']
+    
     try:
         account = SMSAccount.query.filter(SMSAccount.sid == message_sid ).first().id
                            
@@ -196,5 +186,5 @@ def recieve():
     message_json = message_schema.dump(message)
     sse.publish(message_json, type='sms_message')
 
-    #print('SMS recieved at '+ message.SentAt +'.')
+    #print('SMS received at '+ message.SentAt +'.')
     return("<Response/>")

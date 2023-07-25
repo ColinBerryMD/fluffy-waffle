@@ -198,7 +198,7 @@ def edit(account_id):
 
 # Make this our active account
 @login_required
-@account.post('/<int:account_id>/activate')
+@account.route('/<int:account_id>/activate')
 def activate(account_id):
     # limit access to sms users on the account or owner or admin
     try:

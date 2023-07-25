@@ -66,13 +66,13 @@
                 
 
                 <div class="chat-popup" id="chatForm_{{member.id}}" style="display: none;">
-                  <form action="{{ url_for('message.send', client_id = member.id) }}" method="post" class="form-container">
+                  <form action="{{ url_for('message.send', client_id = member.id) }}" method="post" class="form-container" >
                     <h1>Chat</h1>               
 
                     <label for="Body"><b>Message</b></label>
                     <textarea placeholder="Type message.." name="Body" required></textarea>             
 
-                    <button type="submit" class="btn">Send</button>
+                    <button type="submit" class="btn" onclick="closePopup({{member.id}})">Send</button>
                     <button type="button" class="btn cancel" onclick="closePopup({{member.id}})">Close</button>
                   </form>
                 </div>

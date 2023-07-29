@@ -2,6 +2,7 @@
 
 {% block title %}Claim Username{% endblock %}
 {% block content %}
+{# needs user = WebUser() #}
 <div class="w3-container">
     <h1 class='w3-padding-16' style="margin-top: 32px;">Claim Username: {{ user.User }}</h1>
     <form method="POST" action="{{ url_for('auth.register', user_id = user.id) }}">

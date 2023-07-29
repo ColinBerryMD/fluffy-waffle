@@ -24,6 +24,7 @@ def create():
         translate = translate
         blocked   = False
 
+
         session['firstname'] = firstname 
         session['lastname']  = lastname
         session['dob']       = dob_str

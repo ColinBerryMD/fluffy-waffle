@@ -2,6 +2,7 @@
 
 {% block title %}One Time Password{% endblock %}
 {% block content %}
+{# needs user = WebUser() #}
 <div class="w3-container">
     <h1 class='w3-padding-16' style="margin-top: 32px;">New One Time Pass Code for Username: {{ user.User }}</h1>
     <form method="POST" action="{{ url_for('auth.two_factor', user_id = user.id) }}">

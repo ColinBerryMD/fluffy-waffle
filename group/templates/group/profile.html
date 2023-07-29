@@ -2,11 +2,12 @@
 
 {% block title %}{{ group.name }}{% endblock %}
 {% block content %}
+{# needs group = SMSGroup() #}
 <div class="w3-container">
     <h1 class='w3-padding-16' style="margin-top: 32px">{{ group.name }}</h1>
     <p>Associated Account:&nbsp{{ account.name }}</p>
-    {% if clients %}
-        {% for client in clients %}
+    {% if group.clients %}
+        {% for client in group.clients %}
             <p>
                 {{ client.firstname }}&nbsp{{ client.lastname }}
                 <a href="{{ url_for('group.delete_client', client_id=client.id, group_id=group.id) }}" 

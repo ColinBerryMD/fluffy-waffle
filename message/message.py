@@ -32,9 +32,7 @@ def list():
     try:
         messages = db.session.query(Message).all()
         if group_id:
-            group = db.session.query(SMSClient).filter(
-                            SMSClient.group_id == session['group_id']
-                            ).all()
+            group = SMSGroup.query.filter(SMSGroup.id == group_id).one()
         else:
             group = None
 

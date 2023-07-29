@@ -2,12 +2,13 @@
 
 {% block title %}Update&nbsp{{ account.name }}{% endblock %}
 {% block content %}
+{# needs account = SMSAccount() #}
 <div class="w3-container">
     <h1 class='w3-padding-16' style="margin-top: 32px">Update&nbsp{{ account.name }}</h1>
     <div>
         <form method="POST" action="{{ url_for('account.edit',account_id=account.id) }}">
             <div>
-                <input type="text" name="owner_user_name" value='{{ owner.User }}' autofocus="">
+                <input type="text" name="owner_user_name" value='{{ account.owner.User }}' autofocus="">
                 <label for="owner_user_name">Owner</label>
             </div>
             <div>
@@ -23,8 +24,8 @@
                 <label for="sid">SID</label>
             </div>
             <div>
-            {% if users %}
-            {% for user in users %}
+            {% if account.users %}
+            {% for user in account.users %}
                 <p>{{ user.first  }}&nbsp{{ user.last  }}
                     {% if user.id == owner.id %}
                         (owner)

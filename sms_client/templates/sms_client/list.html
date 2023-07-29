@@ -2,6 +2,7 @@
 
 {% block title %}List Clients{% endblock %}
 {% block content %}
+{# needs clients; a list of SMSClient() #}
 <div class="w3-container">
     <h1 class='w3-padding-16' style="margin-top: 32px;">Client List</h1>
     <form method="POST" action="{{ url_for('sms_client.list') }}">

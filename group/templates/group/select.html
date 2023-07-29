@@ -2,6 +2,7 @@
 
 {% block title %}Select Client Group{% endblock %}
 {% block content %}
+{# needs groups; list of SMSGroup() #}
 <div class="w3-container">
     <h1 class='w3-padding-16' style="margin-top: 32px;">Select Client Group</h1>
     <form method="POST" action="{{ url_for('group.select') }}">

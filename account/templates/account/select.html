@@ -2,6 +2,7 @@
 
 {% block title %}Select SMS Account{% endblock %}
 {% block content %}
+{# needs accounts; a list of SMSAccount() #}
 <div class="w3-container">
     <h1 class='w3-padding-16' style="margin-top: 32px;">Select SMS Account</h1>
     <form method="POST" action="{{ url_for('account.select') }}">

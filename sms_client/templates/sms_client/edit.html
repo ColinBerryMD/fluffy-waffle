@@ -2,6 +2,7 @@
 
 {% block title %}Client:&nbsp{{ client.firstname }}&nbsp{{ client.lastname }}{% endblock %}
 {% block content %}
+{# needs client = SMSClient() #}
 <div class="w3-container">
     <h1 class='w3-padding-16' style="margin-top: 32px">Edit:&nbsp{{ client.firstname }}&nbsp{{ client.lastname }}</h1>
     <form method="POST" action="{{ url_for('sms_client.edit', sms_client_id = client.id ) }}">

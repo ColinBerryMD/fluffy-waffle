@@ -42,11 +42,12 @@ def create():
             flash('Date of birth is misformatted.','error')
             return render_template('sms_client/create.html')
 
-        existing_sms_client=False  #for testing
-        #try:
-        #   existing_sms_client = SMSClient.query.filter(or_(SMSClient.email==email, SMSClient.phone==phone)).first()
-        #except sql_error as e:   
-        #    return redirect(url_for(errors.mysql_server, error = e))
+        #existing_sms_client=False  #for testing
+        try:
+           existing_sms_client = SMSClient.query.filter(or_(SMSClient.email==email, SMSClient.phone==phone)).first()
+        except sql_error as e: 
+            locale="checking for duplicate clients"  
+            return redirect(url_for(errors.mysql_server, error = e,locale=locale))
         
         # if this returns a client, then the email or phone already exists in database
         if existing_sms_client : # if a client is found, we want to redirect back to signup page so they can try again
@@ -62,7 +63,9 @@ def create():
             verification = v_client.verify.v2.services( twilio_config.otp_sid ).verifications \
                             .create(to= phone, channel='sms')
         except: # wrong numbers throw an untracable exception
-                return redirect(url_for('errors.twilio_server'))
+            e= "Error sending verification code"
+            locale="sending verification to new client in create()"
+                return redirect(url_for('errors.twilio_server',error=e,locale=locale))
                 
         return redirect(url_for('sms_client.terms'))
     
@@ -101,8 +104,9 @@ def terms():
         try:            # add to database on success
             db.session.add(new_sms_client)
             db.session.commit()
-        except sql_error as e: 
-            return redirect(url_for(errors.mysql_server, error = e))
+        except sql_error as e:
+            locale="adding new client to database" 
+            return redirect(url_for(errors.mysql_server, error = e,locale=locale))
 
         # announce success
         flash('Passcode accepted.','info')
@@ -133,7 +137,7 @@ def profile(client_id):
         flash('You need messaging access for this.','error')
         return redirect(url_for('main.index'))
 
-    client = SMSClient.query.get_or_404(client_id)
+    client = SMSClient.query.filter(SMSClient.id == client_id)
 
     return render_template('sms_client/profile.html', client = client )
 
@@ -142,11 +146,7 @@ def profile(client_id):
 def select():
     if request.method == 'POST':
         if request.form.get('select_all') == 'on':
-            try: 
-                clients = SMSClient.query.all()
-                                                        
-            except sql_error as e:
-                return redirect(url_for('errors.mysql_server', error = e)) 
+            clients = SMSClient.query.all()
         else:
             firstname = request.form['firstname']
             lastname  = request.form['lastname']
@@ -175,7 +175,8 @@ def select():
                 clients = SMSClient.query.filter(sql_text(name_query)).all()
                                                         
             except sql_error as e:
-                return redirect(url_for('errors.mysql_server', error = e))  
+                locale="text() search for client"
+                return redirect(url_for('errors.mysql_server', error = e,locale=locale))  
 
         if clients:
             if len(clients) == 1:     # if only one
@@ -202,9 +203,10 @@ def edit(sms_client_id):
         return redirect(url_for('main.index'))
 
     try:
-        client_to_edit = SMSClient.query.get_or_404(sms_client_id)
+        client_to_edit = SMSClient.query.filter(SMSClient.id == sms_client_id)
     except sql_error as e: 
-        return redirect(url_for(errors.mysql_server, error = e))
+        locale="getting client to edit"
+        return redirect(url_for(errors.mysql_server, error = e,locale=locale))
 
     if client_to_edit.dob:
         dob_str = client_to_edit.dob.strftime('%m/%d/%Y')
@@ -235,11 +237,11 @@ def edit(sms_client_id):
         else:
             dob_obj = datetime.strptime(dob_str,'%m/%d/%Y')
 
-        conflicting_sms_client=False # for testing
-        #try:
-        #   conflicting_sms_client = SMSClient.query.filter(or_(SMSClient.email==email, SMSClient.phone==phone)).first()
-        #except sql_error as e:
-        #   return redirect(url_for(errors.mysql_server, error = e))
+        #conflicting_sms_client=False # for testing
+        try:
+           conflicting_sms_client = SMSClient.query.filter(or_(SMSClient.email==email, SMSClient.phone==phone)).first()
+        except sql_error as e:
+           return redirect(url_for(errors.mysql_server, error = e))
         
         if conflicting_sms_client : # if a user is found, we want to redirect back to signup page so user can try again
             flash('New email address or phone number already exists', 'error')
@@ -258,7 +260,8 @@ def edit(sms_client_id):
             db.session.add(client_to_edit)
             db.session.commit()
         except sql_error as e: 
-            return redirect(url_for(errors.mysql_server, error = e))
+            locale="updating client after edit"
+            return redirect(url_for(errors.mysql_server, error = e,locale=locale))
 
         flash('SMS client updated.','info')
         return redirect(url_for('main.index'))
@@ -278,13 +281,14 @@ def block(client_id):
         flash('You need messaging access for this.','error')
         return redirect(url_for('main.index'))
 
-    client_to_block = SMSClient.query.get_or_404(client_id)
+    client_to_block = SMSClient.query.filter(SMSClient.id == client_id)
     client_to_block.blocked = True
     try:
         db.session.add( sms_client_to_block)
         db.session.commit()
     except sql_error as e:
-        return redirect(url_for(errors.mysql_server, error = e))
+        locale="blocking a client"
+        return redirect(url_for(errors.mysql_server, error = e,locale=locale))
 
     flash('Client '+client_to_block.firstname +' '+client_to_block.lastname+' blocked.','info')
     return redirect(url_for('main.index'))
@@ -301,11 +305,12 @@ def delete(client_id):
         return redirect(url_for('main.index'))
 
     try:
-        client_to_delete = SMSClient.query.get_or_404(client_id)
+        client_to_delete = SMSClient.query.filter(SMSClient.id == client_id)
         db.session.delete(client_to_delete)
         db.session.commit()
     except sql_error as e:
-        return redirect(url_for(errors.mysql_server, error = e))
+        locale="deleting a client"
+        return redirect(url_for(errors.mysql_server, error = e,locale=locale))
 
     flash('Client '+client_to_delete.firstname +' '+client_to_delete.lastname+' deleted.','info')
     return redirect(url_for('main.index'))

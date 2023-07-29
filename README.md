@@ -1,28 +1,20 @@
 # fluffy-waffle
 
- App can run from SQLite practice database with the MySQL code commented out in app.py. I don't keep up with the tables is SQLite, so db.create_all() will be needed and the database file database.db (almost certianly out of date) is excluded from this repository. make_pages is to convert my latest model into a mysql table.
+ App can run from SQLite practice database with the MySQL code commented out in app.py. I don't keep up with the tables is SQLite, so db.create_all() will be needed and the database file database.db (almost certianly out of date) is excluded from this repository. 
 
- I have a bash script (excluded by gitignore) that sets passwords and account info as environmental variables. export_config is an empty version of this script. I tried to put comments with end runs near near most places in the code that need an environmental variable. I also trap the first 'key error' for a smooth landing if critical variables aren't set.
+ I have a bash script (excluded by gitignore) that sets passwords and account info as environmental variables. export_config is an empty version of this script. I tried to put comments with end runs near near most places in the code that need an environmental variable. I also trap the first 'key error' for a smooth landing if critical environmental variables aren't set.
 
-The __init__.py is empty. app.py initializes and extensions.py prevents circular imports. 
-
-Send, recieve, and list sms messages from a cell phone works. It won't look right until 
-I can work in SSE and a pretty front end.
-
-Error tracking is fine. Some Twilio situations break the program rather than throw a catchable exception. Their Alarm utility doesn't seem to stop this. I'm trying to make all the 'reasonable' user errors and catch the ones I can for flash messages and do overs. They do have a way to check the status (ie has it been read or recieved) which I will work in later.
+Some Twilio situations break the program rather than throw a catchable exception. Their Alarm utility doesn't seem to stop this. I'm trying to make all the 'reasonable' user errors and catch the ones I can for flash messages and do overs. They do have a way to check the status (ie has it been read or recieved) which I will work in later.
 
 We now have the ability to create named client groups.
 
-Working on the ability to juggle multiple phone numbers and accounts. This kicks the complexity up a couple notches.
+Works with multiple phone numbers (ie accounts). 
 - Each account has an owner (assigned at creation) and multiple users who are added on later. A client can message any account they like.
-- On login, a user's account or default account will be 'activated' -- session['active_account'] = .... Those with multiple accounts can 
-'select' another.
+- On login, a user's account or default account will be 'activated' -- session['active_account'] = .... Those with multiple accounts can 'select' another.
 
 A note on directory structure. The blueprint layout is after https://realpython.com/flask-blueprint/. 
-The root (cbmd) has app.py and the other backend modules. main.py has the veiws for our front end. It was written last, with its focus on styling. I plan for it to revolve around four dashboards: one for admin, one for a user who mostly needs to work with messages (but someday
-there should be some other tools for them), one for clients to enroll and maybe browse around, and one for visitors -- mostly a billboard. 
-The other blueprints were constructed to test functionality during development. They were born unstyled. I suppose many will remain that way 
-unless they prove to have a purpose in the production environment. I'll try and delete them as they outlive their utility.
+The root (cbmd) has app.py and the other backend modules. main.py has the veiws for our front end. It was written last, with its focus on styling. I plan for it to revolve around four dashboards: one for admin, one for a user who mostly needs to work with messages (but someday there should be some other tools for them), one for clients to enroll and maybe browse around, and one for visitors -- mostly a billboard. 
+The other blueprints were constructed to test functionality during development. They were born unstyled. I suppose many will remain that way unless they prove to have a purpose in the production environment. I'll try and delete them as they outlive their utility.
 	
 - account: 
 	- create -- a new sms twilio account
@@ -61,6 +53,9 @@ unless they prove to have a purpose in the production environment. I'll try and 
 	- delete -- the group
 
 - message: send and recieve sms messages with the active account
+	- list -- the messaging dashboard
+	- send -- a sms 
+	- receiveM
 	
 - sms_client		
 	- create -- enter a client profile
@@ -72,14 +67,10 @@ unless they prove to have a purpose in the production environment. I'll try and 
 	- block -- deleting a client wont help (they can just create a new client profile). Here we keep them in the DB in a blocked status.
 	- delete -- a client
 
-As of today message is primitive. It has already been worked out in a free standing script, but to bring it on board I will need to move
-away from flask's development server to some combination of gunicorn, redis and nginx (none of which I understand that well).
+Messaging requires server sent events, which wont work on the flask development server. Upgraded to a combination of gunicorn, redis and nginx (none of which I understand that well).
 
-At that point the front end is styled with w3css. Tried bootstrap, but div in div in div and too many people trying to sell me stuff
-rather than actually show how things are done... w3css proved much more elegant.
+At that point the front end is styled with w3css. Tried bootstrap, but div in div in div and too many people trying to sell me stuff rather than actually show how things are done... w3css proved much more elegant.
 
-The only local css is static/css/cbmd.css which has been kept very light.
-
-The only local js pertains to messages, so I put it in messages/static/javascript/....
+Working hard to keep the local styling and javascript to a minimum. The only local css should be static/css/cbmd.css. The only local js is in messages/static/javascript/sms.js. This does the dynamic modification of the message dashboard. There is a little js to listen for sse events at the bottom of base.html.
 
 ## I would appreciate feedback regarding style, readability and potential security vulnerabilities. 

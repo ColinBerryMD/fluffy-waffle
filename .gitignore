@@ -4,3 +4,4 @@ __pycache__/
 flask_session/
 database.db
 record.log
+init_db.py

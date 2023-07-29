@@ -3,16 +3,18 @@ from os import environ
 from flask import Blueprint, render_template, redirect, request, flash, url_for, abort, current_app, session, Response as flask_response
 from flask_login import LoginManager,  login_required, login_user, current_user, logout_user
 from flask_bcrypt import Bcrypt
-from flask_marshmallow import Marshmallow
+#from flask_marshmallow import Marshmallow
 
+from sqlalchemy.orm import relationship
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError as sql_error
 from sqlalchemy.sql import func, or_, and_
-from sqlalchemy import text as sql_text
+from sqlalchemy import text as sql_text, ForeignKey, inspect
 
 from twilio.rest import Client as TwilioClient
+
 db = SQLAlchemy()
-ma = Marshmallow()
+#ma = Marshmallow()
 bcrypt = Bcrypt()
 login_manager = LoginManager()
 
@@ -35,5 +37,5 @@ except KeyError:
 try:
 	v_client = TwilioClient(twilio_config.account_sid, twilio_config.auth_token)
 except:
-	print("Error on initial twilio connection.")
+	print("Error on initial twilio connection. Are the SID and auth token correct?")
 	abort(401)

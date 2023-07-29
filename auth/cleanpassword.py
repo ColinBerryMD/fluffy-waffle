@@ -27,17 +27,14 @@ def cleanpassword(password,verify):
         return False
 
     # are they on the list of 10k really bad passwords?
-    bad = BadPasswords.query.filter(BadPasswords.baddie == password).first()
-    if bad:
+    if BadPasswords.query.filter(BadPasswords.baddie == password).first():
         flash('Password '+ password +' is on the list of really bad passwords.','error')
         return False
 
     # are they on the list old passwords?
-    oldies = OldPasswords.query.all()
-    for o in oldies:
-        if bcrypt.check_password_hashpassword ( o.oldie, password ):
-            flash('Password '+ password +' is on the list of previous passwords.','error')
-            return False
+    if bcrypt.check_password_hashpassword in OldPasswords.query.all():
+        flash('Password '+ password +' is on the list of previous passwords.','error')
+        return False
 
     # use the quality tests      
     test = policy.test(password)
@@ -51,7 +48,7 @@ def cleanpassword(password,verify):
             if fault == 'nonletters':
                 flash('Password needs at least '+ str(t.count)  +' non-letter characters.','error')
             if fault == 'strength':
-                flash('Password needs more entropy.')#
+                flash('Password needs more entropy.')
         return False
 
     # seems to have passed all the tests

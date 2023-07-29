@@ -6,14 +6,17 @@ from flask_sse import sse
 from twilio.request_validator import RequestValidator
 from twilio.twiml.messaging_response import MessagingResponse
 
-from models import MessageSchema, Message, WebUser, SMSAccount, SMSGroup, SMSClient,\
+from models import Message, WebUser, SMSAccount, SMSGroup, SMSClient,\
                         Client_Group_Link
 from extensions import db, v_client, twilio_config, sql_error, login_required, flask_response,\
-                            current_user, render_template, request, url_for, flash,\
-                            redirect, Blueprint, abort, session, func, or_, and_
+                        current_user, render_template, request, url_for, flash, redirect, \
+                        Blueprint, abort, session, func, or_, and_, ForeignKey, relationship, inspect
+
 
 from phonenumber import cleanphone
 from mountain_time import mountain_time
+from dict_from import dict_from
+
 
 message = Blueprint('message', __name__,url_prefix='/message', template_folder='templates')
 
@@ -27,40 +30,31 @@ def list():
         group_id = None
 
     try:
-        messages = db.session.query(
-                            Message,SMSClient
-                            ).join(
-                            SMSClient, Message.Client == SMSClient.id
-                            ).all()
+        messages = db.session.query(Message).all()
         if group_id:
-            group = db.session.query(
-                            SMSClient
-                            ).join(
-                            Client_Group_Link, SMSClient.id == Client_Group_Link.client_id
-                            ).join(
-                            SMSGroup, Client_Group_Link.group_id == SMSGroup.id
-                            ).filter(
-                            SMSGroup.id == session['group_id']
+            group = db.session.query(SMSClient).filter(
+                            SMSClient.group_id == session['group_id']
                             ).all()
         else:
             group = None
 
     except sql_error as e:
-        return redirect(url_for('errors.mysql_server', error = e)) 
+        locale = "getting messages for list"
+        return redirect(url_for('errors.mysql_server', error = e, locale=locale)) 
 
     return render_template('message/list.html', messages = messages, group = group )
 
 # send an sms message
 @message.post('/<int:client_id>/send')
 def send(client_id):
-    sms_client = SMSClient.query.get_or_404(client_id)
+    sms_client = SMSClient.query.filter(SMSClient.id == client_id).one()
 
     Body = request.form['Body']
     if not Body:
         flash('Message content is required!','error')
         return redirect( url_for('message.list'))
 
-    account = SMSAccount.query.filter(SMSAccount.id == session['account_id'] ).first()
+    account = SMSAccount.query.filter(SMSAccount.id == session['account_id'] ).one()
     if not account:
         flash('Active account is required.','error')
         return redirect( url_for('message.list'))
@@ -101,17 +95,17 @@ def send(client_id):
         db.session.add(message)
         db.session.commit()
     except sql_error as e:
-        return redirect(url_for('errors.mysql_server', error = e)) 
+        locale = "adding sent message to database"
+        return redirect(url_for('errors.mysql_server', error = e, locale=locale)) 
     
 
     # publish SSE to message list
-    # I need to insert client name in this as I create the json via dump
-    message_schema = MessageSchema()
-    message_json = message_schema.dump(message)
+    msg_dict = dict_from(message)
+    msg_dict.update(dict_from(sms_client))
+    message_json = json.dumps(msg_dict)
     sse.publish(message_json, type='sms_message')
 
     
-
     return flask_response(status=204)
 
 # receive a Twilio SMS message via webhook
@@ -130,23 +124,28 @@ def receive():
     message_sid = request.form['MessagingServiceSid']
     
     try:
-        account = SMSAccount.query.filter(SMSAccount.sid == message_sid ).first().id
+        account = SMSAccount.query.filter(SMSAccount.sid == message_sid ).one().id
                            
-    except sql_error as e:   
-        return redirect(url_for(errors.mysql_server, error = e))
+    except sql_error as e: 
+        locale = "getting account number from twilio sid"  
+        return redirect(url_for('errors.mysql_server', error = e, locale=locale))
 
     # no account found. Don't know how this can happen
     if not account:
-        return redirect(url_for('errors.twilio_server'))
+        e = "No mysql error thrown, but no twillio account found"
+        locale = "finding sms account"
+        return redirect(url_for('errors.twilio_server',error=e,locale=locale))
 
     # is this from a registered client?
     try:
-        sms_client = SMSClient.query.filter(SMSClient.phone == SentFrom).first()
+        sms_client = SMSClient.query.filter(SMSClient.phone == SentFrom).one()
                            
-    except sql_error as e:   
-        return redirect(url_for(errors.mysql_server, error = e))    
+    except sql_error as e:  
+        locale = "getting client info with phone. Do two clients have the same number?" 
+        return redirect(url_for('errors.mysql_server', error = e, locale=locale))    
         
     if not sms_client: # reply with a request to sign up
+        ######### reply with a link in the request
         response = MessagingResponse()
         s = "Looks like you have yet to sign up for our text messaging service."
         s+= "Please re-send your message after signing up."
@@ -178,13 +177,19 @@ def receive():
     try: # add the message to the database
         db.session.add(message)
         db.session.commit()
+        db.session.refresh(message)
     except sql_error as e:
-        return redirect(url_for('errors.mysql_server', error = e)) 
+        locale = "adding recieved message to database"
+        return redirect(url_for('errors.mysql_server', error = e, locale=locale)) 
 
+    
     # publish SSE to message list
-    message_schema = MessageSchema()
-    message_json = message_schema.dump(message)
+
+    msg_dict = dict_from(message)
+    msg_dict.update(dict_from(sms_client))
+    message_json = json.dumps(msg_dict)
+
+    print(message_json)
     sse.publish(message_json, type='sms_message')
 
-    #print('SMS received at '+ message.SentAt +'.')
     return("<Response/>")

@@ -1,11 +1,11 @@
 from flask_login import UserMixin
 
 from datetime import datetime
-from extensions import db, ma
+from extensions import db, relationship
 
 class WebUser(UserMixin,db.Model):
     __tablename__="WebUser"
-    id = db.Column(db.Integer, primary_key=True) # primary keys are required by SQLAlchemy
+    id = db.Column(db.Integer, primary_key=True) 
     User = db.Column(db.String(32))
     password = db.Column(db.String(255))
     password_expires = db.Column(db.DateTime())
@@ -20,6 +20,8 @@ class WebUser(UserMixin,db.Model):
     default_group = db.Column(db.Integer)
     translate = db.Column( db.Boolean() )
     two_fa_expires = db.Column( db.DateTime() )
+    owned_accounts = relationship("SMSAccount", back_populates="owner")
+    accounts = relationship('SMSAccount', secondary = 'User_Account_Link')
 
 class SMSClient(db.Model):
     __tablename__ ="SMSClient"
@@ -31,34 +33,8 @@ class SMSClient(db.Model):
     phone = db.Column(db.String(15))
     translate = db.Column(db.Boolean)
     blocked = db.Column(db.Boolean)
-
-class Client_Group_Link(db.Model):
-    __tablename__ ="Client_Group_Link"
-    id = db.Column(db.Integer, primary_key=True)
-    client_id = db.Column(db.Integer)
-    group_id = db.Column(db.Integer)
-    account_id = db.Column(db.Integer)
-
-class SMSGroup(db.Model):
-    __tablename__ ="SMSGroup"
-    id = db.Column(db.Integer, primary_key=True)
-    account_id = db.Column(db.Integer)
-    name = db.Column(db.String(40))
-    comment = db.Column(db.String(160))
-
-class SMSAccount(db.Model):
-    __tablename__ ="SMSAccount"
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(40))
-    number = db.Column(db.String(12))
-    sid = db.Column(db.String(36))
-
-class User_Account_Link(db.Model):
-    __tablename__ ="User_Account_Link"
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer)
-    is_owner = db.Column(db.Boolean)
-    account_id = db.Column(db.Integer)
+    groups = relationship("SMSGroup", secondary ="Client_Group_Link")
+    messages = relationship("Message",back_populates="sms_client")
 
 class Message(db.Model):
     __tablename__ ="Message"
@@ -70,23 +46,52 @@ class Message(db.Model):
     Outgoing = db.Column(db.Boolean)
     Completed = db.Column(db.Boolean)
     Confirmed = db.Column(db.Boolean)
-    Account = db.Column(db.Integer)
-    Client = db.Column(db.Integer)
+    Account = db.Column(db.Integer,db.ForeignKey('SMSAccount.id'))
+    sms_account = relationship('SMSAccount', back_populates='messages')
+    Client = db.Column(db.Integer, db.ForeignKey('SMSClient.id'))
+    sms_client = relationship('SMSClient', back_populates='messages')
 
 
-class MessageSchema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = Message
-        load_instance = True
-        sqla_session = db.session
+class SMSAccount(db.Model):
+    __tablename__ ="SMSAccount"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(40))
+    number = db.Column(db.String(12))
+    owner_id = db.Column(db.Integer, db.ForeignKey('WebUser.id'))
+    owner = relationship("WebUser", back_populates="owned_accounts")
+    sid = db.Column(db.String(36))
+    messages = relationship("Message",back_populates="sms_account")
+    groups = relationship("SMSGroup",back_populates="sms_account", cascade = "all, delete, delete-orphan")
+    users = relationship('WebUser', secondary = 'User_Account_Link')
+
+
+class SMSGroup(db.Model):
+    __tablename__ ="SMSGroup"
+    id = db.Column(db.Integer, primary_key=True)
+    account_id = db.Column(db.Integer, db.ForeignKey('SMSAccount.id'))
+    name = db.Column(db.String(40))
+    comment = db.Column(db.String(160))
+    sms_account = relationship("SMSAccount", back_populates="groups")
+    clients = relationship("SMSClient", secondary = "Client_Group_Link")
+
+class Client_Group_Link(db.Model):
+    __tablename__ ="Client_Group_Link"
+    client_id = db.Column(db.Integer, db.ForeignKey(SMSAccount.id),primary_key=True)
+    group_id  = db.Column(db.Integer, db.ForeignKey(SMSGroup.id)  ,primary_key=True)
+
+class User_Account_Link(db.Model):
+    __tablename__ ="User_Account_Link"
+    user_id    = db.Column(db.Integer, db.ForeignKey(WebUser.id)   ,primary_key=True)
+    account_id = db.Column(db.Integer, db.ForeignKey(SMSAccount.id),primary_key=True)
+
 
 class BadPasswords(db.Model):
     __tablename__ = 'BadPasswords'
-    id = db.Column(db.Integer, primary_key=True) # primary keys are required by SQLAlchemy
-    baddie = db.Column(db.String(25)) # these are stored plain text
+    id = db.Column(db.Integer, primary_key=True) 
+    baddie = db.Column(db.String(25)) 
 
 class OldPasswords(db.Model):
     __tablename__='OldPasswords'
-    id = db.Column(db.Integer, primary_key=True) # primary keys are required by SQLAlchemy
-    oldie = db.Column(db.String(255)) # these are stored hashed
+    id = db.Column(db.Integer, primary_key=True) 
+    oldie = db.Column(db.String(255)) 
     created = db.Column(db.DateTime)

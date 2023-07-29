@@ -6,6 +6,7 @@
         <h1 class="w3-text-teal">OOOOPS! Something went wrong.</h1>
             {% block error_content %}
             {% endblock %}
+        <p>This error occured in the context of {{ locale }}
         <a href="{{ url_for('main.index') }}" class="w3-button w3-round-xlarge w3-black">Take Me Home</a>
     </div>
 </div>

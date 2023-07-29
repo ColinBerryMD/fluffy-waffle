@@ -31,9 +31,10 @@ def login():
         remember = True if request.form.get('remember') else False
 
         try:
-            user = WebUser.query.filter_by(User=User).first()
+            user = WebUser.query.filter_by(User=User).one()
         except sql_error as e:
-            return redirect(url_for('errors.mysql_server', error = e)) 
+            locale = "getting user for login"
+            return redirect(url_for('errors.mysql_server', error = e, locale=locale)) 
 
         # check if the user actually exists
         # take the user-supplied password, hash it, and compare it to the hashed password in the database
@@ -44,7 +45,7 @@ def login():
         # if the above check passes, then we know the user has the right credentials
         login_user(user, remember=remember)
 
-        if user.password_expires < datetime.now():
+        if not user.password_expires or user.password_expires < datetime.now():
             flash('Your password has expired.','info')
             return redirect(url_for('auth.change_password', user_id = user.id))
 
@@ -57,13 +58,15 @@ def login():
                             .verifications \
                             .create(to= user.sms, channel='sms')
             except:
-                return redirect(url_for('errors.twilio_server'))
+                e="Twillio verification error"
+                locale="sending two factor code"
+                return redirect(url_for('errors.twilio_server',error=e,locale=locale))
 
             flash('Sending a new one time pass code to '+ user.sms +'.','info')
             return redirect(url_for('auth.two_factor', user_id = user.id))
 
         # two factor is in date 
-        #### need to set a default SMS account here
+        ############ need to set a default SMS account here
         
         return redirect(url_for('auth.profile',user_id=user.id ))
 
@@ -95,8 +98,9 @@ def create():
         # if this returns a user, then they already exist in database
         try:
             current = WebUser.query.filter_by(User=user_name).first() 
-        except sql_error as e: 
-            return redirect(url_for("errors.mysql_server", error = e))
+        except sql_error as e:
+            locale="preventing duplicate user names" 
+            return redirect(url_for("errors.mysql_server", error = e,locale=locale))
 
         if current: 
             flash('That user already exists. ','error')
@@ -110,7 +114,8 @@ def create():
             db.session.add(new_user)
             db.session.commit()
         except sql_error as e: 
-            return redirect(url_for("errors.mysql_server", error = e))
+            locale="adding new user to database"
+            return redirect(url_for("errors.mysql_server", error = e,locale=locale))
 
         flash('User '+ user_name + ' created.','info')
         return redirect(url_for('main.index'))        
@@ -141,12 +146,13 @@ def lookup():
         try:
             found = WebUser.query.filter_by(User=user_name).first() 
         except sql_error as e: 
-            return redirect(url_for("errors.mysql_server", error = e))
+            locale="finding user in lookup function"
+            return redirect(url_for("errors.mysql_server", error = e,locale=locale))
 
         if found: # if a user is found, we want to redirect to register route to create their profile
             return redirect(url_for('auth.register',user_id=found.id))
         else:
-            flash('That username is not in our database. ','error')
+            flash('That username is not in our database. ','info')
             return render_template('auth/lookup.html')
 
     # Handle GET requests
@@ -156,7 +162,7 @@ def lookup():
 # our invited user has found their username. Here they create a profile
 @auth.route('/<int:user_id>/register', methods=('GET','POST'))
 def register(user_id):
-    user = WebUser.query.get_or_404(user_id)
+    user = WebUser.query.filter(WebUser.id == user_id).first()
     if user.email: 
         flash('That username has already been registered.', 'error')
         return redirect(url_for('main.index'))
@@ -206,7 +212,8 @@ def register(user_id):
         try:
             existing_user = WebUser.query.filter_by(email=email).first() # if this returns a user, then the email already exists in database
         except sql_error as e: 
-            return redirect(url_for("errors.mysql_server", error = e))
+            locale="checking for a unique email"
+            return redirect(url_for("errors.mysql_server", error = e,locale=locale))
 
         if existing_user : 
             flash('That email address is in use already.', 'error')
@@ -226,7 +233,8 @@ def register(user_id):
             db.session.add(user)
             db.session.commit()
         except sql_error as e: 
-            return redirect(url_for("errors.mysql_server", error = e))
+            locale="creating user"
+            return redirect(url_for("errors.mysql_server", error = e,locale=locale))
 
         # store old password to prevent re-use
         try:
@@ -234,7 +242,8 @@ def register(user_id):
             db.session.add(old_password)
             db.session.commit()
         except sql_error as e: 
-            return redirect(url_for("errors.mysql_server", error = e))
+            locale="storing password to prevent reuse"
+            return redirect(url_for("errors.mysql_server", error = e,locale=locale))
         
         # time to log in
         return redirect(url_for('auth.login'))
@@ -246,7 +255,7 @@ def register(user_id):
 @auth.route('/<int:user_id>/two_factor', methods=('GET','POST'))
 @login_required
 def two_factor(user_id):
-    user = WebUser.query.get_or_404(user_id)
+    user = WebUser.query.filter.(Webuser.id == user_id)
 
     # handle PUT request
     if request.method == 'POST':
@@ -270,8 +279,12 @@ def two_factor(user_id):
         # update expiration
         user.two_fa_expires = datetime.now() + two_fa_lifetime
         
-        db.session.add(user)
-        db.session.commit()
+        try:
+            db.session.add(user)
+            db.session.commit()
+        except sql_error as e:
+            locale="updating user 2fa expiration"
+            return redirect(url_for("errors.mysql_server", error = e,locale=locale))
 
         flash('Pass Code Accepted.','info')
         return redirect(url_for('auth.profile',user_id=user_id))
@@ -284,7 +297,7 @@ def two_factor(user_id):
 @auth.route('/<int:user_id>/change_password', methods=('GET','POST'))
 @login_required
 def change_password(user_id):
-    user = WebUser.query.get_or_404(user_id)
+    user = WebUser.query.filter(WebUser.id == user_id)
 
     # handle PUT request
     if request.method == 'POST':
@@ -303,7 +316,7 @@ def change_password(user_id):
             return render_template('auth/change_password.html',user=user)
 
         # test password quality
-        if cleanpassword(new_password,verify_password):
+        if cleanpassword(new_password,verify_password):   # sends its own flashes
             pw_hash = bcrypt.generate_password_hash(new_password).decode("utf-8")
         else:
             return render_template('auth/change_password.html',user=user)
@@ -315,14 +328,16 @@ def change_password(user_id):
             db.session.add(user)
             db.session.commit()
         except sql_error as e: 
-            return redirect(url_for("errors.mysql_server", error = e))
+            locale="updating new password"
+            return redirect(url_for("errors.mysql_server", error = e,locale=locale))
             
         try:
             old_password = OldPasswords(oldie = user.password, created = datetime.now())
             db.session.add(old_password)
             db.session.commit()
-        except sql_error as e: 
-            return redirect(url_for("errors.mysql_server", error = e))
+        except sql_error as e:
+            locale="adding to old passwords file" 
+            return redirect(url_for("errors.mysql_server", error = e,locale=locale))
         
         return redirect(url_for('auth.profile',user_id=user.id))
 
@@ -338,7 +353,8 @@ def select():
                 users = WebUser.query.all()
                                                         
             except sql_error as e:
-                return redirect(url_for('errors.mysql_server', error = e)) 
+                locale="selecting all users"
+                return redirect(url_for('errors.mysql_server', error = e,locale=locale)) 
         else:
             user_name = request.form['username']
             firstname = request.form['firstname']
@@ -358,7 +374,8 @@ def select():
                 users = WebUser.query.filter(sql_text(name_query)).all()
                                                         
             except sql_error as e:
-                return redirect(url_for('errors.mysql_server', error = e))  
+                locale="search for users"
+                return redirect(url_for('errors.mysql_server', error = e,locale=locale))  
 
         if users:
             if len(users) == 1:     # if only one
@@ -374,7 +391,7 @@ def select():
 # veiw one user account
 @auth.route('/<int:user_id>/profile')
 def profile(user_id):
-    user = WebUser.query.get_or_404(user_id) 
+    user = WebUser.query.filter(WebUser.id == user_id) 
     return render_template('auth/profile.html',user=user)
 
 # display all users
@@ -388,8 +405,9 @@ def all():
 
     try:
         users = WebUser.query.all()
-    except (MySQLdb.Error, MySQLdb.Warning) as e:
-        return redirect(url_for("errors.mysql_server", error = e))
+    except sql_error as e:
+        locale="list all users"
+        return redirect(url_for("errors.mysql_server", error = e,locale=locale))
 
     return render_template('auth/list.html',users=users)
 
@@ -421,7 +439,7 @@ def list():
 @auth.route('/<int:user_id>/edit/', methods=('GET', 'POST'))
 @login_required
 def edit(user_id):
-    user = WebUser.query.get_or_404(user_id)
+    user = WebUser.query.filter(WebUser.id == user_id)
 
     if not ( user_id == current_user.id or current_user.is_admin ):
         flash('You cannot edit that account.', 'error')
@@ -467,8 +485,13 @@ def edit(user_id):
         user._is_sms = is_sms
         user.translate = translate
         
-        db.session.add(user)
-        db.session.commit()
+        try:
+            db.session.add(user)
+            db.session.commit()
+        except sql_error as e:
+            locale = "updating edited user"
+            return redirect(url_for("errors.mysql_server", error = e,locale=locale))
+
         return redirect(url_for('main.index'))
 
     # handle GET request    
@@ -493,13 +516,13 @@ def delete(user_id):
         flash('You need administrative access for this.','error')
         return redirect(url_for('main.index'))
 
-    u = WebUser.query.get_or_404(user_id)
+    u = WebUser.query.filter(WebUser.id == user_id)
     try:
         db.session.delete(u)
         db.session.commit()
-    except (MySQLdb.Error, MySQLdb.Warning) as e:
-        print(e)
-        return redirect(url_for("errors.mysql_server", error = e))
+    except sql_error as e:
+        locale = "deleting a user from database"
+        return redirect(url_for("errors.mysql_server", error = e,locale=locale))
 
     flash('User '+ u.User + ' deleted.','info')
     return redirect(url_for('main.index'))

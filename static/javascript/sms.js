@@ -48,9 +48,8 @@ function closePopup( client ) {
 // smsMessage is json of Class Message from .models
 // need to add in name attributes
 function AddChatElement(smsMessage){ 
-      
     // does a tab for this client exist? if not create it
-    let linkId, tabLink, buttonText
+    let linkId, tabLink, buttonText, buttonContent
 
     linkId = "button_"+String(smsMessage.Client)
     const tabParent = document.getElementById("tab_parent");
@@ -61,8 +60,8 @@ function AddChatElement(smsMessage){
       tabLink.setAttribute("id",linkId);
       tabLink.setAttribute("class", "w3-button w3-border w3-block w3-right-align tablink");
       tabLink.setAttribute("onclick", "openTab(event,'sms_"+String(smsMessage.Client)+"')");
-      const buttonContent = document.createTextNode(buttonText);
-      buttonContent = "Client: "+String(smsMessage.Client);  //// temp for now till we can get the name
+      buttonText = "Client: "+String(smsMessage.Client);  //// temp for now till we can get the name
+      buttonContent = document.createTextNode(buttonText);
       tabLink.appendChild(buttonContent);
       tabParent.appendChild( tabLink );
     }

@@ -255,7 +255,7 @@ def register(user_id):
 @auth.route('/<int:user_id>/two_factor', methods=('GET','POST'))
 @login_required
 def two_factor(user_id):
-    user = WebUser.query.filter.(Webuser.id == user_id)
+    user = WebUser.query.filter(Webuser.id == user_id)
 
     # handle PUT request
     if request.method == 'POST':

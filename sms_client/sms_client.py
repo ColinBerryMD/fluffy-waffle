@@ -66,7 +66,7 @@ def create():
         except: # wrong numbers throw an untracable exception
             e= "Error sending verification code"
             locale="sending verification to new client in create()"
-                return redirect(url_for('errors.twilio_server',error=e,locale=locale))
+            return redirect(url_for('errors.twilio_server',error=e,locale=locale))
                 
         return redirect(url_for('sms_client.terms'))
     

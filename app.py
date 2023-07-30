@@ -23,11 +23,11 @@ app.config['SECRET_KEY'] = environ['WTF_SECRET']
 
 # uncomment this to use mysql for with unprivileged account
 #db_password = environ.get('MYSQL_WEBSERVER_PASSWORD')
-#db_url = 'mysql+pymysql://webserver:'+db_password+'@localhost/fluffy-waffle'
+#db_url = 'mysql+pymysql://webserver:'+db_password+'@localhost/fluffy_waffle'
 
 # uncomment this to use mysql and modify 'fluffy-waffle' database
 db_password = environ.get('MYSQL_PRIVILEGED_PASSWORD')
-db_url = 'mysql+pymysql://privileged:'+db_password+'@localhost/fluffy-waffle'
+db_url = 'mysql+pymysql://privileged:'+db_password+'@localhost/fluffy_waffle'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False

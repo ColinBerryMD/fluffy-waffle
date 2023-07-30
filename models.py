@@ -21,7 +21,7 @@ class WebUser(UserMixin,db.Model):
     translate = db.Column( db.Boolean() )
     two_fa_expires = db.Column( db.DateTime() )
     owned_accounts = relationship("SMSAccount", back_populates="owner")
-    accounts = relationship('SMSAccount', secondary = 'User_Account_Link')
+    accounts = relationship('SMSAccount', secondary = 'User_Account_Link', viewonly=True )
 
 class SMSClient(db.Model):
     __tablename__ ="SMSClient"
@@ -33,7 +33,7 @@ class SMSClient(db.Model):
     phone = db.Column(db.String(15))
     translate = db.Column(db.Boolean)
     blocked = db.Column(db.Boolean)
-    groups = relationship("SMSGroup", secondary ="Client_Group_Link")
+    groups = relationship("SMSGroup", secondary ="Client_Group_Link", viewonly=True )
     messages = relationship("Message",back_populates="sms_client")
 
 class Message(db.Model):
@@ -68,7 +68,7 @@ class SMSAccount(db.Model):
 class SMSGroup(db.Model):
     __tablename__ ="SMSGroup"
     id = db.Column(db.Integer, primary_key=True)
-    account_id = db.Column(db.Integer, db.ForeignKey('SMSAccount.id'))
+    account_id = db.Column(db.Integer, db.ForeignKey('SMSAccount.id') )
     name = db.Column(db.String(40))
     comment = db.Column(db.String(160))
     sms_account = relationship("SMSAccount", back_populates="groups")
@@ -76,7 +76,7 @@ class SMSGroup(db.Model):
 
 class Client_Group_Link(db.Model):
     __tablename__ ="Client_Group_Link"
-    client_id = db.Column(db.Integer, db.ForeignKey(SMSAccount.id),primary_key=True)
+    client_id = db.Column(db.Integer, db.ForeignKey(SMSClient.id),primary_key=True)
     group_id  = db.Column(db.Integer, db.ForeignKey(SMSGroup.id)  ,primary_key=True)
 
 class User_Account_Link(db.Model):

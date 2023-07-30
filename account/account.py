@@ -230,7 +230,7 @@ def close():
 @account.route('/<int:account_id>/profile')
 def profile(account_id):
     try: 
-       account = SMSAccount.query.filter(SMSAccount.id == account_id
+       account = SMSAccount.query.filter(SMSAccount.id == account_id)
     except sql_error as e:
         locale="opening account for profile"
         return redirect(url_for('errors.mysql_server', error = e,locale=locale))        
@@ -290,7 +290,7 @@ def add_user(user_id):
 
     user = WebUser.query.filter(Webuser.id == user_id).one()
 
-    if not current_user.is_admin and not current_account in user.owned_accounts
+    if not current_user.is_admin and not current_account in user.owned_accounts:
         flash('You need admin access or account ownership for this.','error')
         return redirect(url_for('main.index'))
 

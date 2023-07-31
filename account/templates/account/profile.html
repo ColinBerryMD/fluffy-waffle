@@ -7,7 +7,7 @@
     <h1 class='w3-padding-16' style="margin-top: 32px">{{ account.name }}</h1>
         <p>SMS Phone: {{ account.number }}</p>
         <p>SID:&nbsp{{ account.sid }}</p>
-        {% if users %}
+        {% if account.users %}
             {% for user in account.users %}
                 <p>{{ user.first  }}&nbsp{{ user.last  }}
                     {% if user.is_owner %}

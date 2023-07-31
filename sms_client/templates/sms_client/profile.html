@@ -25,9 +25,9 @@
                    class="w3-bar-item w3-button w3-theme-l1">Add to {{session['group_name']}} Group</i></a>
     {% endif %}
     <a href="{{ url_for('sms_client.edit', sms_client_id = client.id ) }}" 
-                   class="w3-bar-item w3-button w3-theme-l1"><i class='fas fa-pencil-square-o'></i></a>
+                   class="w3-bar-item w3-button w3-theme-l1"><i class='fa fa-pencil-square-o'></i></a>
     <a href="{{ url_for('sms_client.delete', client_id = client.id ) }}" 
-                   class="w3-bar-item w3-button w3-theme-l1"><i class='fas fa fa-trash'></i></a>
+                   class="w3-bar-item w3-button w3-theme-l1"><i class='fa fa-trash'></i></a>
     <a href="{{ url_for('sms_client.block', client_id = client.id ) }}"
                    class="w3-bar-item w3-button w3-theme-l1">Block</a>
     <a href="{{ url_for('main.index' ) }}" 

@@ -2,7 +2,7 @@ from datetime import datetime
 
 from models import SMSClient
 from extensions import v_client, twilio_config, db, sql_error, sql_text, login_required, current_user, session,\
-                            func, or_, and_, Blueprint, render_template, request, url_for, flash, redirect
+                            func, or_, and_, not_, Blueprint, render_template, request, url_for, flash, redirect
 
 from phonenumber import cleanphone
 
@@ -35,7 +35,7 @@ def create():
                           
         # check for empty fields
         if not firstname or not lastname or not email or not phone:
-            flash('One or more required fields is empty.')
+            flash('One or more required fields is empty.','error')
             return render_template('sms_client/create.html')
 
         # check fo valid date string
@@ -107,13 +107,13 @@ def terms():
             db.session.commit()
         except sql_error as e:
             locale="adding new client to database" 
-            return redirect(url_for(errors.mysql_server, error = e,locale=locale))
+            return redirect(url_for('errors.mysql_server', error = e,locale=locale))
 
         # announce success
         flash('Passcode accepted.','info')
         flash('You can close the page any time.','info')
         flash('Send us that text message now.','info')
-        return redirect(url_for('main.client'))
+        return redirect(url_for('main.index'))
 
     return render_template('sms_client/terms.html')
 
@@ -138,7 +138,7 @@ def profile(client_id):
         flash('You need messaging access for this.','error')
         return redirect(url_for('main.index'))
 
-    client = SMSClient.query.filter(SMSClient.id == client_id)
+    client = SMSClient.query.filter(SMSClient.id == client_id).one()
 
     return render_template('sms_client/profile.html', client = client )
 
@@ -204,7 +204,7 @@ def edit(sms_client_id):
         return redirect(url_for('main.index'))
 
     try:
-        client_to_edit = SMSClient.query.filter(SMSClient.id == sms_client_id)
+        client_to_edit = SMSClient.query.filter(SMSClient.id == sms_client_id).one()
     except sql_error as e: 
         locale="getting client to edit"
         return redirect(url_for(errors.mysql_server, error = e,locale=locale))
@@ -240,7 +240,13 @@ def edit(sms_client_id):
 
         #conflicting_sms_client=False # for testing
         try:
-           conflicting_sms_client = SMSClient.query.filter(or_(SMSClient.email==email, SMSClient.phone==phone)).first()
+           conflicting_sms_client = SMSClient.query.filter(and_(
+                                                                or_(
+                                                                    SMSClient.email==email,
+                                                                    SMSClient.phone==phone
+                                                                ), not_(
+                                                                    SMSClient.id == sms_client_id
+                                                                ))).first()
         except sql_error as e:
            return redirect(url_for(errors.mysql_server, error = e))
         
@@ -274,7 +280,7 @@ def edit(sms_client_id):
 # but this is for folks who violate the terms of use
 # probably nice people, but we can't SMS with them anymore
 @login_required
-@sms_client.post('/<int:client_id>/block/')
+@sms_client.route('/<int:client_id>/block/')
 def block(client_id):
 
     # require sms access
@@ -282,7 +288,7 @@ def block(client_id):
         flash('You need messaging access for this.','error')
         return redirect(url_for('main.index'))
 
-    client_to_block = SMSClient.query.filter(SMSClient.id == client_id)
+    client_to_block = SMSClient.query.filter(SMSClient.id == client_id).one()
     client_to_block.blocked = True
     try:
         db.session.add( sms_client_to_block)
@@ -297,7 +303,7 @@ def block(client_id):
 # more of a clean up function
 # once deleted they can sign up again
 @login_required
-@sms_client.post('/<int:client_id>/delete/')
+@sms_client.route('/<int:client_id>/delete/')
 def delete(client_id):
 
     # require sms access
@@ -306,7 +312,7 @@ def delete(client_id):
         return redirect(url_for('main.index'))
 
     try:
-        client_to_delete = SMSClient.query.filter(SMSClient.id == client_id)
+        client_to_delete = SMSClient.query.filter(SMSClient.id == client_id).one()
         db.session.delete(client_to_delete)
         db.session.commit()
     except sql_error as e:

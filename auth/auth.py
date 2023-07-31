@@ -144,7 +144,7 @@ def lookup():
         
         # if this returns a user, then we can proceed with claim
         try:
-            found = WebUser.query.filter_by(User=user_name).first() 
+            found = WebUser.query.filter(User=user_name).one() 
         except sql_error as e: 
             locale="finding user in lookup function"
             return redirect(url_for("errors.mysql_server", error = e,locale=locale))
@@ -162,7 +162,7 @@ def lookup():
 # our invited user has found their username. Here they create a profile
 @auth.route('/<int:user_id>/register', methods=('GET','POST'))
 def register(user_id):
-    user = WebUser.query.filter(WebUser.id == user_id).first()
+    user = WebUser.query.filter(WebUser.id == user_id).one()
     if user.email: 
         flash('That username has already been registered.', 'error')
         return redirect(url_for('main.index'))
@@ -255,7 +255,7 @@ def register(user_id):
 @auth.route('/<int:user_id>/two_factor', methods=('GET','POST'))
 @login_required
 def two_factor(user_id):
-    user = WebUser.query.filter(Webuser.id == user_id)
+    user = WebUser.query.filter(WebUser.id == user_id).one()
 
     # handle PUT request
     if request.method == 'POST':
@@ -297,7 +297,7 @@ def two_factor(user_id):
 @auth.route('/<int:user_id>/change_password', methods=('GET','POST'))
 @login_required
 def change_password(user_id):
-    user = WebUser.query.filter(WebUser.id == user_id)
+    user = WebUser.query.filter(WebUser.id == user_id).one()
 
     # handle PUT request
     if request.method == 'POST':
@@ -391,7 +391,7 @@ def select():
 # veiw one user account
 @auth.route('/<int:user_id>/profile')
 def profile(user_id):
-    user = WebUser.query.filter(WebUser.id == user_id) 
+    user = WebUser.query.filter(WebUser.id == user_id).one() 
     return render_template('auth/profile.html',user=user)
 
 # display all users
@@ -439,7 +439,7 @@ def list():
 @auth.route('/<int:user_id>/edit/', methods=('GET', 'POST'))
 @login_required
 def edit(user_id):
-    user = WebUser.query.filter(WebUser.id == user_id)
+    user = WebUser.query.filter(WebUser.id == user_id).one()
 
     if not ( user_id == current_user.id or current_user.is_admin ):
         flash('You cannot edit that account.', 'error')
@@ -516,7 +516,7 @@ def delete(user_id):
         flash('You need administrative access for this.','error')
         return redirect(url_for('main.index'))
 
-    u = WebUser.query.filter(WebUser.id == user_id)
+    u = WebUser.query.filter(WebUser.id == user_id).one()
     try:
         db.session.delete(u)
         db.session.commit()

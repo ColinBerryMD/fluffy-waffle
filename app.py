@@ -1,5 +1,3 @@
-# to work this command string from python-source directory
-# gunicorn cbmd.app:app --bind 0.0.0.0:8000
 
 from flask import Flask
 from config import Config
@@ -22,12 +20,12 @@ app.config['SECRET_KEY'] = environ['WTF_SECRET']
 #db_url = 'mysql+pymysql://webserver:'+db_password+'@localhost/sms'
 
 # uncomment this to use mysql for with unprivileged account
-#db_password = environ.get('MYSQL_WEBSERVER_PASSWORD')
-#db_url = 'mysql+pymysql://webserver:'+db_password+'@localhost/fluffy_waffle'
+db_password = environ.get('MYSQL_WEBSERVER_PASSWORD')
+db_url = 'mysql+pymysql://webserver:'+db_password+'@localhost/fluffy_waffle'
 
 # uncomment this to use mysql and modify 'fluffy-waffle' database
-db_password = environ.get('MYSQL_PRIVILEGED_PASSWORD')
-db_url = 'mysql+pymysql://privileged:'+db_password+'@localhost/fluffy_waffle'
+#db_password = environ.get('MYSQL_PRIVILEGED_PASSWORD')
+#db_url = 'mysql+pymysql://privileged:'+db_password+'@localhost/fluffy_waffle'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False

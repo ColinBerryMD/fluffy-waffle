@@ -3,7 +3,7 @@
 
 from models import WebUser, SMSAccount, User_Account_Link
 from extensions import db, v_client, twilio_config, sql_error, render_template, request,\
-                            url_for, flash, redirect, Blueprint, abort, session, func, or_, and_,\
+                            url_for, flash, redirect, Blueprint, abort, session, func, or_, and_, not_,\
                             login_required, current_user
 
 from phonenumber import cleanphone
@@ -116,25 +116,25 @@ def edit(account_id):
             return render_template('account/edit.html',account=account) 
 
         if not  account.owner.User == owner_user_name:
-            new_owner = WebUser.query.filter(WebUser.User == owner_user_name)
+            new_owner = WebUser.query.filter(WebUser.User == owner_user_name).one()
 
             if not new_owner.is_sms:
                 flash('That user is not allowed to own account.','error')
                 return render_template('account/edit.html', account=account)
 
-        existing_account=False  #for testing
-#        try:
-#           existing_account = SMSAccount.query.filter(or_(
-#                                                         SMSAccount.name  == account_name, 
-#                                                         SMSAccount.number== number,
-#                                                         SMSAccount.sid   == sid 
-#                                                         )
-#                                                      and_(not_( SMSAccount.id == account_id))
-#                                                      ).first()
-#                           
-#        except sql_error as e: 
-#            locale="testing for duplicate accounts"  
-#            return redirect(url_for('errors.mysql_server', error = e, locale=locale))
+        #existing_account=False  #for testing
+        try:
+           existing_account = SMSAccount.query.filter(or_(
+                                                         SMSAccount.name  == account_name, 
+                                                         SMSAccount.number== number,
+                                                         SMSAccount.sid   == sid 
+                                                         ),
+                                                      and_(not_( SMSAccount.id == account_id))
+                                                      ).first()
+                           
+        except sql_error as e: 
+            locale="testing for duplicate accounts"  
+            return redirect(url_for('errors.mysql_server', error = e, locale=locale))
         
         # if this returns an account we are creating a duplicate
         if existing_account : 
@@ -230,7 +230,7 @@ def close():
 @account.route('/<int:account_id>/profile')
 def profile(account_id):
     try: 
-       account = SMSAccount.query.filter(SMSAccount.id == account_id)
+       account = SMSAccount.query.filter(SMSAccount.id == account_id).one()
     except sql_error as e:
         locale="opening account for profile"
         return redirect(url_for('errors.mysql_server', error = e,locale=locale))        
@@ -286,16 +286,16 @@ def select():
 @account.route('/<int:user_id>/add_user')
 def add_user(user_id):
     # restrict access
-    current_account = SMSAccount.query.filter(SMSAccount.id == session['account_id'])
+    current_account = SMSAccount.query.filter(SMSAccount.id == session['account_id']).one()
 
-    user = WebUser.query.filter(Webuser.id == user_id).one()
+    user = WebUser.query.filter(WebUser.id == user_id).one()
 
     if not current_user.is_admin and not current_account in user.owned_accounts:
         flash('You need admin access or account ownership for this.','error')
         return redirect(url_for('main.index'))
 
     if user in current_account.users:
-        flash( user_name +' is already on account: ' + current_account.name, 'info' )
+        flash( user.User +' is already on account: ' + current_account.name, 'info' )
         return redirect(url_for('main.index'))
 
     link_to_add = User_Account_Link( user_id=user_id, account_id = current_account.id )

@@ -16,24 +16,24 @@ def index():
     return render_template('index.html')
 
 # our contact information
-@main.route('/contact/')
+@main.route('/contact')
 def contact():
     return render_template('contact.html')
 
 # an sms from a potential client (ie not registered) generates a response
 # with a link to this
-@main.route('/client/')
+@main.route('/client')
 def client():
     return render_template('client.html')
 
 # most user logins will land here to use the sms server
-@main.route('/user/')
+@main.route('/user')
 @login_required
 def user():
     return render_template('user.html')
 
 #  this is the admin maintenance dashboard
-@main.route('/admin/')
+@main.route('/admin')
 @login_required
 def admin():
     # require admin access

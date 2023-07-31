@@ -113,7 +113,7 @@ def terms():
         flash('Passcode accepted.','info')
         flash('You can close the page any time.','info')
         flash('Send us that text message now.','info')
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.client'))
 
     return render_template('sms_client/terms.html')
 

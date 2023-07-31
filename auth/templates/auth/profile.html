@@ -25,7 +25,7 @@
                    class="w3-bar-item w3-button w3-theme-l1">Add to {{session['account_name']}} Account</i></a>
     {% endif %}
     <a href="{{ url_for('auth.edit', user_id = user.id ) }}" 
-                   class="w3-bar-item w3-button w3-theme-l1"><i class='fa fa-pencil-square-o'></i></a>
+                   class="w3-bar-item w3-button w3-theme-l1"><i class='fa fa-pencil'></i></a>
     <a href="{{ url_for('auth.delete', user_id = user.id ) }}" 
                    class="w3-bar-item w3-button w3-theme-l1"><i class='fa fa-trash'></i></a>
     <a href="{{ url_for('main.index' ) }}" 

@@ -497,9 +497,6 @@ def edit(user_id):
     # handle GET request    
     return render_template('auth/edit.html', user=user)
 
-
-
-
 # logout
 @auth.route('/logout')
 @login_required
@@ -517,6 +514,20 @@ def delete(user_id):
         return redirect(url_for('main.index'))
 
     u = WebUser.query.filter(WebUser.id == user_id).one()
+    
+    if u.owned_accounts:
+        for acct in u.owned_accounts:
+            flash('Need to change owner of '+acct.name+' before delete of this user.')
+            return redirect(url_for('main.index'))
+    
+    try:
+        db.session.query(User_Account_Link).filter(
+                         User_Account_Link.user_id == user_id,
+                        ).delete()
+        db.session.commit()
+    except sql_error as e:
+        locale="deleting user links"
+        return redirect(url_for('errors.mysql_server', error = e,locale=locale))
     try:
         db.session.delete(u)
         db.session.commit()

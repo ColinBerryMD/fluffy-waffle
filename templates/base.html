@@ -167,13 +167,11 @@
             </div>
         </div>
 
-<!-- Overlay effect when opening sidebar on small screens -->
-        <div class="w3-overlay w3-hide-large" style="cursor:pointer" title="close side menu" id="myOverlay"></div>
+
 <!-- Sidbar if there is one in this template -->
 {% block sidebar %}{% endblock %}
 
-<!-- Main content: shift it to the right by 250 pixels when the sidebar is visible -->
-        <div class="w3-main" style="margin-left:250px">
+
 
 <!-- Flash messages -->
         {% with messages = get_flashed_messages( with_categories = true ) %}

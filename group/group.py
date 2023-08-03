@@ -69,7 +69,11 @@ def select():
         flash('You need messaging access for this.','error')
         return redirect(url_for('main.index'))
     
-    groups = current_user.groups
+    if not session['account_id']:
+        flash ('First select an Account','error')
+        return redirect(url_for('account.select'))
+    else:
+        groups = SMSAccount.query.filter(SMSAccount.id == session['account_id']).one().groups
  
     if request.method == 'POST':
         try:
@@ -78,7 +82,7 @@ def select():
             flash('You need to select a group.','error')
             return redirect(url_for('main.index'))
         
-        group_selected = SMSGroup.filter(SMSGroup.id == selected_group_id)
+        group_selected = SMSGroup.query.filter(SMSGroup.id == selected_group_id).one()
   
         session['group_id'] = selected_group_id
         session['group_name'] = group_selected.name
@@ -93,11 +97,18 @@ def select():
 @group.route('/<int:group_id>/profile')
 @login_required
 def profile(group_id):
-    group = SMSGroup.query.filter(SMSGroup.id == group_id)
+    try:
+        group = SMSGroup.query.filter(SMSGroup.id == group_id).one()
+    except sql_error as e:
+        locale=" getting group to profile"
+        return redirect(url_for('errors.mysql_server', error = e,locale=locale))
+    if not group:
+        flash('No group found with that id.','error')
+        return redirect(url_for('main.index'))
 
     # limit access to users of the relevant account    
-    if not current_user in group.clients or current_user.is_admin:
-        flash('You need access to account: '+ account.name + ' for this.','error')
+    if not (current_user in group.clients or current_user.is_admin):
+        flash('You need access to group: '+ group.name + ' for this.','error')
         return redirect(url_for('main.index'))
 
     return render_template("group/profile.html", group=group)
@@ -106,8 +117,16 @@ def profile(group_id):
 @group.route('/<int:group_id>/activate')
 @login_required
 def activate(group_id):
+    try:
+        group = SMSGroup.query.filter(SMSGroup.id == group_id).one()
+    except sql_error as e:
+        locale=" getting group to activate"
+        return redirect(url_for('errors.mysql_server', error = e,locale=locale))
+    if not group:
+        flash('No group found with that id.','error')
+        return redirect(url_for('main.index'))
+
     # limit access to sms users 
-    group = SMSGroup.query.get_or_404(group_id)
 
     if not current_user.is_sms:
         flash('Group selection is not available to you.','error')
@@ -143,10 +162,26 @@ def add_client(client_id,group_id):
         return redirect(url_for('main.index'))
 
     # limit access to users of the relevant account
-    group = SMSGroup.query.filter(SMSGroup.id == group_id)
-    client = SMSClient.query.filter(SMSClient.id == client_id)
+    try:
+        group = SMSGroup.query.filter(SMSGroup.id == group_id).one()
+    except sql_error as e:
+        locale=" getting group to add to"
+        return redirect(url_for('errors.mysql_server', error = e,locale=locale))
+    if not group:
+        flash('No group found with that id.','error')
+        return redirect(url_for('main.index'))
+
+    try:
+        client = SMSClient.query.filter(SMSClient.id == client_id).one()
+    except sql_error as e:
+        locale=" getting client to add to group"
+        return redirect(url_for('errors.mysql_server', error = e,locale=locale))
+    if not client:
+        flash('No client found with that id.','error')
+        return redirect(url_for('main.index'))
+
     
-    if not current_user.is_admin or current_user in group.sms_account.users:
+    if not (current_user.is_admin or current_user in group.sms_account.users):
         flash('You need access to account: '+ session['account_name'] + ' for this.','error')
         return redirect(url_for('main.index'))
 
@@ -166,7 +201,7 @@ def add_client(client_id,group_id):
     return redirect(url_for('main.index'))
 
 # delete a client from the current group
-@group.post('/<int:client_id>/<int:group_id>/delete_client')
+@group.route('/<int:client_id>/<int:group_id>/delete_client')
 @login_required
 def delete_client(client_id,group_id):
     # require sms access
@@ -188,7 +223,7 @@ def delete_client(client_id,group_id):
     return redirect(url_for('main.index'))
 
 # delete a whole client group
-@group.post('/<int:group_id>/delete/')
+@group.route('/<int:group_id>/delete/')
 @login_required
 def delete(group_id):
     # require sms access
@@ -197,21 +232,21 @@ def delete(group_id):
         return redirect(url_for('main.index'))
 
     try:
-        group_to_delete = SMSGroup.query.filter(SMSGroup.id == group_id)
+        db.session.query(Client_Group_Link).filter(
+                         Client_Group_Link.group_id == group_id,
+                        ).delete()
+        db.session.commit()
+    except sql_error as e:
+        locale="unlink clients from group"
+        return redirect(url_for('errors.mysql_server', error = e, locale=locale))
+
+    try:
+        group_to_delete = SMSGroup.query.filter(SMSGroup.id == group_id).one()
         db.session.delete(group_to_delete)
         db.session.commit()
     except sql_error as e:
         locale="removing group"
         return redirect(url_for('errors.mysql_server', error = e,locale=locale))
-
-#    # unlink the group from its clients
-#    try:
-#        links = Client_Group_Link.query.filter(Client_Group_Link.group_id == group_id).all()
-#        if links:
-#            db.session.delete(links)
-#            db.session.commit()
-#    except sql_error as e:
-#        return redirect(url_for('errors.mysql_server', error = e))
 
     flash('Group '+group_to_delete.name +' deleted.','info')
     return redirect(url_for('main.index'))

@@ -33,7 +33,7 @@ class SMSClient(db.Model):
     phone = db.Column(db.String(15))
     translate = db.Column(db.Boolean)
     blocked = db.Column(db.Boolean)
-    groups = relationship("SMSGroup", secondary ="Client_Group_Link", viewonly=True )
+    groups = relationship("SMSGroup", secondary ="Client_Group_Link",viewonly=True )
     messages = relationship("Message",back_populates="sms_client")
 
 class Message(db.Model):
@@ -48,8 +48,8 @@ class Message(db.Model):
     Confirmed = db.Column(db.Boolean)
     Account = db.Column(db.Integer,db.ForeignKey('SMSAccount.id'))
     sms_account = relationship('SMSAccount', back_populates='messages')
-    Client = db.Column(db.Integer, db.ForeignKey('SMSClient.id'))
-    sms_client = relationship('SMSClient', back_populates='messages')
+    Client = db.Column(db.Integer, db.ForeignKey('SMSClient.id'))  # this is stored in DB
+    sms_client = relationship('SMSClient', back_populates='messages') # this simplifies access in our templates
 
 
 class SMSAccount(db.Model):
@@ -60,10 +60,9 @@ class SMSAccount(db.Model):
     owner_id = db.Column(db.Integer, db.ForeignKey('WebUser.id'))
     owner = relationship("WebUser", back_populates="owned_accounts")
     sid = db.Column(db.String(36))
-    messages = relationship("Message",back_populates="sms_account")
-    groups = relationship("SMSGroup",back_populates="sms_account", cascade = "all, delete, delete-orphan")
-    users = relationship('WebUser', secondary = 'User_Account_Link')
-
+    messages = relationship("Message" ,back_populates="sms_account")
+    groups = relationship(  "SMSGroup",back_populates="sms_account")
+    users = relationship('WebUser', secondary = 'User_Account_Link', viewonly=True)
 
 class SMSGroup(db.Model):
     __tablename__ ="SMSGroup"
@@ -72,12 +71,12 @@ class SMSGroup(db.Model):
     name = db.Column(db.String(40))
     comment = db.Column(db.String(160))
     sms_account = relationship("SMSAccount", back_populates="groups")
-    clients = relationship("SMSClient", secondary = "Client_Group_Link")
+    clients = relationship("SMSClient", secondary = "Client_Group_Link", viewonly=True)
 
 class Client_Group_Link(db.Model):
     __tablename__ ="Client_Group_Link"
-    client_id = db.Column(db.Integer, db.ForeignKey(SMSClient.id),primary_key=True)
-    group_id  = db.Column(db.Integer, db.ForeignKey(SMSGroup.id)  ,primary_key=True)
+    client_id = db.Column(db.Integer, db.ForeignKey(SMSClient.id), primary_key=True )
+    group_id  = db.Column(db.Integer, db.ForeignKey(SMSGroup.id ), primary_key=True )
 
 class User_Account_Link(db.Model):
     __tablename__ ="User_Account_Link"

@@ -5,7 +5,7 @@
 {# needs group = SMSGroup() #}
 <div class="w3-container">
     <h1 class='w3-padding-16' style="margin-top: 32px">{{ group.name }}</h1>
-    <p>Associated Account:&nbsp{{ account.name }}</p>
+    <p>Associated Account:&nbsp{{ group.sms_account.name }}</p>
     {% if group.clients %}
         {% for client in group.clients %}
             <p>

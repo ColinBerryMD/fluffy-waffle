@@ -41,15 +41,15 @@ def create():
             flash('That user is not allowed.','error')
             return render_template('account/create.html')
 
-        existing_account=False  #for testing
-#        try:
-#           existing_account = SMSAccount.query.filter(or_(SMSAccount.name  == account_name, 
-#                                                         SMSAccount.number== number,
-#                                                         SMSAccount.sid   == sid )).first()
-#                           
-#        except sql_error as e: 
-#            locale= "testing for account duplicates"  
-#            return redirect(url_for('errors.mysql_server', error = e, locale=locale))
+        #existing_account=False  #for testing
+        try:
+           existing_account = SMSAccount.query.filter(or_(SMSAccount.name  == account_name, 
+                                                         SMSAccount.number== number,
+                                                         SMSAccount.sid   == sid )).first()
+                           
+        except sql_error as e: 
+            locale= "testing for account duplicates"  
+            return redirect(url_for('errors.mysql_server', error = e, locale=locale))
 
         # if this returns an account we are creating a duplicate
         if existing_account : 
@@ -265,14 +265,14 @@ def select():
 
         try:
             session['account_id'] = current_account_id
-            account_selected = SMSAccount.query.filter(SMSAccount.id == current_account_id)
-            session['account_name'] = account_selected.name
+            account_selected = SMSAccount.query.filter(SMSAccount.id == current_account_id).one()
         except sql_error as e:
             locale= "selecting account"
             return redirect(url_for('errors.mysql_server', error = e, locale=locale))
         
         if account_selected.owner:
-            session['account_owner'] = account_selected.user_id
+            session['account_owner'] = account_selected.owner_id
+            session['account_name'] = account_selected.name
         else: 
             flash('Selected account has no owner.','error')
             return redirect(url_for('main.index'))
@@ -316,12 +316,12 @@ def add_user(user_id):
 def delete_user(user_id,account_id):
 
     # get user and account
-    user_to_delete = WebUser.query.filter(Webuser.id == user_id).one()
-    current_account = SMSAccount.query.filter(SMSAccount.id == account_id)
+    user_to_delete = WebUser.query.filter(WebUser.id == user_id).one()
+    current_account = SMSAccount.query.filter(SMSAccount.id == account_id).one()
     
     # attempt to delete owner can't work
     if user_to_delete.id == current_account.owner_id:
-        flash('You cannot unlink the owner from an account','error')
+        flash('You cannot unlink the owner from an account here. Change the owner or delete account.','error')
         return redirect(url_for('main.index'))
     
     if not current_user.is_admin and not current_user.id == current_account.owner_id:
@@ -359,21 +359,20 @@ def delete_account(account_id):
         return redirect(url_for('main.index'))
 
     try:
+        db.session.query(User_Account_Link).filter(
+                         User_Account_Link.account_id == account_id,
+                        ).delete()
+        db.session.commit()
+    except sql_error as e:
+        locale="deleting account links"
+        return redirect(url_for('errors.mysql_server', error = e,locale=locale))
+    
+    try:
         db.session.delete(account_to_delete)
         db.session.commit()
     except sql_error as e:
         locale="deleting account"
         return redirect(url_for('errors.mysql_server', error = e, locale=locale))
-
-    # I think this happens automatically  ################
-    # We will need to unlink users with account access here
-#    try:
-#        links_to_delete = User_Account_Link.query.filter(User_Account_Link.account_id == account_id).all()
-#        if links_to_delete:
-#            db.session.delete(links_to_delete)
-#            db.session.commit()
-#    except sql_error as e:
-#        return redirect(url_for('errors.mysql_server', error = e))
 
     flash(account_to_delete.name +'('+account_to_delete.number+') '+' deleted.','info')
     return redirect(url_for('main.index'))

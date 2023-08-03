@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from models import SMSClient
+from models import SMSClient, Client_Group_Link
 from extensions import v_client, twilio_config, db, sql_error, sql_text, login_required, current_user, session,\
                             func, or_, and_, not_, Blueprint, render_template, request, url_for, flash, redirect
 
@@ -310,6 +310,15 @@ def delete(client_id):
     if not current_user.is_sms:
         flash('You need messaging access for this.','error')
         return redirect(url_for('main.index'))
+    
+    try:
+        db.session.query(Client_Group_Link).filter(
+                         Client_Group_Link.client_id == client_id
+                        ).delete()
+        db.session.commit()
+    except sql_error as e:
+        locale="deleting client links"
+        return redirect(url_for('errors.mysql_server', error = e,locale=locale))
 
     try:
         client_to_delete = SMSClient.query.filter(SMSClient.id == client_id).one()
@@ -317,7 +326,7 @@ def delete(client_id):
         db.session.commit()
     except sql_error as e:
         locale="deleting a client"
-        return redirect(url_for(errors.mysql_server, error = e,locale=locale))
+        return redirect(url_for('errors.mysql_server', error = e,locale=locale))
 
     flash('Client '+client_to_delete.firstname +' '+client_to_delete.lastname+' deleted.','info')
     return redirect(url_for('main.index'))

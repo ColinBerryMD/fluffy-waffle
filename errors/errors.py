@@ -16,12 +16,14 @@ def server_error(error):
 
 @errors.route('/twilio_server', methods=('GET','POST'))
 def twilio_server():
-    return render_template('errors/twilio.html')
+    locale = request.args.get('locale')
+    return render_template('errors/twilio.html',locale=locale)
 
 @errors.route('/mysql_server', methods=('GET','POST'))
 def mysql_server():
     error = request.args.get('error')
-    return render_template('errors/mysql.html',error=error)
+    locale = request.args.get('locale')
+    return render_template('errors/mysql.html',error=error,locale=locale)
 
 @errors.route('/twilio_alarm', methods=['POST'])
 def twilio_alarm():

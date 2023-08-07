@@ -4,7 +4,7 @@
 {% block content %}
 <div class="w3-container">
     <h1 class='w3-padding-16' style="margin-top: 32px;">New Messaging Client</h1>
-    <form method="POST" action='{{ url_for('sms_client.create') }}'>
+    <form method="POST" action='{{ url_for('sms_client.fake') }}'>
         <p>This information is to add you to our contacts list and prove that you are not a robot.</p>
         <div>
             <input type="text" name="firstname" placeholder="First Name"/>

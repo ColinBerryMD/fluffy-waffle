@@ -42,6 +42,61 @@ def list():
 
     return render_template('message/list.html', messages = messages, group = group )
 
+# create a fake sms message to populate our DB for testing
+@message.route('/fake', methods= ( 'GET','POST'))
+def fake():
+    if request.method == 'POST':
+        client_id = request.form['client_id']
+        sms_client = SMSClient.query.filter(SMSClient.id == client_id).first()    
+        if not sms_client:
+            flash('Client not found.','error')
+            return redirect( url_for('message.list'))   
+
+        account = SMSAccount.query.filter(SMSAccount.id == session['account_id'] ).one()
+        if not account:
+            flash('Active account is required.','error')
+            return redirect( url_for('message.list'))   
+
+        Body = request.form['Body']
+        if request.form.get('Outgoing') == 'on':
+            Outgoing = True
+            SentTo = sms_client.phone
+            SentFrom = account.number
+        else:
+            Outgoing = False
+            SentTo = account.number
+            SentFrom = sms_client.phone
+
+
+        # insert into database
+        message = Message(SentFrom = SentFrom,
+                          SentTo   = SentTo, 
+                          SentAt   = mountain_time( datetime.now()), 
+                          Body     = Body,
+                          Outgoing = Outgoing,
+                          Completed= False,
+                          Confirmed= False,
+                          Account  = account.id,
+                          Client   = sms_client.id 
+                          )
+        
+        try:
+            db.session.add(message)
+            db.session.commit()
+        except sql_error as e:
+            locale = "adding sent message to database"
+            return redirect(url_for('errors.mysql_server', error = e, locale=locale)) 
+        
+    #    # publish SSE to message list
+    #    msg_dict = dict_from(message)
+    #    msg_dict.update(dict_from(sms_client))
+    #    message_json = json.dumps(msg_dict)
+    #    sse.publish(message_json, type='sms_message') 
+
+        flash('Message added', 'info') 
+
+    return render_template('message/fake.html') 
+
 # send an sms message
 @message.post('/<int:client_id>/send')
 def send(client_id):

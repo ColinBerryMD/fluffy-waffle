@@ -18,7 +18,7 @@ def create():
         
         firstname = request.form['firstname']
         lastname  = request.form['lastname']
-        dob_str   = request.form['dob']
+        dob   = request.form['dob']
         email     = request.form['email']
         phone     = cleanphone(request.form['phone'])
         translate = translate
@@ -27,7 +27,7 @@ def create():
 
         session['firstname'] = firstname 
         session['lastname']  = lastname
-        session['dob']       = dob_str
+        session['dob']       = dob
         session['email']     = email   
         session['phone']     = phone   
         session['translate'] = translate 
@@ -39,7 +39,7 @@ def create():
             return render_template('sms_client/create.html')
 
         # check fo valid date string
-        if not (bool(datetime.strptime(dob_str, '%m/%d/%Y'))):
+        if not (bool(datetime.strptime(dob, '%m/%d/%Y'))):
             flash('Date of birth is misformatted.','error')
             return render_template('sms_client/create.html')
 
@@ -72,6 +72,37 @@ def create():
     
     return render_template('sms_client/create.html')
 
+# create fake client for testing
+@sms_client.route('/fake', methods=('GET', 'POST'))
+def fake():
+    if request.method == 'POST':
+        translate = False
+        if request.form.get('translate'):
+            translate = True
+        
+        new_sms_client = SMSClient( 
+            firstname = request.form['firstname'],
+            lastname  = request.form['lastname'],
+            dob   = request.form['dob'],
+            email     = request.form['email'],
+            phone     = cleanphone(request.form['phone']),
+            translate = translate,
+            blocked   = False )
+
+        
+        try:            # add to database on success
+            db.session.add(new_sms_client)
+            db.session.commit()
+        except sql_error as e:
+            locale="adding new fake client to database" 
+            return redirect(url_for('errors.mysql_server', error = e,locale=locale))
+        
+        flash('Fake client added','info')       
+        return redirect(url_for('main.index'))
+    
+    return render_template('sms_client/create.html')
+
+
 # two factor authentication at signup will prove them not to be a spam bot
 # and give documentation that they read our terms and conditions
 @sms_client.route('/terms', methods= ('GET', 'POST'))
@@ -79,11 +110,9 @@ def terms():
     if request.method == 'POST':
         OTP = request.form['one_time_password']
 
-        datetime_obj = datetime.strptime(session['dob'],'%m/%d/%Y')
-
         new_sms_client = SMSClient( firstname = session['firstname'], 
                                     lastname = session['lastname'],
-                                    dob = datetime_obj,
+                                    dob = session['dob'],
                                     email = session['email'],
                                     phone = session['phone'],
                                     translate = session['translate'],
@@ -151,23 +180,19 @@ def select():
         else:
             firstname = request.form['firstname']
             lastname  = request.form['lastname']
-            dob_str   = request.form['dob']
-            if dob_str:
-                if not (bool(datetime.strptime(dob_str, '%m/%d/%Y'))):
+            dob   = request.form['dob']
+            if dob:
+                if not (bool(datetime.strptime(dob, '%m/%d/%Y'))):
                     flash('Date of birth is misformatted.','error')
                     return render_template('sms_client/select.html')
-                
-                dob_obj = datetime.strptime(dob_str, '%m/%d/%Y')
-            else:
-                dob_obj = None
-     
+                     
          # clients where firstname sounds like firstname and lastname sounds like lastname -- or -- dob == dob 
             if firstname and lastname:
                 name_query = "SOUNDEX(SMSClient.firstname)=SOUNDEX('"+ firstname +"') AND SOUNDEX(SMSClient.lastname)=SOUNDEX('"+ lastname +"')"
                 if dob_obj:
-                    name_query += " OR SMSClient.dob ='"+str(dob_obj)+"'"
+                    name_query += " OR SMSClient.dob ='"+dob+"'"
             elif dob_obj:
-                name_query = "SMSClient.dob ='"+str(dob_obj)+"'"
+                name_query = "SMSClient.dob ='"+dob+"'"
             else:
                 flash('Not enough information for search.','error')
                 return render_template('sms_client/select.html')
@@ -210,14 +235,12 @@ def edit(sms_client_id):
         return redirect(url_for(errors.mysql_server, error = e,locale=locale))
 
     if client_to_edit.dob:
-        dob_str = client_to_edit.dob.strftime('%m/%d/%Y')
-    else:
-        dob_str = None
+        dob = client_to_edit.dob.strftime('%m/%d/%Y')
 
     if request.method == 'POST':
         firstname   = request.form.get('firstname')
         lastname    = request.form.get('lastname')
-        dob_str     = request.form.get('dob_str')
+        dob         = request.form.get('dob')
         email       = request.form.get('email')
         phone       = cleanphone(request.form.get('phone'))
         
@@ -229,14 +252,12 @@ def edit(sms_client_id):
         # check for empty fields
         if not firstname or not lastname or not email or not phone:
             flash('One or more required fields is empty.','error')
-            return render_template('sms_client/edit.html', client=client_to_edit, dob_str=dob_str)
+            return render_template('sms_client/edit.html', client=client_to_edit)
 
         # check fo valid date string
-        if not (bool(datetime.strptime(dob_str, '%m/%d/%Y'))) or not dob_str:
+        if not (bool(datetime.strptime(dob, '%m/%d/%Y'))) or not dob:
             flash('Date of birth is misformatted or blank.','error')
-            return render_template('sms_client/edit.html', client=client_to_edit, dob_str=dob_str)
-        else:
-            dob_obj = datetime.strptime(dob_str,'%m/%d/%Y')
+            return render_template('sms_client/edit.html', client=client_to_edit)
 
         #conflicting_sms_client=False # for testing
         try:
@@ -252,12 +273,12 @@ def edit(sms_client_id):
         
         if conflicting_sms_client : # if a user is found, we want to redirect back to signup page so user can try again
             flash('New email address or phone number already exists', 'error')
-            return render_template('sms_client/edit.html', client=client_to_edit, dob_str = dob_str)
+            return render_template('sms_client/edit.html', client=client_to_edit)
         
         # ok. We passed all the tests, now lets update the DB with our new info
         client_to_edit.firstname = firstname
         client_to_edit.lastname = lastname
-        client_to_edit.dob = dob_obj
+        client_to_edit.dob = dob
         client_to_edit.email = email
         client_to_edit.phone = phone
         client_to_edit.translate = translate
@@ -268,12 +289,12 @@ def edit(sms_client_id):
             db.session.commit()
         except sql_error as e: 
             locale="updating client after edit"
-            return redirect(url_for(errors.mysql_server, error = e,locale=locale))
+            return redirect(url_for('errors.mysql_server', error = e,locale=locale))
 
         flash('SMS client updated.','info')
         return redirect(url_for('main.index'))
 
-    return render_template('sms_client/edit.html', client=client_to_edit, dob_str= dob_str)
+    return render_template('sms_client/edit.html', client=client_to_edit)
 
 # We might also need a list of numbers to block from jump street
 # without an invitation to sign up

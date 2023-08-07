@@ -1,34 +1,60 @@
 
 /* Style the tab buttons */
+:root {
+  --border-color: grey;
+  --active-color: #F0FFF0;
+  --hover-color: #b6d1ca;
+  --inactive-color: #edf5f3;
+  --outgoing-color: lightgrey;
+  --incoming-color: lightgrey;
+  --time-color: black;
+}
 
-.chat-tab button {
+#tab_parent button {
   cursor: pointer;
-  padding: 14px 16px;
-  margin-left: 20%;
+  padding: 10px;
+  margin-right: 2px;
   transition: 0.3s;
+  background-color: var(--inactive-color);
+  border-radius: 10px 10px 0px 0px;
+  border: 1px var(--border-color);
+}
+#tab_parent button:hover {
+  background-color: var(--hover-color)
+}
+#tab_parent button.active {
+  background-color: var(--active-color); 
+  border-bottom: 2px solid var(--active-color);
+  position: relative;
+  z-index: 5;
 }
 
-/* Change background color of buttons on hover */
-.chat-tab button:hover {
-  background-color: #ddd;
-}
 
-/* Create an active/current tablink class */
-.chat-tab button.active {
-  background-color: #ccc;
+#chat_parent{
+  background-color: var(--active-color);
+  border-top: 1px solid var(--border-color);
+  position: relative;
+  z-index: 0;
 }
 
 .chat-container {
-  border: 2px solid #dedede;
-  background-color: #f1f1f1;
+  border: 2px solid var(--border-color);
+  background-color: grey; 
   border-radius: 25px;
   padding: 10px;
   margin: 10px 0;
 }
 
-.chat-darker {
-  border-color: #ccc;
-  background-color: #ddd;
+.chat-outgoing {
+  border-color: var(--border-color);
+  background-color: var(--outgoing-color);
+  margin-left: 15%;
+
+}
+.chat-incoming {
+  border-color: var(--border-color);
+  background-color: var(--incoming-color);
+  margin-right: 15%;
 }
 
 .chat-container::after {
@@ -37,20 +63,27 @@
   display: table;
 }
 
-.chat-msg-right {
-  margin-left: 15%;
-}
-
-.chat-msg-left {
-  margin-right: 15%;
-}
-
 .chat-time-right {
   float: right;
-  color: #aaa;
+  color: var(--time-color);
 }
 
 .chat-time-left {
   float: left;
-  color: #999;
+  color: var(--time-color)
+}
+.group-label {
+  height: 20px;
+}
+
+/* The popup chat - hidden by default */
+.chat-popup {
+  display: none;
+  resize: none;
+  min-height: 200px;
+  position: fixed;
+  bottom: 0;
+  right: 15px;
+  border: 1px solid lightgrey;
+  z-index: 9;
 }

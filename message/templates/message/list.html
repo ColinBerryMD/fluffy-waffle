@@ -2,86 +2,87 @@
 
 
 {% block title %} Messages {% endblock %}
+{% block header %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'css/chat.css') }}">
+{% endblock %}
 {% block content %}
 {# needs messages; a list of Message() #}
 {# needs group = SMSGroup() #}
 <div class="w3-row">
-    <div class="w3-col s4 m3 l2"> 
-        <div id="tab_parent" class="w3-container chat-tab">
+    <div class="w3-col s12 m8 l8">
+
+        <div id="tab_parent" class="w3-container chat-tab w3-bar cb-under-navbar">
             {% if messages %}
-                <h1 class='w3-padding-16 w3-center cb-under-navbar'>Active Senders</h1>
-                {% for sender, their_messages in messages | groupby('SMSClient.id') %}
-                    {% with client = their_messages[0].SMSClient %}
+                {% for sender, their_messages in messages | groupby('sms_client.id') %}
+                    {% with client = their_messages[0].sms_client %}
                         <button id="button_{{ sender }}" 
-                                class="w3-button w3-border w3-block w3-right-align tablink" 
+                                class="w3-bar-item w3-left w3-block tablink" 
                                 onclick="openTab(event,'sms_{{ sender }}')" >
                             {{ client.firstname }}&nbsp{{ client.lastname }}
                         </button>
                     {% endwith %}
                 {% endfor %}
             {% else %}
-                <h1 class='w3-padding-16 w3-center cb-under-navbar'>No Senders</h1>
+                <h1 class='w3-padding-16 w3-center cb-under-navbar'>No Messages</h1>
             {% endif %}
         </div>
-    </div>
-    <div class="w3-col s8 m6 l6">
 
         <div id="chat_parent" class="w3-container">
-            <h1 class='w3-padding-16 w3-center cb-under-navbar'>Current Messages</h1>
             {% if messages %}
-                {% for sender, their_messages in messages | groupby('SMSClient.id') %}
+                {% for sender, their_messages in messages | groupby('sms_client.id') %}
                     <div id="sms_{{ sender }}" class="w3-container tabcontent" style="display: none;">
                         {% for m in their_messages %}
-                            {% if m.Message.Outgoing %}
-                            <div id="chat_child" class="chat-container chat-msg-right">
-                                <p>To:&nbsp{{m.SMSClient.firstname}}&nbsp{{m.SMSClient.lastname}}&nbsp({{ m.Message.SentTo }})</p>
-                                <p>{{ m.Message.Body }}</p>
-                                <span class="chat-time-right">{{ m.Message.SentAt }}</span>
+                            {% if m.Outgoing %}
+                            <div id="chat_child" class="chat-container chat-outgoing">
+                                <p>{{ m.Body }}</p>
+                                <span class="chat-time-right">{{ m.SentAt }}</span>
                             </div>
                             {% else %}
-                            <div id="chat_child" class="chat-container chat-msg-left chat-darker">
-                                <p>From:&nbsp{{m.SMSClient.firstname}}&nbsp{{m.SMSClient.lastname}}&nbsp({{ m.Message.SentFrom }})</p>
-                                <p>{{ m.Message.Body }}</p>
-                                <span class="chat-time-left">{{ m.Message.SentAt }}</span>
+                            <div id="chat_child" class="chat-container chat-incoming">
+                                <p>{{ m.Body }}</p>
+                                <span class="chat-time-left">{{ m.SentAt }}</span>
                             </div>
                             {% endif %}
                         {% endfor %}
                     </div>
                 {% endfor %}
             {% else %}
-                    <div id="chat_placeholder" class="chat-container">
+                    <div id="chat_placeholder" class="chat-container chat-incoming">
                         <p >No messages yet.</p>
                     </div> 
             {% endif%}
         </div>
     </div>
-    <div class="w3-col s12 m3 l4">
+    <div class="w3-col s12 m4 l4 w3-border cb-under-navbar">
         {% if group %}
-            <h1 class='w3-padding-16 w3-center cb-under-navbar'>Group</h1>
+            <div class="w3-container w3-border group-label">
+                <p>{{ group.name }}</p>
+            </div>
             {% for member in group.clients %}
-                <div class="w3-container w3-border">
+                <div class="w3-container">
                     <a class="open-chat-popup" onclick="chatPopup({{member.id}})">
                             {{ member.firstname }}&nbsp{{ member.lastname }}
                             <i class='far fa-comment' style='font-size:24px'></i>
                     </a>
                 </div>
-                
-
-                <div class="chat-popup" id="chatForm_{{member.id}}" style="display: none;">
-                  <form action="{{ url_for('message.send', client_id = member.id) }}" method="post" class="form-container" >
-                    <h1>Chat</h1>               
-
-                    <label for="Body"><b>Message</b></label>
-                    <textarea placeholder="Type message.." name="Body" required></textarea>             
-
-                    <button type="submit" class="btn" onclick="closePopup({{member.id}})">Send</button>
-                    <button type="button" class="btn cancel" onclick="closePopup({{member.id}})">Close</button>
-                  </form>
+                <div class="chat-popup w3-container" id="chatForm_{{member.id}}" 
+                     style="display: none;">
+                    <span onclick="closePopup({{member.id}})"
+                          class="w3-button w3-large w3-display-topright">&times;</span>
+                    <form action="{{ url_for('message.send', client_id = member.id) }}" 
+                          method="post">
+                        <textarea placeholder="Type message..." name="Body" required>
+                        </textarea>
+                        <div class="w3-bar w3-padding-16">
+                            <button type='submit' class="w3-button w3-black" 
+                                    onclick="closePopup({{member.id}})">
+                                        Send
+                            </button>
+                        </div>
+                    </form>
                 </div>
             {% endfor %}
             
         {% endif %}
     </div>
-</div>
-
 {% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Create a fake message{% endblock %}
+{% block content %}
+<div class="w3-container">
+    <h1 class='w3-padding-16' style="margin-top: 32px;">Fake SMS Message</h1>
+    <form method="POST" action='{{ url_for('message.fake') }}'>
+        <div>
+            <label for="translate">Outgoing</label>
+            <input type="checkbox" name="Outgoing"/>
+        </div>
+        <div>
+            <input type="text" name="client_id" placeholder="Client ID"/>
+        </div>
+        <div>
+            <input type="text" name="Body" placeholder="Body"/>
+        </div> 
+        <div class="w3-bar w3-padding-16">
+           <button type='submit' class="w3-button w3-black">Submit</button>
+           <a href="{{ url_for('main.index') }}" class="w3-button w3-black">Cancel</a>
+       </div>
+    </form>
+</div>
+{% endblock %}

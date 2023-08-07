@@ -137,7 +137,7 @@ def activate(group_id):
     return redirect(url_for('main.index'))
 
 # Close our active group
-@group.post('/close')
+@group.route('/close')
 @login_required
 def close():
     # limit access to sms users 
@@ -247,6 +247,9 @@ def delete(group_id):
     except sql_error as e:
         locale="removing group"
         return redirect(url_for('errors.mysql_server', error = e,locale=locale))
+
+    session['group_id'] = None
+    session['group_name'] = None
 
     flash('Group '+group_to_delete.name +' deleted.','info')
     return redirect(url_for('main.index'))

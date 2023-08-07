@@ -28,7 +28,7 @@ class SMSClient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     firstname = db.Column(db.String(100))
     lastname = db.Column(db.String(100))
-    dob = db.Column(db.Date)
+    dob = db.Column(db.String(10))
     email = db.Column(db.String(80))
     phone = db.Column(db.String(15))
     translate = db.Column(db.Boolean)

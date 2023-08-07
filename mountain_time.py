@@ -8,7 +8,8 @@ def mountain_time(zulu):
 	else:
 		offset = MST_TIME_OFFSET	
 
-	return zulu + timedelta(hours = offset)
+	mtn = zulu + timedelta(hours = offset)
+	return mtn.isoformat()
 
 if __name__ == "__main__":
     zulu = datetime.now()

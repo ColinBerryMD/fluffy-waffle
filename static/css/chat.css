@@ -10,7 +10,7 @@
   --time-color: black;
 }
 
-#tab_parent button {
+#tab_parent button, #group_parent button {
   cursor: pointer;
   padding: 10px;
   margin-right: 2px;
@@ -19,10 +19,10 @@
   border-radius: 10px 10px 0px 0px;
   border: 1px var(--border-color);
 }
-#tab_parent button:hover {
+#tab_parent button:hover, #group_parent button:hover {
   background-color: var(--hover-color)
 }
-#tab_parent button.active {
+#tab_parent button.active, #group_parent button.active {
   background-color: var(--active-color); 
   border-bottom: 2px solid var(--active-color);
   position: relative;
@@ -79,11 +79,8 @@
 /* The popup chat - hidden by default */
 .chat-popup {
   display: none;
-  resize: none;
   min-height: 200px;
-  position: fixed;
-  bottom: 0;
-  right: 15px;
+  position: relative;  
   border: 1px solid lightgrey;
   z-index: 9;
 }

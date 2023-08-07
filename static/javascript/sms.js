@@ -8,17 +8,19 @@
 
 //////////////////////////////////////////
 // work with css to style tabbed layout
-function openTab(evt, tabId) {
+function openTab(evt, columnId, tabId) {
   var i, tabcontent, tablinks;
 
+  let column = document.getElementById(columnId)
+
   // Get all elements with class="tabcontent" and hide them
-  tabcontent = document.getElementsByClassName("tabcontent");
+  tabcontent = column.getElementsByClassName("tabcontent");
   for (i = 0; i < tabcontent.length; i++) {
     tabcontent[i].style.display = "none";
   }
 
   // Get all elements with class="tablinks" and remove the class "active"
-  tablinks = document.getElementsByClassName("tablink");
+  tablinks = column.getElementsByClassName("tablink");
   for (i = 0; i < tablinks.length; i++) {
     tablinks[i].className = tablinks[i].className.replace(" active", "");
   }

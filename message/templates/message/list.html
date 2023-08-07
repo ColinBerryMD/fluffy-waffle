@@ -9,15 +9,15 @@
 {# needs messages; a list of Message() #}
 {# needs group = SMSGroup() #}
 <div class="w3-row">
-    <div class="w3-col s12 m8 l8">
+    <div id="chat_column" class="w3-col s12 m8 l8">
 
-        <div id="tab_parent" class="w3-container chat-tab w3-bar cb-under-navbar">
+        <div id="tab_parent" class="w3-container w3-bar cb-under-navbar">
             {% if messages %}
                 {% for sender, their_messages in messages | groupby('sms_client.id') %}
                     {% with client = their_messages[0].sms_client %}
                         <button id="button_{{ sender }}" 
                                 class="w3-bar-item w3-left w3-block tablink" 
-                                onclick="openTab(event,'sms_{{ sender }}')" >
+                                onclick="openTab(event, 'chat_column', 'sms_{{ sender }}')" >
                             {{ client.firstname }}&nbsp{{ client.lastname }}
                         </button>
                     {% endwith %}
@@ -53,36 +53,57 @@
             {% endif%}
         </div>
     </div>
-    <div class="w3-col s12 m4 l4 w3-border cb-under-navbar">
-        {% if group %}
-            <div class="w3-container w3-border group-label">
-                <p>{{ group.name }}</p>
+    {% if group %}
+    <div id="group_column" class="w3-col s12 m4 l4 cb-under-navbar">
+        <div id="group_parent" class="w3-container w3-bar">
+            <button id="button_list" 
+                    class="w3-bar-item w3-left w3-block tablink active" 
+                    onclick="openTab(event,'group_column','group_list')" >
+                {{ group.name }}
+            </button>
+            <button id="button_multiple" 
+                    class="w3-bar-item w3-left w3-block tablink" 
+                    onclick="openTab(event,'group_column','group_multiple')" >
+                Multiple
+            </button>
+            <button id="button_other_client" 
+                    class="w3-bar-item w3-left w3-block tablink" 
+                    onclick="openTab(event,'group_column','group_other_client')" >
+                Other Client
+            </button>
+        </div>
+        <div id="group_list" class="w3-container tabcontent" style="display: block;">
+        {% for member in group.clients %}
+            <div class="w3-container">
+                <a class="open-chat-popup" onclick="chatPopup({{member.id}})">
+                        {{ member.firstname }}&nbsp{{ member.lastname }}
+                        <i class='far fa-comment' style='font-size:24px'></i>
+                </a>
             </div>
-            {% for member in group.clients %}
-                <div class="w3-container">
-                    <a class="open-chat-popup" onclick="chatPopup({{member.id}})">
-                            {{ member.firstname }}&nbsp{{ member.lastname }}
-                            <i class='far fa-comment' style='font-size:24px'></i>
-                    </a>
-                </div>
-                <div class="chat-popup w3-container" id="chatForm_{{member.id}}" 
-                     style="display: none;">
-                    <span onclick="closePopup({{member.id}})"
-                          class="w3-button w3-large w3-display-topright">&times;</span>
-                    <form action="{{ url_for('message.send', client_id = member.id) }}" 
-                          method="post">
-                        <textarea placeholder="Type message..." name="Body" required>
-                        </textarea>
-                        <div class="w3-bar w3-padding-16">
-                            <button type='submit' class="w3-button w3-black" 
-                                    onclick="closePopup({{member.id}})">
-                                        Send
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            {% endfor %}
-            
-        {% endif %}
+            <div class="chat-popup w3-container" id="chatForm_{{member.id}}" 
+                 style="display: none;">
+                <span onclick="closePopup({{member.id}})"
+                      class="w3-button w3-large w3-display-topright">&times;</span>
+                <form action="{{ url_for('message.send', client_id = member.id) }}" 
+                      method="post">
+                    <textarea class="w3-input" placeholder="Type message..." name="Body" required>
+                    </textarea>
+                    <div class="w3-bar w3-padding-16">
+                        <button type='submit' class="w3-button" 
+                                onclick="closePopup({{member.id}})">
+                                    Send
+                        </button>
+                    </div>
+                </form>
+            </div>
+        {% endfor %}
+        </div>
+        <div id="group_multiple" class="w3-container tabcontent" style="display: none;">
+            <h2>select from group</h2>
+        </div>
+        <div id="group_other_client" class="w3-container tabcontent" style="display: none;">
+            <h2>select from outside of group</h2>
+        </div>
     </div>
+    {% endif %}
 {% endblock %}

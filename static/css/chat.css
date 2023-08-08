@@ -2,12 +2,12 @@
 /* Style the tab buttons */
 :root {
   --border-color: grey;
-  --active-color: #F0FFF0;
-  --hover-color: #b6d1ca;
+  --active-color:   #F0FFF0;
+  --hover-color:    #b6d1ca;
   --inactive-color: #edf5f3;
-  --outgoing-color: lightgrey;
-  --incoming-color: lightgrey;
-  --time-color: black;
+  --outgoing-color: #a7dceb;
+  --incoming-color: #d3edf5;
+  --time-color:     #717475;
 }
 
 #tab_parent button, #group_parent button {
@@ -17,11 +17,12 @@
   transition: 0.3s;
   background-color: var(--inactive-color);
   border-radius: 10px 10px 0px 0px;
-  border: 1px var(--border-color);
+  border: 1px  solid var(--border-color);
 }
 #tab_parent button:hover, #group_parent button:hover {
   background-color: var(--hover-color)
 }
+
 #tab_parent button.active, #group_parent button.active {
   background-color: var(--active-color); 
   border-bottom: 2px solid var(--active-color);
@@ -29,17 +30,20 @@
   z-index: 5;
 }
 
-
-#chat_parent{
+#chat_parent, #group_list, #group_multiple, #group_other_client {
   background-color: var(--active-color);
   border-top: 1px solid var(--border-color);
+  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
   position: relative;
+  height: 100vh;
+  position: relative;
+  margin-top: -2px;
   z-index: 0;
 }
 
 .chat-container {
-  border: 2px solid var(--border-color);
-  background-color: grey; 
+  border: 1px solid var(--border-color);
   border-radius: 25px;
   padding: 10px;
   margin: 10px 0;
@@ -79,8 +83,34 @@
 /* The popup chat - hidden by default */
 .chat-popup {
   display: none;
-  min-height: 200px;
+  min-height: 180px;
+  border-radius: 25px;
+  padding: 10px;
+  background-color: var(--outgoing-color);
   position: relative;  
-  border: 1px solid lightgrey;
-  z-index: 9;
+  border: 1px solid var(--border-color);
+  z-index: 5;
+}
+.chat-popup span {
+  background-color: transparent;
+  border-radius: 50%;
+  position: absolute;
+  top: 5;
+  right: 15;
+}
+.chat-popup span:hover {
+  background-color: var(--hover-color);
+}
+.chat-popup textarea {
+  border-radius: 12px;
+  padding: 30px;
+  min-height: 100px;
+}
+.chat-popup button {
+  background-color: var(--inactive-color);
+  border-radius: 10px;
+  margin: 10px;
+}
+.chat-popup button:hover {
+  background-color: var(--hover-color);
 }

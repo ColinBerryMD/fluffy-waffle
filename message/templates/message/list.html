@@ -16,7 +16,11 @@
                 {% for sender, their_messages in messages | groupby('sms_client.id') %}
                     {% with client = their_messages[0].sms_client %}
                         <button id="button_{{ sender }}" 
+                            {% if loop.index == 1 %}
+                                class="w3-bar-item w3-left w3-block tablink active" 
+                            {% else %}
                                 class="w3-bar-item w3-left w3-block tablink" 
+                            {% endif %}
                                 onclick="openTab(event, 'chat_column', 'sms_{{ sender }}')" >
                             {{ client.firstname }}&nbsp{{ client.lastname }}
                         </button>
@@ -30,7 +34,12 @@
         <div id="chat_parent" class="w3-container">
             {% if messages %}
                 {% for sender, their_messages in messages | groupby('sms_client.id') %}
-                    <div id="sms_{{ sender }}" class="w3-container tabcontent" style="display: none;">
+                    <div id="sms_{{ sender }}" class="w3-container tabcontent"
+                        {% if loop.index == 1 %}
+                            style="display: block;"
+                        {% else %}
+                            style ="display:none;"
+                        {% endif %}>
                         {% for m in their_messages %}
                             {% if m.Outgoing %}
                             <div id="chat_child" class="chat-container chat-outgoing">
@@ -75,31 +84,39 @@
         <div id="group_list" class="w3-container tabcontent" style="display: block;">
         {% for member in group.clients %}
             <div class="w3-container">
-                <a class="open-chat-popup" onclick="chatPopup({{member.id}})">
+                <a class="open-chat-popup" onclick="chatPopup('chatForm_{{member.id}}'')">
                         {{ member.firstname }}&nbsp{{ member.lastname }}
                         <i class='far fa-comment' style='font-size:24px'></i>
                 </a>
             </div>
             <div class="chat-popup w3-container" id="chatForm_{{member.id}}" 
                  style="display: none;">
-                <span onclick="closePopup({{member.id}})"
-                      class="w3-button w3-large w3-display-topright">&times;</span>
+                <span onclick="closePopup('chatForm_{{member.id}}')"
+                      class="w3-large w3-button w3-display-topright">&times;</span>
                 <form action="{{ url_for('message.send', client_id = member.id) }}" 
                       method="post">
                     <textarea class="w3-input" placeholder="Type message..." name="Body" required>
                     </textarea>
                     <div class="w3-bar w3-padding-16">
-                        <button type='submit' class="w3-button" 
-                                onclick="closePopup({{member.id}})">
-                                    Send
-                        </button>
+                        <button type='submit' class="w3-button w3-display-bottomright" 
+                                onclick="closePopup('chatForm_{{member.id}}')">Send</button>
                     </div>
                 </form>
             </div>
         {% endfor %}
         </div>
         <div id="group_multiple" class="w3-container tabcontent" style="display: none;">
-            <h2>select from group</h2>
+            <form action="{{ url_for('message.multiple_send') }}">
+            {% for member in group.clients %}
+                <label for="check_{{member.id}}">{{ member.firstname }}&nbsp{{ member.lastname }}</label>
+                <input type="checkbox" name="check_{{member.id}}" value="{{member.id}}" checked/>
+            {% endfor %}
+                <textarea class="w3-input" placeholder="Type message..." name="Body" required>
+                </textarea>
+                <div class="w3-bar w3-padding-16">
+                    <button type='submit' class="w3-button w3-display-bottomright">Send</button>
+                </div>
+            </form>
         </div>
         <div id="group_other_client" class="w3-container tabcontent" style="display: none;">
             <h2>select from outside of group</h2>

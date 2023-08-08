@@ -37,12 +37,12 @@ function mysqlDatetoJs(mysqlTimeStamp){
 /////////////////////////////////////////////
 // style the send message popup
 
-function chatPopup( client ) {
-  document.getElementById("chatForm_"+String(client)).style.display = "block";
+function chatPopup( chatId ) {
+  document.getElementById( chatId ).style.display = "block";
 }
 
-function closePopup( client ) {
-  document.getElementById("chatForm_"+String(client)).style.display = "none";
+function closePopup( chatId ) {
+  document.getElementById( chatId ).style.display = "none";
 }
 
 ////////////////////////////////////////////

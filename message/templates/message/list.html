@@ -84,7 +84,7 @@
         <div id="group_list" class="w3-container tabcontent" style="display: block;">
         {% for member in group.clients %}
             <div class="w3-container">
-                <a class="open-chat-popup" onclick="chatPopup('chatForm_{{member.id}}'')">
+                <a class="open-chat-popup" onclick="chatPopup('chatForm_{{member.id}}')">
                         {{ member.firstname }}&nbsp{{ member.lastname }}
                         <i class='far fa-comment' style='font-size:24px'></i>
                 </a>
@@ -95,10 +95,9 @@
                       class="w3-large w3-button w3-display-topright">&times;</span>
                 <form action="{{ url_for('message.send', client_id = member.id) }}" 
                       method="post">
-                    <textarea class="w3-input" placeholder="Type message..." name="Body" required>
-                    </textarea>
+                    <textarea class="w3-input" placeholder="Type message..." name="Body" required></textarea>
                     <div class="w3-bar w3-padding-16">
-                        <button type='submit' class="w3-button w3-display-bottomright" 
+                        <button type='submit' class="w3-button" 
                                 onclick="closePopup('chatForm_{{member.id}}')">Send</button>
                     </div>
                 </form>
@@ -106,15 +105,21 @@
         {% endfor %}
         </div>
         <div id="group_multiple" class="w3-container tabcontent" style="display: none;">
-            <form action="{{ url_for('message.multiple_send') }}">
+            <form action="{{ url_for('message.multiple_send') }}" method="post">
+                <ul style="list-style-type: none">
             {% for member in group.clients %}
-                <label for="check_{{member.id}}">{{ member.firstname }}&nbsp{{ member.lastname }}</label>
-                <input type="checkbox" name="check_{{member.id}}" value="{{member.id}}" checked/>
+                    <li>
+                        <label for="check_{{member.id}}">{{ member.firstname }}&nbsp{{ member.lastname }}</label>
+                        <input type="checkbox" id="check_{{member.id}}" name="selected" value="{{member.id}}" checked/>
+                    </li>
             {% endfor %}
-                <textarea class="w3-input" placeholder="Type message..." name="Body" required>
-                </textarea>
-                <div class="w3-bar w3-padding-16">
-                    <button type='submit' class="w3-button w3-display-bottomright">Send</button>
+                </ul>
+                <div class="chat-popup" style="display: block;">
+                    <textarea class="w3-input" placeholder="Type message..." name="MultiBody" required></textarea>
+                    <div class="w3-bar w3-padding-16">
+                        <button type='reset' class="w3-button" >Reset</button>
+                        <button type='submit' class="w3-button">Send </button>
+                    </div>
                 </div>
             </form>
         </div>

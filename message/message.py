@@ -151,12 +151,68 @@ def send(client_id):
         locale = "adding sent message to database"
         return redirect(url_for('errors.mysql_server', error = e, locale=locale)) 
     
-
     # publish SSE to message list
     msg_dict = dict_from(message)
     msg_dict.update(dict_from(sms_client))
     message_json = json.dumps(msg_dict)
     sse.publish(message_json, type='sms_message')
+
+    return flask_response(status=204)
+
+# send a group of sms messages
+@message.route('/multiple_send', methods= ( 'GET','POST'))
+def multiple_send():
+
+    Body = request.form['MultiBody']
+    if not Body:
+        flash('Message content is required!','error')
+        return redirect( url_for('message.list'))
+
+    account = SMSAccount.query.filter(SMSAccount.id == session['account_id'] ).one()
+    if not account:
+        flash('Active account is required.','error')
+        return redirect( url_for('message.list'))
+
+    # post the messages via twilio
+    
+    selection = request.form.getlist('selected')
+
+    for client_id in selection:
+        sms_client = SMSClient.query.filter(SMSClient.id == client_id).one()
+        try:
+            sms = v_client.messages.create(
+                 body = Body,
+                 messaging_service_sid = account.sid,
+                 to = sms_client.phone
+                 )
+        except:
+            return redirect(url_for('errors.twilio_server'))    
+
+        # insert into database
+        message = Message(SentFrom = account.number,
+                          SentTo   = sms_client.phone, 
+                          SentAt   = mountain_time( datetime.now()), 
+                          Body     = Body,
+                          Outgoing = True,
+                          Completed= False,
+                          Confirmed= False,
+                          Account  = account.id,
+                          Client   = client_id 
+                          )
+        
+        try:
+            db.session.add(message)
+            db.session.commit()
+        except sql_error as e:
+            locale = "adding sent message to database"
+            return redirect(url_for('errors.mysql_server', error = e, locale=locale)) 
+            
+
+        # publish SSE to message list
+        msg_dict = dict_from(message)
+        msg_dict.update(dict_from(sms_client))
+        message_json = json.dumps(msg_dict)
+        sse.publish(message_json, type='sms_message')
 
     
     return flask_response(status=204)

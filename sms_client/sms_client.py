@@ -1,10 +1,13 @@
 from datetime import datetime
+import json
+from flask_sse import sse
 
 from models import SMSClient, Client_Group_Link
 from extensions import v_client, twilio_config, db, sql_error, sql_text, login_required, current_user, session,\
                             func, or_, and_, not_, Blueprint, render_template, request, url_for, flash, redirect
 
 from phonenumber import cleanphone
+from cleandob import cleandob
 
 sms_client = Blueprint('sms_client', __name__, url_prefix='/sms_client', template_folder='templates')
 
@@ -24,22 +27,15 @@ def create():
         translate = translate
         blocked   = False
 
-
-        session['firstname'] = firstname 
-        session['lastname']  = lastname
-        session['dob']       = dob
-        session['email']     = email   
-        session['phone']     = phone   
-        session['translate'] = translate 
-        session['blocked']   = blocked
-                          
+                   
         # check for empty fields
         if not firstname or not lastname or not email or not phone:
             flash('One or more required fields is empty.','error')
             return render_template('sms_client/create.html')
 
         # check fo valid date string
-        if not (bool(datetime.strptime(dob, '%m/%d/%Y'))):
+        dob = cleandob(dob)
+        if not dob:
             flash('Date of birth is misformatted.','error')
             return render_template('sms_client/create.html')
 
@@ -68,6 +64,14 @@ def create():
             locale="sending verification to new client in create()"
             return redirect(url_for('errors.twilio_server',error=e,locale=locale))
                 
+        session['firstname'] = firstname 
+        session['lastname']  = lastname
+        session['dob']       = dob
+        session['email']     = email   
+        session['phone']     = phone   
+        session['translate'] = translate 
+        session['blocked']   = blocked
+
         return redirect(url_for('sms_client.terms'))
     
     return render_template('sms_client/create.html')
@@ -83,7 +87,7 @@ def fake():
         new_sms_client = SMSClient( 
             firstname = request.form['firstname'],
             lastname  = request.form['lastname'],
-            dob   = request.form['dob'],
+            dob   = cleandob(request.form['dob']),
             email     = request.form['email'],
             phone     = cleanphone(request.form['phone']),
             translate = translate,
@@ -182,16 +186,17 @@ def select():
             lastname  = request.form['lastname']
             dob   = request.form['dob']
             if dob:
-                if not (bool(datetime.strptime(dob, '%m/%d/%Y'))):
+                dob = cleandob(dob)
+                if not dob:
                     flash('Date of birth is misformatted.','error')
                     return render_template('sms_client/select.html')
                      
          # clients where firstname sounds like firstname and lastname sounds like lastname -- or -- dob == dob 
             if firstname and lastname:
                 name_query = "SOUNDEX(SMSClient.firstname)=SOUNDEX('"+ firstname +"') AND SOUNDEX(SMSClient.lastname)=SOUNDEX('"+ lastname +"')"
-                if dob_obj:
+                if dob:
                     name_query += " OR SMSClient.dob ='"+dob+"'"
-            elif dob_obj:
+            elif dob:
                 name_query = "SMSClient.dob ='"+dob+"'"
             else:
                 flash('Not enough information for search.','error')
@@ -210,11 +215,63 @@ def select():
             elif len(clients) >1:                     # else we have a list
                 return render_template('sms_client/list.html', clients=clients)
             else:
-                flash('Not enough information for search.','error')
+                flash('No clients found.','info')
                 return render_template('sms_client/select.html')
-
     
     return render_template('sms_client/select.html')
+
+# search is like select, but works with javascript and sse dynamically
+# from the message dashboard
+@sms_client.route('/search', methods=('GET', 'POST'))
+def search():
+    if request.method == 'POST':
+        
+        firstname = request.form['firstname']
+        lastname  = request.form['lastname']
+        dob   = request.form['dob']
+        dob   = request.form['dob']
+        if dob:
+            dob = cleandob(dob)
+            if not dob:
+                flash('Date of birth is misformatted.','error')
+                return redirect(url_for('message.list'))
+
+         # clients where firstname sounds like firstname and lastname sounds like lastname -- or -- dob == dob 
+            if firstname and lastname:
+                name_query = "SOUNDEX(SMSClient.firstname)=SOUNDEX('"+ firstname +"') AND SOUNDEX(SMSClient.lastname)=SOUNDEX('"+ lastname +"')"
+                if dob:
+                    name_query += " OR SMSClient.dob ='"+dob+"'"
+            elif dob:
+                name_query = "SMSClient.dob ='"+dob+"'"
+            else:
+                flash('Not enough information for search.','error')
+                return redirect(url_for('message.list'))
+
+            try: 
+                clients = SMSClient.query.filter(sql_text(name_query)).all()
+                                                        
+            except sql_error as e:
+                locale="text() search for client"
+                return redirect(url_for('errors.mysql_server', error = e,locale=locale))  
+
+
+        if clients: # change to json and send back as SSE
+            if len(clients) == 1:     # if only one
+                msg_dict = dict_from(clients[0])
+                message_json = json.dumps(msg_dict)
+                print(message_json)
+                #sse.publish(message_json, type='client_profile')
+                return "",201
+            elif len(clients) >1: 
+                msg_dict = dict_from(clients)
+                message_json = json.dumps(msg_dict) 
+                print(message_json)
+                #sse.publish(message_json, type='client_list')
+                return "",201                   
+            else:
+                flash('Not enough information for search.','error')
+                return redirect(url_for('message.list'))
+                
 
 # since they have no login, the clients can't make corrections themselves
 # but any use with a login can do it for them
@@ -234,9 +291,6 @@ def edit(sms_client_id):
         locale="getting client to edit"
         return redirect(url_for(errors.mysql_server, error = e,locale=locale))
 
-    if client_to_edit.dob:
-        dob = client_to_edit.dob.strftime('%m/%d/%Y')
-
     if request.method == 'POST':
         firstname   = request.form.get('firstname')
         lastname    = request.form.get('lastname')
@@ -254,8 +308,13 @@ def edit(sms_client_id):
             flash('One or more required fields is empty.','error')
             return render_template('sms_client/edit.html', client=client_to_edit)
 
+        dob = cleandob(dob)
+        if not dob:
+            flash('Date of birth is misformatted.','error')
+            return render_template('sms_client/edit.html', client=client_to_edit)
+
         # check fo valid date string
-        if not (bool(datetime.strptime(dob, '%m/%d/%Y'))) or not dob:
+        if not formatted or not dob:
             flash('Date of birth is misformatted or blank.','error')
             return render_template('sms_client/edit.html', client=client_to_edit)
 

@@ -211,8 +211,8 @@ def delete_client(client_id,group_id):
 
     try:
         db.session.query(Client_Group_Link).filter(and_(
-                         Client_Group_Link.group_id == group_id,
-                         client_id == client_id
+                         Client_Group_Link.group_id  == group_id,
+                         Client_Group_Link.client_id == client_id
                         )).delete()
         db.session.commit()
     except sql_error as e:

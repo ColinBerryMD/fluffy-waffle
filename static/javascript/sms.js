@@ -138,3 +138,17 @@ function AddChatElement(smsMessage){
     newSpan.appendChild(timeContent);
 
   }
+/////////////////////////////////////////////
+// create a popup element to send a message
+// given a sms_client() json
+function AddSendPopup(client_json){ 
+  }
+/////////////////////////////////////////////
+// create a radio button form to select a client from a short list
+// given a list of sms_client() as json
+function AddSelectElement(client_list_json){ 
+  }
+/////////////////////////////////////////////
+// hide the other clients menus
+function closeOtherClient(){ 
+  }

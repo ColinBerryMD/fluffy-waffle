@@ -124,7 +124,54 @@
             </form>
         </div>
         <div id="group_other_client" class="w3-container tabcontent" style="display: none;">
-            <h2>select from outside of group</h2>
+            <div id="search_form" style="display: block;">
+                <form action="{{ url_for('sms_client.search') }}" method="post">
+                    <div>
+                        <label>Enter Search Terms</label>
+                        <input  class="w3-input" type="text" name="firstname" placeholder="First Name"/>
+                    
+                        <input  class="w3-input" type="text" name="lastname" placeholder="Last Name"/>
+                    
+                        <input  class="w3-input" type="text" name="dob" placeholder="Date of Birth"/>
+                    </div>
+                    
+                    <div class="w3-bar w3-padding-16">
+                        <button type='reset' class="w3-button" >Reset</button>
+                        <button type='submit' class="w3-button">Search </button>
+                    </div>
+                </form>
+            </div>
+            <div id="select_form" style="display: none;">
+                <form action="{{ url_for('sms_client.sse_select') }}" method="post">
+                    <div id="client_select">
+                        <label>Select One Client</label>
+                        <!-- radio buttons for each client in list with javascript -->
+                        <!--input  class="w3-input" type="radio" name="selection" value/-->
+                    </div>
+                    
+                    <div class="w3-bar w3-padding-16">
+                        <button type='reset' class="w3-button" >Reset</button>
+                        <button type='submit' class="w3-button">Select</button>
+                    </div>
+                </form>
+            </div>
+            <div id="profile_form" style="display: none;">
+                <!-- create an action attribute like action=url_for('message.send', client_id = member.id)-->
+                <form  method="post">
+                    <div id="client_profile">
+                        <label>Message Client: </label>
+                        <!-- put a profile of our selected client here with javascript -->
+                    </div>
+                    
+                    <div class="chat-popup">
+                        <textarea class="w3-input" placeholder="Type message..." name="OtherClientBody" required></textarea>
+                        <div class="w3-bar w3-padding-16">
+                            <button type='reset' class="w3-button" >Reset</button>
+                            <button type='submit' class="w3-button" onclick="closeOtherClient()">Send</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
     {% endif %}

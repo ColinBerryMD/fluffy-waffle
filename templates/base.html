@@ -210,6 +210,14 @@
           var message = JSON.parse(event.data);
           AddChatElement(message);
         }, false);
+        source.addEventListener('client_profile', function(event) {
+          var message = JSON.parse(event.data);
+          AddSendPopup(message);
+        }, false);
+        source.addEventListener('client_list', function(event) {
+          var message = JSON.parse(event.data);
+          AddSelectElement(message);
+        }, false);
         //source.addEventListener('error', function(event) {
         //  alert("Failed to connect to event stream. Is Redis running?");
         //}, false);

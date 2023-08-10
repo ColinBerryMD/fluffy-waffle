@@ -106,12 +106,15 @@
   padding: 10px;
   min-height: 100px;
 }
-.chat-popup button {
+.chat-popup button, #group_other_client button {
   background-color: var(--inactive-color);
   border-radius: 10px;
   margin: 10px;
   float: right;
 }
-.chat-popup button:hover {
+.chat-popup button:hover, #group_other_client button:hover {
   background-color: var(--hover-color);
+}
+#group_other_client button.active {
+  background-color: var(--active-color);
 }

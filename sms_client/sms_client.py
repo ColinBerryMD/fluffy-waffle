@@ -7,7 +7,8 @@ from extensions import v_client, twilio_config, db, sql_error, sql_text, login_r
                             func, or_, and_, not_, Blueprint, render_template, request, url_for, flash, redirect
 
 from phonenumber import cleanphone
-from cleandob import cleandob
+from dict_from import dict_from
+from .cleandob import cleandob
 
 sms_client = Blueprint('sms_client', __name__, url_prefix='/sms_client', template_folder='templates')
 
@@ -162,6 +163,24 @@ def list():
     clients = request.form.get('clients')
     return render_template('sms_client/list.html', clients = clients )
 
+# publish sse of a single client profile back to message dashboard
+@sms_client.post('/sse_select')
+@login_required
+def sse_select():
+    try:
+        client_id = request.form['selection']
+    except:
+        flash('No selection passed','error')
+        return redirect(url_for('message.list'))
+    
+    client = SMSClient.query.filter(SMSClient.id == client_id).one()
+
+    msg_dict = dict_from(client)
+    message_json = json.dumps(msg_dict)
+    print(message_json)
+    #sse.publish(message_json, type='client_profile')
+    return "",201
+
 @login_required
 @sms_client.route('/<int:client_id>/profile')
 def profile(client_id):
@@ -222,55 +241,52 @@ def select():
 
 # search is like select, but works with javascript and sse dynamically
 # from the message dashboard
-@sms_client.route('/search', methods=('GET', 'POST'))
-def search():
-    if request.method == 'POST':
-        
-        firstname = request.form['firstname']
-        lastname  = request.form['lastname']
-        dob   = request.form['dob']
-        dob   = request.form['dob']
+@sms_client.post('/search')
+def search():        
+    firstname = request.form['firstname']
+    lastname  = request.form['lastname']
+    dob   = request.form['dob']
+    if dob:
+        dob = cleandob(dob)
+        if not dob:
+            flash('Date of birth is misformatted.','error')
+            return redirect(url_for('message.list'))
+
+    # clients where firstname sounds like firstname and lastname sounds like lastname -- or -- dob == dob 
+    if firstname and lastname:
+        name_query = "SOUNDEX(SMSClient.firstname)=SOUNDEX('"+ firstname +"') AND SOUNDEX(SMSClient.lastname)=SOUNDEX('"+ lastname +"')"
         if dob:
-            dob = cleandob(dob)
-            if not dob:
-                flash('Date of birth is misformatted.','error')
-                return redirect(url_for('message.list'))
+            name_query += " OR SMSClient.dob ='"+dob+"'"
+    elif dob:
+        name_query = "SMSClient.dob ='"+dob+"'"
+    else:
+        flash('Not enough information for search.','error')
+        return redirect(url_for('message.list'))    
 
-         # clients where firstname sounds like firstname and lastname sounds like lastname -- or -- dob == dob 
-            if firstname and lastname:
-                name_query = "SOUNDEX(SMSClient.firstname)=SOUNDEX('"+ firstname +"') AND SOUNDEX(SMSClient.lastname)=SOUNDEX('"+ lastname +"')"
-                if dob:
-                    name_query += " OR SMSClient.dob ='"+dob+"'"
-            elif dob:
-                name_query = "SMSClient.dob ='"+dob+"'"
-            else:
-                flash('Not enough information for search.','error')
-                return redirect(url_for('message.list'))
+    try: 
+        clients = SMSClient.query.filter(sql_text(name_query)).all()
 
-            try: 
-                clients = SMSClient.query.filter(sql_text(name_query)).all()
-                                                        
-            except sql_error as e:
-                locale="text() search for client"
-                return redirect(url_for('errors.mysql_server', error = e,locale=locale))  
+    except sql_error as e:
+        locale="text() search for client"
+        return redirect(url_for('errors.mysql_server', error = e,locale=locale))  
 
-
-        if clients: # change to json and send back as SSE
-            if len(clients) == 1:     # if only one
-                msg_dict = dict_from(clients[0])
-                message_json = json.dumps(msg_dict)
-                print(message_json)
-                #sse.publish(message_json, type='client_profile')
-                return "",201
-            elif len(clients) >1: 
-                msg_dict = dict_from(clients)
-                message_json = json.dumps(msg_dict) 
-                print(message_json)
-                #sse.publish(message_json, type='client_list')
-                return "",201                   
-            else:
-                flash('Not enough information for search.','error')
-                return redirect(url_for('message.list'))
+    if len(clients) == 1:     # if only one
+        msg_dict = dict_from(clients[0])
+        message_json = json.dumps(msg_dict)
+        print(message_json)
+        #sse.publish(message_json, type='client_profile')
+        return "",201
+    elif len(clients) >1:
+        msg_dict = []
+        for c in clients: 
+            msg_dict.append(dict_from(c))
+        message_json = json.dumps(msg_dict) 
+        print(message_json)
+        #sse.publish(message_json, type='client_list')
+        return "",201                   
+    else:
+        flash('No clients found.','info')
+        return redirect(url_for('message.list'))
                 
 
 # since they have no login, the clients can't make corrections themselves
@@ -308,14 +324,10 @@ def edit(sms_client_id):
             flash('One or more required fields is empty.','error')
             return render_template('sms_client/edit.html', client=client_to_edit)
 
+        # check fo valid date string
         dob = cleandob(dob)
         if not dob:
             flash('Date of birth is misformatted.','error')
-            return render_template('sms_client/edit.html', client=client_to_edit)
-
-        # check fo valid date string
-        if not formatted or not dob:
-            flash('Date of birth is misformatted or blank.','error')
             return render_template('sms_client/edit.html', client=client_to_edit)
 
         #conflicting_sms_client=False # for testing

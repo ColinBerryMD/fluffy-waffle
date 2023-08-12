@@ -3,8 +3,8 @@ import json
 from flask_sse import sse
 
 from models import SMSClient, Client_Group_Link
-from extensions import v_client, twilio_config, db, sql_error, sql_text, login_required, current_user, session,\
-                            func, or_, and_, not_, Blueprint, render_template, request, url_for, flash, redirect
+from extensions import v_client, twilio_config, db, sql_error, sql_text, login_required, current_user, flask_response,\
+                       session, func, or_, and_, not_, Blueprint, render_template, request, url_for, flash, redirect
 
 from phonenumber import cleanphone
 from dict_from import dict_from
@@ -168,18 +168,17 @@ def list():
 @login_required
 def sse_select():
     try:
-        client_id = request.form['selection']
+        client_id = request.form['client_id']
     except:
         flash('No selection passed','error')
-        return redirect(url_for('message.list'))
+        return flask_response(status=204)
     
     client = SMSClient.query.filter(SMSClient.id == client_id).one()
 
     msg_dict = dict_from(client)
     message_json = json.dumps(msg_dict)
-    print(message_json)
-    #sse.publish(message_json, type='client_profile')
-    return "",201
+    sse.publish(message_json, type='client_profile')
+    return flask_response(status=204)
 
 @login_required
 @sms_client.route('/<int:client_id>/profile')
@@ -273,20 +272,18 @@ def search():
     if len(clients) == 1:     # if only one
         msg_dict = dict_from(clients[0])
         message_json = json.dumps(msg_dict)
-        print(message_json)
-        #sse.publish(message_json, type='client_profile')
-        return "",201
-    elif len(clients) >1:
+        sse.publish(message_json, type='client_profile')
+        return flask_response(status=204)
+    elif len(clients) >1:    # a list of client objects
         msg_dict = []
         for c in clients: 
             msg_dict.append(dict_from(c))
         message_json = json.dumps(msg_dict) 
-        print(message_json)
-        #sse.publish(message_json, type='client_list')
-        return "",201                   
-    else:
+        sse.publish(message_json, type='client_list')
+        return flask_response(status=204)         
+    else:                     # nothing found 
         flash('No clients found.','info')
-        return redirect(url_for('message.list'))
+        return flask_response(status=204)
                 
 
 # since they have no login, the clients can't make corrections themselves

@@ -29,9 +29,14 @@ function openTab(evt, columnId, tabId) {
   document.getElementById(tabId).style.display = "block";
   evt.currentTarget.className += " active";
 }
-function mysqlDatetoJs(mysqlTimeStamp){
-      var t = mysqlTimeStamp.split(/[- :]/);
-          return new Date(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
+///////////////////////////////////////////////////
+// return a humanized date/time stamp
+// the complex part was moved to python
+function messageTime(mysqlTimeStamp){
+  let t =  mysqlTimeStamp.split(/[- : T]/);  // mysql time to js
+  let msgDate = new Date(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
+  
+  return msgDate.toLocaleTimeString([], { timeStyle: 'short' }); // the time won't need javascript if its not today
 }
 
 /////////////////////////////////////////////
@@ -51,9 +56,9 @@ function closePopup( chatId ) {
 // need to add in name attributes
 function AddChatElement(smsMessage){ 
     // does a tab for this client exist? if not create it
-    let linkId, tabLink, buttonText, buttonContent
+    let linkId, tabLink, buttonText, buttonContent;
 
-    linkId = "button_"+String(smsMessage.Client)
+    linkId = "button_"+String(smsMessage.Client);
     const tabParent = document.getElementById("tab_parent");
     if (document.getElementById( linkId )){
       tabLink = document.getElementById( linkId ); 
@@ -89,19 +94,15 @@ function AddChatElement(smsMessage){
     const chatChild = document.createElement("div"); 
     chatContent.appendChild(chatChild);
     
-    // add id and class
-    let divClass, spanClass, divId
-
+    let divClass, spanClass;
     if (smsMessage.Outgoing) {
-      divClass = "chat-container chat-darker chat-msg-right"
-      spanClass= "chat-time-right"
+      divClass = "chat-container chat-outgoing";
+      spanClass= "chat-time-right";
     } else {
-      divClass = "chat-container chat-msg-left"
-      spanClass="chat-time-left"
+      divClass = "chat-container chat-incoming";
+      spanClass="chat-time-left";
     }
     
-    divId = "msg_" + String(smsMessage.id)
-    chatChild.setAttribute("id",divId);  
     chatChild.setAttribute("class",divClass); 
     
     // the <p> element containing the text itself
@@ -116,39 +117,90 @@ function AddChatElement(smsMessage){
     
     newSpan.setAttribute("class",spanClass);  // depends on incoming v. outgoing
     
-    let Today = new Date();
-    let tDate = Today.getDate();
-    let tMonth = Today.getMonth();
-    let Yesterday = new Date().setDate(Today.getDate() - 1);
-    let yDate = new Date(Yesterday).getMonth();
-    let yMonth = new Date(Yesterday).getMonth();
-    let messageDateTime = mysqlDatetoJs(smsMessage.SentAt)
-    let mDate = messageDateTime.getDate();
-    let mMonth = messageDateTime.getMonth();
-    
-    if (tDate == mDate && tMonth == mMonth) {
-      timeStr = messageDateTime.toLocaleTimeString(); // the time
-    } else if (yDate == mDate && yMonth == mMonth) {
-      timeStr = "Yesterday at "+ messageDateTime.toLocaleTimeString();
-    } else {
-      timeStr = messageDateTime.toDateString();// the date
-    }
-    
-    const timeContent = document.createTextNode(timeStr);
+    const timeContent = document.createTextNode(messageTime(smsMessage.SentAt));
     newSpan.appendChild(timeContent);
 
-  }
+}
 /////////////////////////////////////////////
 // create a popup element to send a message
 // given a sms_client() json
 function AddSendPopup(client_json){ 
+  //<div id="profile_form" style="display: none;">
+  let profile_block = document.getElementById('profile_block');
+  profile_block.setAttribute("style", "display: block;");
+
+  // set competeing blocks to display:none
+  let select_block = document.getElementById('select_block');
+  select_block.setAttribute("style", "display: none;");
+  let search_block = document.getElementById('search_block');
+  search_block.setAttribute("style", "display: none;");
+
+  // create an action attribute like action=url_for('message.send', client_id = member.id)
+  //<form  method="post">
+  let profile_form = document.getElementById('profile_form');
+  send_url= "/message/"+client_json.id+"/send";
+  profile_form.setAttribute("action",send_url);
+
+  //<div id="client_profile">
+  let client_profile = document.getElementById('client_profile');
+  //   <label>Message Client: </label>
+  // put a profile of our selected client here with javascript 
+  profile_string = client_json.firstname+" "+client_json.lastname+" ("+client_json.dob+")";
+  let name_par = document.createElement("p"); 
+  const profileContent = document.createTextNode(profile_string);
+  name_par.appendChild(profileContent);
+  client_profile.appendChild(name_par);
+ 
   }
 /////////////////////////////////////////////
 // create a radio button form to select a client from a short list
 // given a list of sms_client() as json
+function listSelectElement(results){ 
+  results.forEach(function(item) {
+    console.log(item);
+  });
+}
+/////////////////////////////////////////////
+// create a radio button form to select a client from a short list
+// given a list of sms_client() as json
 function AddSelectElement(client_list_json){ 
+  //<div id="profile_form" style="display: none;">
+  let select_block = document.getElementById('select_block');
+  select_block.setAttribute("style", "display: block;");
+
+  // set competeing blocks to display:none
+  let profile_block = document.getElementById('profile_block');
+  profile_block.setAttribute("style", "display: none;");
+  let search_block = document.getElementById('search_block');
+  search_block.setAttribute("style", "display: none;");
+
+  //let select_form = document.getElementById('select_form');
+  let input_label, profile_string, input_el, for_radio, br_el;
+  let client_select = document.getElementById('client_select');
+
+  client_list_json.forEach(function(client) {
+    br_el = document.createElement("br"); 
+    client_select.appendChild(br_el);
+    profile_string = client.firstname+" "+client.lastname+" ("+client.dob+")";
+    input_label = document.createElement("label"); 
+    profileContent = document.createTextNode(profile_string);
+    input_label.appendChild(profileContent);
+    for_radio = "radio_"+String(client.id);
+    input_label.setAttribute("for",for_radio);
+
+    input_el = document.createElement("input"); 
+    input_el.setAttribute("type", "radio");
+    input_el.setAttribute("id", for_radio);
+    input_el.setAttribute("name", "client_id");
+    input_el.setAttribute("value", client.id);
+  
+    client_select.appendChild(input_el);
+    client_select.appendChild(input_label);
+    });
   }
 /////////////////////////////////////////////
-// hide the other clients menus
-function closeOtherClient(){ 
+// clear text message on submit
+function submitForm(parentForm){ 
+  document.getElementById(parentForm).submit()
+  document.getElementById(parentForm).reset()
   }

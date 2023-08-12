@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 from flask_sse import sse
 
@@ -20,7 +20,37 @@ from dict_from import dict_from
 
 message = Blueprint('message', __name__,url_prefix='/message', template_folder='templates')
 
-       
+# a little jinja2 filter for the timestamp       
+@message.app_template_filter()
+def pretty_timestamp(iso_time): # actually a iso string -- not a timestamp (timestamps dont jasonify)
+    iso_time = iso_time.replace('T',':')
+    iso_time = iso_time.replace('-',':')
+    t =  iso_time.split(':')
+
+    try:
+        msg_month = int(t[1])
+        msg_dom = int(t[2])
+        msg_date = t[1]+'/'+t[2]+'/'+t[0]
+        msg_time = t[3]+':'+t[4]
+    except:
+        return iso_time  # give up - it isnt going to work
+
+    today = datetime.now()
+    t_dom = today.day
+    t_month = today.month
+    yesterday = today - timedelta(days = 1)
+    y_dom = yesterday.day
+    y_month = yesterday.month
+
+    if t_dom == msg_dom and t_month == msg_month:
+        stamp = msg_time
+    elif y_dom == msg_dom and y_month == msg_month:
+        stamp = "Yesterday at "+ msg_time
+    else:
+        stamp = msg_date
+
+    return stamp
+
 # list all messages
 @message.route('/')
 def list():

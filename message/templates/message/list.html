@@ -42,14 +42,14 @@
                         {% endif %}>
                         {% for m in their_messages %}
                             {% if m.Outgoing %}
-                            <div id="chat_child" class="chat-container chat-outgoing">
+                            <div class="chat-container chat-outgoing">
                                 <p>{{ m.Body }}</p>
-                                <span class="chat-time-right">{{ m.SentAt }}</span>
+                                <span class="chat-time-right">{{ m.SentAt | pretty_timestamp }}</span>
                             </div>
                             {% else %}
-                            <div id="chat_child" class="chat-container chat-incoming">
+                            <div class="chat-container chat-incoming">
                                 <p>{{ m.Body }}</p>
-                                <span class="chat-time-left">{{ m.SentAt }}</span>
+                                <span class="chat-time-left">{{ m.SentAt | pretty_timestamp }}</span>
                             </div>
                             {% endif %}
                         {% endfor %}
@@ -124,8 +124,8 @@
             </form>
         </div>
         <div id="group_other_client" class="w3-container tabcontent" style="display: none;">
-            <div id="search_form" style="display: block;">
-                <form action="{{ url_for('sms_client.search') }}" method="post">
+            <div id="search_block" style="display: block;">
+                <form id="search_form" action="{{ url_for('sms_client.search') }}" method="post">
                     <div>
                         <label>Enter Search Terms</label>
                         <input  class="w3-input" type="text" name="firstname" placeholder="First Name"/>
@@ -141,8 +141,8 @@
                     </div>
                 </form>
             </div>
-            <div id="select_form" style="display: none;">
-                <form action="{{ url_for('sms_client.sse_select') }}" method="post">
+            <div id="select_block" style="display: none;">
+                <form id="select_form" action="{{ url_for('sms_client.sse_select') }}" method="post">
                     <div id="client_select">
                         <label>Select One Client</label>
                         <!-- radio buttons for each client in list with javascript -->
@@ -155,19 +155,19 @@
                     </div>
                 </form>
             </div>
-            <div id="profile_form" style="display: none;">
+            <div id="profile_block" style="display: none;">
                 <!-- create an action attribute like action=url_for('message.send', client_id = member.id)-->
-                <form  method="post">
+                <form  id="profile_form" method="post">
                     <div id="client_profile">
                         <label>Message Client: </label>
                         <!-- put a profile of our selected client here with javascript -->
                     </div>
                     
-                    <div class="chat-popup">
-                        <textarea class="w3-input" placeholder="Type message..." name="OtherClientBody" required></textarea>
+                    <div class="chat-popup" style="display: inherit">
+                        <textarea class="w3-input" placeholder="Type message..." name="Body" required></textarea>
                         <div class="w3-bar w3-padding-16">
                             <button type='reset' class="w3-button" >Reset</button>
-                            <button type='submit' class="w3-button" onclick="closeOtherClient()">Send</button>
+                            <button type='button' class="w3-button" onclick="submitForm('profile_form')">Send</button>
                         </div>
                     </div>
                 </form>

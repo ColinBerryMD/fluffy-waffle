@@ -16,3 +16,39 @@
 {
     margin-top: 48px;
 }
+
+
+@media only screen and (max-width: 750px) {
+    .cb-hide-small {
+        display: none;
+    }
+    .cb-show-small {
+        display: block;
+    }
+}
+@media only screen and (min-width: 751px) and (max-width: 1225px) {
+    .cb-hide-medium {
+        display: none;
+    }
+    .cb-show-medium {
+        display: block;
+    }
+}
+@media only screen and (min-width: 1226px) {
+    .cb-hide-large {
+        display: none;
+    }
+    .cb-show-large {
+        display: block;
+    }
+}
+
+.dropdown-submenu {
+  position: relative;
+}
+
+.dropdown-submenu .dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -1px;
+}

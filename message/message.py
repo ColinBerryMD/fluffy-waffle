@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from dateutil.tz import tzlocal
 import json
 from flask_sse import sse
 
@@ -14,7 +15,6 @@ from extensions import db, v_client, twilio_config, sql_error, login_required, f
 
 
 from phonenumber import cleanphone
-from mountain_time import mountain_time
 from dict_from import dict_from
 
 
@@ -35,7 +35,7 @@ def pretty_timestamp(iso_time): # actually a iso string -- not a timestamp (time
     except:
         return iso_time  # give up - it isnt going to work
 
-    today = datetime.now()
+    today = datetime.now(tzlocal())
     t_dom = today.day
     t_month = today.month
     yesterday = today - timedelta(days = 1)
@@ -101,7 +101,7 @@ def fake():
         # insert into database
         message = Message(SentFrom = SentFrom,
                           SentTo   = SentTo, 
-                          SentAt   = mountain_time( datetime.now()), 
+                          SentAt   = datetime.now(tzlocal()).isoformat(), 
                           Body     = Body,
                           Outgoing = Outgoing,
                           Completed= False,
@@ -165,7 +165,7 @@ def send(client_id):
     # insert into database
     message = Message(SentFrom = account.number,
                       SentTo   = sms_client.phone, 
-                      SentAt   = mountain_time( datetime.now()), 
+                      SentAt   = datetime.now(tzlocal()).isoformat(), 
                       Body     = Body,
                       Outgoing = True,
                       Completed= False,
@@ -221,7 +221,7 @@ def multiple_send():
         # insert into database
         message = Message(SentFrom = account.number,
                           SentTo   = sms_client.phone, 
-                          SentAt   = mountain_time( datetime.now()), 
+                          SentAt   = datetime.now(tzlocal()).isoformat(), 
                           Body     = Body,
                           Outgoing = True,
                           Completed= False,
@@ -304,7 +304,7 @@ def receive():
     message = Message(
         SentFrom  = SentFrom,
         SentTo    = SentTo, 
-        SentAt    = mountain_time( datetime.now() ), 
+        SentAt    = datetime.now(tzlocal()).isoformat(), 
         Body      = Body,
         Outgoing  = False,
         Completed = False,

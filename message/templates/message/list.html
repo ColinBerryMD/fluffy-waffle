@@ -9,7 +9,8 @@
 {# needs messages; a list of Message() #}
 {# needs group = SMSGroup() #}
 <div class="w3-row">
-    <div id="chat_column" class="w3-col s12 m8 l8">
+    <!-- div id="chat_column" class="w3-col s12 m8 l8" -->
+    <div id="chat_column" class="w3-col cb-col-one-of-two">
 
         <div id="tab_parent" class="w3-container w3-bar cb-under-navbar">
             {% if messages %}
@@ -63,7 +64,8 @@
         </div>
     </div>
     {% if group %}
-    <div id="group_column" class="w3-col s12 m4 l4 cb-under-navbar">
+    <!-- div id="group_column" class="w3-col s12 m4 l4 cb-under-navbar"-->
+    <div id="group_column" class="w3-col cb-col-two-of-two cb-under-navbar">
         <div id="group_parent" class="w3-container w3-bar">
             <button id="button_list" 
                     class="w3-bar-item w3-left w3-block tablink active" 

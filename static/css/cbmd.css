@@ -25,6 +25,12 @@
     .cb-show-small {
         display: block;
     }
+    .cb-col-one-of-two {
+        width: 100%;
+    }
+    .cb-col-two-of-two {
+        width: 100%;
+    }
 }
 @media only screen and (min-width: 751px) and (max-width: 1225px) {
     .cb-hide-medium {
@@ -33,6 +39,13 @@
     .cb-show-medium {
         display: block;
     }
+    .cb-col-one-of-two {
+        width: 70%;
+
+    }
+    .cb-col-two-of-two {
+        width: 30%;
+    }
 }
 @media only screen and (min-width: 1226px) {
     .cb-hide-large {
@@ -40,6 +53,12 @@
     }
     .cb-show-large {
         display: block;
+    }
+    .cb-col-one-of-two {
+        width: 70%;
+    }
+    .cb-col-two-of-two {
+        width: 30%;
     }
 }
 

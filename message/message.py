@@ -328,7 +328,6 @@ def receive():
     msg_dict.update(dict_from(sms_client))
     message_json = json.dumps(msg_dict)
 
-    print(message_json)
     sse.publish(message_json, type='sms_message')
 
     return("<Response/>")

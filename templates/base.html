@@ -11,6 +11,7 @@
         <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
         <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-black.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        
         <link rel="stylesheet" href="{{ url_for('static', filename='css/cbmd.css') }}">
         <script type="text/javascript" src = "{{ url_for('static', filename = 'javascript/sms.js') }}"/></script>
         {% block header %}{% endblock %}
@@ -49,20 +50,47 @@
                             </ul>
                         </li>
                     {% endif %}
+                    {% if current_user.is_sms %}
+                        <!-- select or manage account -->
+                        {% if session['account_id'] %}
                         <li class="dropdown-submenu">
-                            <a class="test" tabindex="-1">New dropdown <span class="caret"></span></a>
+                            <a class="test" tabindex="-1">
+                            Account: &nbsp{{ session['account_name'] }}&nbsp
+                            <span class="caret"></span></a>
                             <ul class="dropdown-menu">
-                                <li><a tabindex="-1" href="#">2nd level dropdown</a></li>
-                                <li><a tabindex="-1" href="#">2nd level dropdown</a></li>
+                                <li><a tabindex="-1" href="{{ url_for('account.close') }}" >Close Account</a></li>
+                                <li><a tabindex="-1" href="{{ url_for('account.select') }}">Change Account</a></li>
+                                <li><a tabindex="-1" href="{{ url_for('account.profile',account_id=session['account_id']) }}">Account Profile</a></li>
+                                <li><a tabindex="-1" href="{{ url_for('account.edit',account_id=session['account_id']) }}">Edit Account</a></li>
+                                <li><a tabindex="-1" href="{{ url_for('auth.select') }}">Add User to Account</a></li>
                             </ul>
                         </li>
+                        {% else %}
+                        <li><a tabindex="-1" href="{{ url_for('account.select') }}"  
+                           class="">Select Account</a></li>
+                        {% endif %}
+
+                        {% if session['group_id'] %}
                         <li class="dropdown-submenu">
-                            <a class="test" tabindex="-1">another dropdown <span class="caret"></span></a>
+                            <a class="test" tabindex="-1">
+                            Group:&nbsp{{ session['group_name'] }}
+                            <span class="caret"></span></a>
                             <ul class="dropdown-menu">
-                                <li><a tabindex="-1" href="#">2nd level dropdown</a></li>
-                                <li><a tabindex="-1" href="#">2nd level dropdown</a></li>
+                                <li><a tabindex="-1" href="{{ url_for('group.close') }}" >Close Group</a></li>
+                                <li><a tabindex="-1" href="{{ url_for('group.select') }}">Change Group</a></li>
+                                <li><a tabindex="-1" href="{{ url_for('group.profile',group_id=session['group_id']) }}">Group Profile</a></li>
+                                <li><a tabindex="-1" href="{{ url_for('sms_client.select') }}">Add Client to Group</a></li>
                             </ul>
                         </li>
+                        {% else %}
+                        <li><a tabindex="-1" href="{{ url_for('group.select') }}"  
+                           class="">Select Group</a></li>
+                        {% endif %}
+                    {% else %}
+                        <li><a tabindex="-1" href="{{ url_for('sms_client.create') }}">Registration</a></li>
+                        <li><a tabindex="-1" href="{{ url_for('sms_client.create') }}">Claim Username</a></li>
+                        <li><a tabindex="-1" href="{{ url_for('sms_client.create') }}">Contact Us</a></li>
+                    {% endif %}
                     </ul>
                 </div>
 
@@ -73,6 +101,30 @@
                 <a href="{{ url_for('main.admin') }}"
                    class="w3-bar-item w3-button w3-hover-white"><i class="fa fa-gear"></i></a>
                 {% endif %}
+
+                {% if (session['account_id'] and current_user.is_sms) %}
+                <div class="w3-dropdown-hover">
+                    <a href="{{ url_for('message.list') }}" 
+                       class="w3-bar-item w3-button  w3-hover-white"><i class="fa fa-comment"></i>
+                       <div class="w3-dropdown-content w3-card-4 w3-left w3-left-align" >
+                            Messaging dashboard
+                        </div>
+                   </a>
+                </div>
+                {% endif %}
+
+
+                <div class="w3-dropdown-hover w3-right">
+                    <a href="{{ url_for('sms_client.create') }}" 
+                        class="w3-bar-item w3-button w3-hover-white">
+                            Registration          
+                        <div class="w3-dropdown-content w3-card-4 w3-left w3-left-align" style="width:250px; right:0">
+                            Sign up to use our messaging service. You will need your phone to prove
+                            that you are not a robot.
+                        </div>
+                    </a>
+                </div>
+
                 {% if current_user.is_authenticated %}
                 <div class="w3-dropdown-hover cb-hide-small cb-hide-medium cb-show-large">
                     <a class="w3-bar-item w3-button  w3-hover-white">
@@ -100,7 +152,7 @@
                     <!-- select or manage account -->
                     {% if session['account_id'] %}
                     <div class="w3-dropdown-hover cb-hide-small cb-hide-medium cb-show-large">
-                        <a class="w3-bar-item w3-button  w3w3-hover-white">
+                        <a class="w3-bar-item w3-button  w3-hover-white">
                             Account: &nbsp{{ session['account_name'] }}
                             <i class="fa fa-caret-down"></i>
                         </a>
@@ -164,20 +216,6 @@
                     <div class="cb-hide-small cb-hide-medium cb-show-large">
                         <a href="{{ url_for('group.select') }}"  
                            class="w3-bar-item w3-button w3-hover-white">Select Client Group</a>
-                    </div>
-                    {% endif %}
-                    {% if session['account_id'] %}
-                    <div class="cb-hide-small cb-show-medium cb-show-large">
-                        <a href="{{ url_for('message.list') }}" 
-                           class="w3-bar-item w3-button  w3-hover-white">
-                                Open Messages
-                        </a>
-                    </div>
-                    <div class="cb-show-small cb-hide-medium cb-hide-large">
-                        <a href="{{ url_for('message.list') }}" 
-                           class="w3-bar-item w3-button  w3-hover-white">
-                                Messages
-                        </a>
                     </div>
                     {% endif %}
                 {% endif %}

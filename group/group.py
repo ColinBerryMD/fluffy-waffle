@@ -1,5 +1,5 @@
 from extensions import  db, sql_error, Blueprint, render_template, request, url_for, flash, redirect,\
-                             session, login_required, current_user, func, or_, and_
+                             flask_response, session, login_required, current_user, func, or_, and_
 
 from models import SMSClient, User_Account_Link, Client_Group_Link, SMSGroup, SMSAccount, WebUser
 
@@ -134,7 +134,24 @@ def activate(group_id):
 
     session['group_id'] = group.id
     session['group_name'] = group.name
-    return redirect(url_for('main.index'))
+    
+    return flask_response(status=204)
+
+# Make this our default group
+@login_required
+@group.route('/<int:group_id>/default')
+def default(group_id):
+    user_to_update = WebUser.query.filter(WebUser.id == current_user.id).one()
+    user_to_update.default_group = group_id
+    try:
+        db.session.add(user_to_update)
+        db.session.commit()
+    except sql_error as e:
+        locale="updating default group"
+        return redirect(url_for('errors.mysql_server', error = e, locale=locale))
+
+    return flask_response(status=204)
+
 
 # Close our active group
 @group.route('/close')
@@ -148,8 +165,8 @@ def close():
     group_name=session['group_name']
     session['group_id'] = None
     session['group_name'] = None
-    flash('Group :'+group_name+' closed.','info')
-    return redirect(url_for('main.index'))
+    
+    return flask_response(status=204)
 
 
 # add a client the current group

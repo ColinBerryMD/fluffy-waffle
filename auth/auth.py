@@ -45,10 +45,22 @@ def login():
         # if the above check passes, then we know the user has the right credentials
         login_user(user, remember=remember)
 
+        # activate default SMS account and group here if this user has one
+        if user.default_group:
+            g = SMSGroup.query.filter(SMSGroup.id == user.default_group).one() 
+            session['group_id'] = g.id
+            session['group_name'] = g.name
+        if user.default_account:
+            a = SMSAccount.query.filter(SMSAccount.id == user.default_account).one() 
+            session['account_id'] = new_account.id
+            session['account_name'] = new_account.name
+        
+        # password is not in date
         if not user.password_expires or user.password_expires < datetime.now():
             flash('Your password has expired.','info')
             return redirect(url_for('auth.change_password', user_id = user.id))
 
+        # two factor is not in date 
         if not user.two_fa_expires or user.two_fa_expires < datetime.now(): # time for new two factor
 
             try:
@@ -65,8 +77,7 @@ def login():
             flash('Sending a new one time pass code to '+ user.sms +'.','info')
             return redirect(url_for('auth.two_factor', user_id = user.id))
 
-        # two factor is in date 
-        ############ need to set a default SMS account here
+
         
         return redirect(url_for('auth.profile',user_id=user.id ))
 

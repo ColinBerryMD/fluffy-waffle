@@ -60,6 +60,8 @@
                             <ul class="dropdown-menu">
                                 <li><a tabindex="-1" href="{{ url_for('account.close') }}" >Close Account</a></li>
                                 <li><a tabindex="-1" href="{{ url_for('account.select') }}">Change Account</a></li>
+                                <li><a tabindex="-1" onclick="alert('Default account set.');" 
+                                        href="{{ url_for('account.default',account_id=session['account_id']) }}">Set as Default</a></li>
                                 <li><a tabindex="-1" href="{{ url_for('account.profile',account_id=session['account_id']) }}">Account Profile</a></li>
                                 <li><a tabindex="-1" href="{{ url_for('account.edit',account_id=session['account_id']) }}">Edit Account</a></li>
                                 <li><a tabindex="-1" href="{{ url_for('auth.select') }}">Add User to Account</a></li>
@@ -78,6 +80,8 @@
                             <ul class="dropdown-menu">
                                 <li><a tabindex="-1" href="{{ url_for('group.close') }}" >Close Group</a></li>
                                 <li><a tabindex="-1" href="{{ url_for('group.select') }}">Change Group</a></li>
+                                <li><a tabindex="-1" onclick="alert('Default group set.');" 
+                                        href="{{ url_for('group.default',group_id=session['group_id']) }}">Set as Default</a></li>
                                 <li><a tabindex="-1" href="{{ url_for('group.profile',group_id=session['group_id']) }}">Group Profile</a></li>
                                 <li><a tabindex="-1" href="{{ url_for('sms_client.select') }}">Add Client to Group</a></li>
                             </ul>
@@ -113,17 +117,6 @@
                 </div>
                 {% endif %}
 
-
-                <div class="w3-dropdown-hover w3-right">
-                    <a href="{{ url_for('sms_client.create') }}" 
-                        class="w3-bar-item w3-button w3-hover-white">
-                            Registration          
-                        <div class="w3-dropdown-content w3-card-4 w3-left w3-left-align" style="width:250px; right:0">
-                            Sign up to use our messaging service. You will need your phone to prove
-                            that you are not a robot.
-                        </div>
-                    </a>
-                </div>
 
                 {% if current_user.is_authenticated %}
                 <div class="w3-dropdown-hover cb-hide-small cb-hide-medium cb-show-large">
@@ -165,6 +158,11 @@
                                class="w3-bar-item w3-button  w3-hover-white">
                                 Change Account
                             </a>
+                            <a href="{{ url_for('account.default',account_id=session['account_id']) }}" 
+                                onclick="alert('Default account set.');" 
+                               class="w3-bar-item w3-button  w3-hover-white">
+                                Set as default Account
+                            </a>
                             <a href="{{ url_for('account.profile',account_id=session['account_id']) }}" 
                                class="w3-bar-item w3-button  w3-hover-white">
                                 Account Profile
@@ -201,6 +199,11 @@
                             <a href="{{ url_for('group.select') }}" 
                                class="w3-bar-item w3-button  w3-hover-white">
                                 Change Group
+                            </a>
+                            <a href="{{ url_for('group.default',group_id=session['group_id']) }}" 
+                               onclick="alert('Default group set.');" 
+                               class="w3-bar-item w3-button  w3-hover-white">
+                                Set as Default Group
                             </a>
                             <a href="{{ url_for('group.profile',group_id=session['group_id']) }}" 
                                class="w3-bar-item w3-button  w3-hover-white">

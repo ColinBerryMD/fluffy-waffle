@@ -2,7 +2,7 @@
 # routes for creating and maintaning Twilio messaging accounts
 
 from models import WebUser, SMSAccount, User_Account_Link
-from extensions import db, v_client, twilio_config, sql_error, render_template, request,\
+from extensions import db, v_client, twilio_config, sql_error, render_template, request, flask_response,\
                             url_for, flash, redirect, Blueprint, abort, session, func, or_, and_, not_,\
                             login_required, current_user
 
@@ -204,9 +204,23 @@ def activate(account_id):
 
     session['account_id'] = account.id
     session['account_name'] = account.name
-    session['account_owner']= is_auth_user.id
 
-    return redirect(url_for('main.index'))
+    return flask_response(status=204)
+
+# Make this our default account
+@login_required
+@account.route('/<int:account_id>/default')
+def default(account_id):
+    user_to_update = WebUser.query.filter(WebUser.id == current_user.id).one()
+    user_to_update.default_account = account_id
+    try:
+        db.session.add(user_to_update)
+        db.session.commit()
+    except sql_error as e:
+        locale="updating default account"
+        return redirect(url_for('errors.mysql_server', error = e, locale=locale))
+
+    return flask_response(status=204)
 
 # Close our active account
 @account.route('/close')
@@ -222,8 +236,7 @@ def close():
     session['account_name'] = None
     session['account_owner']= None
 
-    flash('Account: '+account_name+' closed.','info')
-    return redirect(url_for('main.index'))
+    return flask_response(status=204)
 
 # Veiw SMS Account details
 @login_required

@@ -41,6 +41,10 @@
   margin-top: -2px;
   z-index: 0;
 }
+/*#chat_parent {
+  overflow: auto;
+  white-space: nowrap;
+}*/
 
 .chat-container {
   border: 1px solid var(--border-color);

@@ -40,11 +40,11 @@
         display: block;
     }
     .cb-col-one-of-two {
-        width: 70%;
+        max-width: 850px;
 
     }
     .cb-col-two-of-two {
-        width: 30%;
+        min-width: 325px;
     }
 }
 @media only screen and (min-width: 1226px) {

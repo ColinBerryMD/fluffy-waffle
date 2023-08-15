@@ -323,6 +323,10 @@
           var message = JSON.parse(event.data);
           AddChatElement(message);
         }, false);
+        source.addEventListener('sms_status', function(event) {
+          var message = JSON.parse(event.data);
+          UpdateChatStatus(message);
+        }, false);
         source.addEventListener('client_profile', function(event) {
           var message = JSON.parse(event.data);
           AddSendPopup(message);

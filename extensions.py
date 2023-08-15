@@ -29,6 +29,7 @@ try:
 		sms_sid		= environ['TWILIO_MSG_SERVICE_SID']
 		auth_token 	= environ['TWILIO_AUTH_TOKEN']
 		twilio_phone= environ['TWILIO_PHONE_NUMBER']
+		status      = environ['TWILIO_STATUS_WEBHOOK']
 		my_cell 	= environ['MY_CELL_NUMBER']
 except KeyError:
 	print("Error on initial twilio configuration. Did you set the environmental variables?")

@@ -4,9 +4,11 @@
 
  I have a bash script (excluded by gitignore) that sets passwords and account info as environmental variables. export_config is an empty version of this script. I tried to put comments with end runs near near most places in the code that need an environmental variable. I also trap the first 'key error' for a smooth landing if critical environmental variables aren't set.
 
-Some Twilio situations break the program rather than throw a catchable exception. Their Alarm utility doesn't seem to stop this. I'm trying to make all the 'reasonable' user errors and catch the ones I can for flash messages and do overs. They do have a way to check the status (ie has it been read or recieved) which I will work in later.
+Some Twilio situations break the program rather than throw a catchable exception. Their Alarm utility doesn't seem to stop this. I'm trying to make all the 'reasonable' user errors and catch the ones I can for flash messages and do overs. I do verify that webhook posts are from them and track the progress of
+outgoing messages from queued to sent to delivered (or undelivered or failed).
 
-We now have the ability to create named client groups.
+We now have the ability to create named client groups. The active group is used to facilitate sending messages to one or more clients of current clinical
+importance from a set of tabs on the right side (bottom with a phone sized screen) of the messaging dashboard.
 
 Works with multiple phone numbers (ie accounts). 
 - Each account has an owner (assigned at creation) and multiple users who are added on later. A client can message any account they like.
@@ -23,6 +25,7 @@ The other blueprints were constructed to test functionality during development. 
 	- activate -- set active_account session variable
 	- profile -- details of one account
 	- select -- for multi account users
+	- default -- set current active account as the current users default
 	- add_user -- to the current active account by user_id
 	- delete_user -- remove from the current active account (see auth.delete() to actually delete a user)
 	- delete -- an account
@@ -49,13 +52,16 @@ The other blueprints were constructed to test functionality during development. 
 	- activate -- set active_group session variable
 	- add_client -- to the group
 	- profile -- describe the group
+	- default -- set the current active group as the current users default group
 	- delete_client -- from a group
 	- delete -- the group
 
 - message: send and recieve sms messages with the active account
 	- list -- the messaging dashboard
 	- send -- a sms 
-	- receiveM
+	- receive -- an sms via webhook
+	- status -- recieve a status update via webhook
+	- archive -- label a message for archiving
 	
 - sms_client		
 	- create -- enter a client profile
@@ -67,10 +73,12 @@ The other blueprints were constructed to test functionality during development. 
 	- block -- deleting a client wont help (they can just create a new client profile). Here we keep them in the DB in a blocked status.
 	- delete -- a client
 
-Messaging requires server sent events, which wont work on the flask development server. Upgraded to a combination of gunicorn, redis and nginx (none of which I understand that well).
+Messaging requires server sent events, which wont work on the flask development server. Upgraded to a combination of gunicorn, redis and nginx (none of which I understand that well but seem to be working).
 
-At that point the front end is styled with w3css. Tried bootstrap, but div in div in div and too many people trying to sell me stuff rather than actually show how things are done... w3css proved much more elegant.
+At that point the front end is styled mostly with w3css. Needed some bootstrap and jquery to make it responsive. Time will tell how much more I will need.
 
-Working hard to keep the local styling and javascript to a minimum. The only local css should be static/css/cbmd.css. The only local js is in messages/static/javascript/sms.js. This does the dynamic modification of the message dashboard. There is a little js to listen for sse events at the bottom of base.html.
+Working hard to keep the local styling and javascript to a minimum. The general local css should be static/css/cbmd.css. The css for the messaging dashboard is in chat.css. The only local js is in static/javascript/sms.js. This does the dynamic modification of the message dashboard. There is a little js to listen for sse events at the bottom of base.html. At this point that is the only javascript in the project. The tiny jquery to make the nested phone menus work is also at the bottom of base.html.
+
+Still to do: debug the status updates. Style the status updates. Write the archiving feature. Write the translator. Better responsive style. Cohesive overall color scheme. Write the content prose.
 
 ## I would appreciate feedback regarding style, readability and potential security vulnerabilities. 

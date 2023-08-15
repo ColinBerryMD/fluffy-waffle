@@ -104,8 +104,6 @@ def fake():
                           SentAt   = datetime.now(tzlocal()).isoformat(), 
                           Body     = Body,
                           Outgoing = Outgoing,
-                          Completed= False,
-                          Confirmed= False,
                           Account  = account.id,
                           Client   = sms_client.id 
                           )
@@ -148,19 +146,11 @@ def send(client_id):
         sms = v_client.messages.create(
              body = Body,
              messaging_service_sid = account.sid,
+             status_callback= twilio_config.status,
              to = sms_client.phone
              )
     except:
         return redirect(url_for('errors.twilio_server'))
-    
-# even undeliverable messages go out with an initial status of 'Sent' 
-# once SSE works we will need to use Status Call Back to know what really happened       
-#        if sms.status == 'accepted':
-#            flash('That phone number is not working.','info')
-#            return render_template('send_message.html')
-#        elif not sms.status == 'Sent':
-#            print ('SMS failure with status: '+ sms.status )
-#            return redirect(url_for('errors.twilio_server'))
 
     # insert into database
     message = Message(SentFrom = account.number,
@@ -168,8 +158,7 @@ def send(client_id):
                       SentAt   = datetime.now(tzlocal()).isoformat(), 
                       Body     = Body,
                       Outgoing = True,
-                      Completed= False,
-                      Confirmed= False,
+                      sms_sid  = sms.sid,
                       Account  = account.id,
                       Client   = client_id 
                       )
@@ -213,6 +202,7 @@ def multiple_send():
             sms = v_client.messages.create(
                  body = Body,
                  messaging_service_sid = account.sid,
+                 statusCallback= twilio_config.status,
                  to = sms_client.phone
                  )
         except:
@@ -223,9 +213,7 @@ def multiple_send():
                           SentTo   = sms_client.phone, 
                           SentAt   = datetime.now(tzlocal()).isoformat(), 
                           Body     = Body,
-                          Outgoing = True,
-                          Completed= False,
-                          Confirmed= False,
+                          sms_sid  = sms.sid, 
                           Account  = account.id,
                           Client   = client_id 
                           )
@@ -246,6 +234,49 @@ def multiple_send():
 
     
     return flask_response(status=204)
+
+# receive an outbound Twilio SMS message's status via webhook
+@message.post('/status')
+def status():
+
+    # make sure this is a valid twilio text message
+    validator = RequestValidator(twilio_config.auth_token)
+    if not validator.validate(request.url, request.form, request.headers.get('X-Twilio-Signature')):
+        abort(401)
+
+    # get the parts we care about
+    SmsSid = request.form['SmsSid']
+    SmsStatus     = request.form['SmsStatus']
+
+    # update the database
+    try: 
+        message_to_update = Message.query.filter(Message.SmsSid == SmsSid).one()
+    except sql_error as e:  
+            locale="finding message for status update" 
+            return redirect(url_for('errors.mysql_server', error = e,locale=locale))
+
+    message_to_update.sms_status = SmsStatus
+    message_to_update.sms_sid = SmsSid
+    try:
+        db.session.add(message_to_update)
+        db.session.commit()
+    except sql_error as e:
+        locale="updating sms status"
+        return redirect(url_for('errors.mysql_server', error = e, locale=locale))
+
+    # publish SSE to message list
+    
+    status_dict ={}
+    status_dict['SmsSid']   = SmsSid
+    status_dict['SmsStatus']= SmsStatus
+
+    #status_dict = dict_from(message_to_update)
+    status_json = json.dumps(status_dict)
+
+    sse.publish(status_json, type='sms_status')
+
+    return flask_response(status=204)
+
 
 # receive a Twilio SMS message via webhook
 @message.route('/receive', methods= ( 'GET','POST'))
@@ -307,8 +338,6 @@ def receive():
         SentAt    = datetime.now(tzlocal()).isoformat(), 
         Body      = Body,
         Outgoing  = False,
-        Completed = False,
-        Confirmed = False,
         Account   = account,
         Client    = sms_client.id
         )

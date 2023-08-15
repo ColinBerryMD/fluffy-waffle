@@ -44,8 +44,9 @@ class Message(db.Model):
     SentAt =db.Column(db.String(50))
     Body = db.Column(db.String(160))
     Outgoing = db.Column(db.Boolean)
-    Completed = db.Column(db.Boolean)
-    Confirmed = db.Column(db.Boolean)
+    sms_sid = db.Column(db.String(40))
+    sms_status = db.Column(db.String(20))
+    archived = db.Column(db.Boolean)
     Account = db.Column(db.Integer,db.ForeignKey('SMSAccount.id'))
     sms_account = relationship('SMSAccount', back_populates='messages')
     Client = db.Column(db.Integer, db.ForeignKey('SMSClient.id'))  # this is stored in DB

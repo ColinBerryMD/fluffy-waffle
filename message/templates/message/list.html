@@ -43,12 +43,12 @@
                         {% endif %}>
                         {% for m in their_messages %}
                             {% if m.Outgoing %}
-                            <div class="chat-container chat-outgoing">
+                            <div id="m.sms_sid" class="chat-container chat-outgoing">
                                 <p>{{ m.Body }}</p>
                                 <span class="chat-time-right">{{ m.SentAt | pretty_timestamp }}</span>
                             </div>
                             {% else %}
-                            <div class="chat-container chat-incoming">
+                            <div id="m.sms_sid" class="chat-container chat-incoming">
                                 <p>{{ m.Body }}</p>
                                 <span class="chat-time-left">{{ m.SentAt | pretty_timestamp }}</span>
                             </div>

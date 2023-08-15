@@ -1,9 +1,9 @@
 //////////////////////////////////////////
 // Javascript for our sms web application
 // 
-// CB 7/2023
+// CB 8/2023
 
-// Process sse based response to twillio message status pending
+// Process sse based response to twillio message and message status
 
 
 //////////////////////////////////////////
@@ -37,7 +37,7 @@ function messageTime(mysqlTimeStamp){
   let msgDate = new Date(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
   
   return msgDate.toLocaleTimeString([], { timeStyle: 'short' }); // the time won't need javascript if its not today
-}
+}                                                                // as it will be updated on server side
 
 /////////////////////////////////////////////
 // style the send message popup
@@ -56,7 +56,7 @@ function closePopup( chatId ) {
 // need to add in name attributes
 function AddChatElement(smsMessage){ 
     // does a tab for this client exist? if not create it
-    let linkId, tabLink, buttonText, buttonContent;
+    let linkId, tabLink, buttonContent, fullName;
 
     linkId = "button_"+String(smsMessage.Client);
     const tabParent = document.getElementById("tab_parent");
@@ -67,8 +67,8 @@ function AddChatElement(smsMessage){
       tabLink.setAttribute("id",linkId);
       tabLink.setAttribute("class", "w3-button w3-border w3-block w3-right-align tablink");
       tabLink.setAttribute("onclick", "openTab(event,'sms_"+String(smsMessage.Client)+"')");
-      buttonText = "Client: "+String(smsMessage.Client);  //// temp for now till we can get the name
-      buttonContent = document.createTextNode(buttonText);
+      fullName= smsMessage.sms_client.firstname+&nbsp+smsMessage.sms_client.lastname;
+      buttonContent = document.createTextNode(fullName);
       tabLink.appendChild(buttonContent);
       tabParent.appendChild( tabLink );
     }
@@ -92,6 +92,7 @@ function AddChatElement(smsMessage){
     
     // build our child <div>
     const chatChild = document.createElement("div"); 
+    chatChild.setAttribute("id",smsMessage.sms_sid)
     chatContent.appendChild(chatChild);
     
     let divClass, spanClass;
@@ -113,14 +114,32 @@ function AddChatElement(smsMessage){
     
     // the <span> element with the time and date
     const newSpan = document.createElement("span"); 
-    chatChild.appendChild(newSpan);
-    
+    chatChild.appendChild(newSpan);// the <span> element with the time and date
     newSpan.setAttribute("class",spanClass);  // depends on incoming v. outgoing
-    
+
     const timeContent = document.createTextNode(messageTime(smsMessage.SentAt));
     newSpan.appendChild(timeContent);
 
+    // a span element to flag failed messages
+    const failSpan = document.createElement("span"); 
+    chatChild.appendChild(failSpan);
+    failSpan.setAttribute("class",'chat-time-right chat-failed');
+    failMsg = document.createTextNode("message failed");
+    failSpan.appendChild(failMsg);
+    failSpan.setAttribute("style","display: none;");
+    
+    
+
 }
+////////////////////////////////////////////
+// update an sms message status dynamically with sse
+// we will change the appearance in css based on status
+// 
+function UpdateChatStatus(smsStatus){ 
+  const chatChild = document.getElementById( smsStatus.SmsSid );
+  chatChild.classList.remove("status-queued","status-sent","status-delivered","status-undelivered","status-failed");
+  chatChild.classList.add("status-"+smsStatus.smsStatus);
+
 /////////////////////////////////////////////
 // create a popup element to send a message
 // given a sms_client() json

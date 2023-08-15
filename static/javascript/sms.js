@@ -11,7 +11,7 @@
 function openTab(evt, columnId, tabId) {
   var i, tabcontent, tablinks;
 
-  let column = document.getElementById(columnId)
+  let column = document.getElementById(columnId);
 
   // Get all elements with class="tabcontent" and hide them
   tabcontent = column.getElementsByClassName("tabcontent");
@@ -67,7 +67,7 @@ function AddChatElement(smsMessage){
       tabLink.setAttribute("id",linkId);
       tabLink.setAttribute("class", "w3-button w3-border w3-block w3-right-align tablink");
       tabLink.setAttribute("onclick", "openTab(event,'sms_"+String(smsMessage.Client)+"')");
-      fullName= smsMessage.sms_client.firstname+&nbsp+smsMessage.sms_client.lastname;
+      fullName= smsMessage.sms_client.firstname+" "+smsMessage.sms_client.lastname;
       buttonContent = document.createTextNode(fullName);
       tabLink.appendChild(buttonContent);
       tabParent.appendChild( tabLink );
@@ -79,7 +79,7 @@ function AddChatElement(smsMessage){
 
     let contentId, chatContent
     // as above we may need to create a new tabcontent <div> or locate the one that exists for client
-    contentId = "sms_"+String(smsMessage.Client)
+    contentId = "sms_"+String(smsMessage.Client);
     if (document.getElementById( contentId )) {
       chatContent = document.getElementById( contentId ); 
     } else {
@@ -92,7 +92,7 @@ function AddChatElement(smsMessage){
     
     // build our child <div>
     const chatChild = document.createElement("div"); 
-    chatChild.setAttribute("id",smsMessage.sms_sid)
+    chatChild.setAttribute("id",smsMessage.sms_sid);
     chatContent.appendChild(chatChild);
     
     let divClass, spanClass;
@@ -112,6 +112,18 @@ function AddChatElement(smsMessage){
     const newContent = document.createTextNode(smsMessage.Body);
     newPar.appendChild(newContent);
     
+    // a span element to flag failed messages
+    const failSpan = document.createElement("span"); 
+    chatChild.appendChild(failSpan);
+    failSpan.setAttribute("class",'chat-time-right chat-failed');
+    failSpan.setAttribute("name",'flag-failure');
+    failMsg = document.createTextNode("_message failed");
+    failSpan.appendChild(failMsg);
+    //failSpan.setAttribute("style","display: none;");
+
+    // if the status is already known, ie failed
+    chatChild.classList.add("status-"+smsMessage.sms_status);
+
     // the <span> element with the time and date
     const newSpan = document.createElement("span"); 
     chatChild.appendChild(newSpan);// the <span> element with the time and date
@@ -119,27 +131,16 @@ function AddChatElement(smsMessage){
 
     const timeContent = document.createTextNode(messageTime(smsMessage.SentAt));
     newSpan.appendChild(timeContent);
-
-    // a span element to flag failed messages
-    const failSpan = document.createElement("span"); 
-    chatChild.appendChild(failSpan);
-    failSpan.setAttribute("class",'chat-time-right chat-failed');
-    failMsg = document.createTextNode("message failed");
-    failSpan.appendChild(failMsg);
-    failSpan.setAttribute("style","display: none;");
-    
-    
-
 }
 ////////////////////////////////////////////
 // update an sms message status dynamically with sse
 // we will change the appearance in css based on status
 // 
 function UpdateChatStatus(smsStatus){ 
-  const chatChild = document.getElementById( smsStatus.SmsSid );
+  const chatChild = document.getElementById( smsStatus.sms_sid );
   chatChild.classList.remove("status-queued","status-sent","status-delivered","status-undelivered","status-failed");
-  chatChild.classList.add("status-"+smsStatus.smsStatus);
-
+  chatChild.classList.add("status-"+smsStatus.sms_status);
+}
 /////////////////////////////////////////////
 // create a popup element to send a message
 // given a sms_client() json
@@ -170,15 +171,9 @@ function AddSendPopup(client_json){
   name_par.appendChild(profileContent);
   client_profile.appendChild(name_par);
  
-  }
-/////////////////////////////////////////////
-// create a radio button form to select a client from a short list
-// given a list of sms_client() as json
-function listSelectElement(results){ 
-  results.forEach(function(item) {
-    console.log(item);
-  });
 }
+
+
 /////////////////////////////////////////////
 // create a radio button form to select a client from a short list
 // given a list of sms_client() as json
@@ -220,6 +215,6 @@ function AddSelectElement(client_list_json){
 /////////////////////////////////////////////
 // clear text message on submit
 function submitForm(parentForm){ 
-  document.getElementById(parentForm).submit()
-  document.getElementById(parentForm).reset()
+  document.getElementById(parentForm).submit();
+  document.getElementById(parentForm).reset();
   }

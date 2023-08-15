@@ -43,12 +43,15 @@
                         {% endif %}>
                         {% for m in their_messages %}
                             {% if m.Outgoing %}
-                            <div id="m.sms_sid" class="chat-container chat-outgoing">
+                            <div id="{{ m.sms_sid }}" 
+                                 class="chat-container chat-outgoing {% if m.sms_status %} status-{{m.sms_status}}{%endif%}">
                                 <p>{{ m.Body }}</p>
+                                <!-- failure message will only show on failure -->
+                                <span name="flag-failure" class="chat-time-right">&nbspmessage failed</span>
                                 <span class="chat-time-right">{{ m.SentAt | pretty_timestamp }}</span>
                             </div>
                             {% else %}
-                            <div id="m.sms_sid" class="chat-container chat-incoming">
+                            <div id="{{ m.sms_sid }}" class="chat-container chat-incoming">
                                 <p>{{ m.Body }}</p>
                                 <span class="chat-time-left">{{ m.SentAt | pretty_timestamp }}</span>
                             </div>
@@ -86,7 +89,7 @@
         <div id="group_list" class="w3-container tabcontent" style="display: block;">
         {% for member in group.clients %}
             <div class="w3-container">
-                <a class="open-chat-popup" onclick="chatPopup('chatForm_{{member.id}}')">
+                <a class="open-chat-popup" onclick="chatPopup('chatForm_{{member.id}}');">
                         {{ member.firstname }}&nbsp{{ member.lastname }}
                         <i class='far fa-comment' style='font-size:24px'></i>
                 </a>

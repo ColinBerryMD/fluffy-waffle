@@ -5,13 +5,13 @@
 from datetime import datetime, timedelta
 
 # database models
-from models import WebUser, OldPasswords
+from models import WebUser, OldPasswords, SMSAccount, SMSGroup
 
 # my own modules
 from phonenumber import cleanphone
 from .cleanpassword import cleanpassword
 
-from extensions import Blueprint, render_template, redirect, url_for, request, flash,\
+from extensions import Blueprint, render_template, redirect, url_for, request, flash, session,\
                             current_app, db, v_client, twilio_config, sql_error, environ, sql_text,\
                             login_user, login_required, logout_user, current_user, bcrypt
 
@@ -52,8 +52,8 @@ def login():
             session['group_name'] = g.name
         if user.default_account:
             a = SMSAccount.query.filter(SMSAccount.id == user.default_account).one() 
-            session['account_id'] = new_account.id
-            session['account_name'] = new_account.name
+            session['account_id'] = a.id
+            session['account_name'] = a.name
         
         # password is not in date
         if not user.password_expires or user.password_expires < datetime.now():

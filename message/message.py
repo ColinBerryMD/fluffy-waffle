@@ -149,16 +149,20 @@ def send(client_id):
              status_callback= twilio_config.status,
              to = sms_client.phone
              )
+        sms_sid = sms.sid
+        sms_status = None
     except:
-        return redirect(url_for('errors.twilio_server'))
-
+        sms_status = 'failed'
+        sms_sid = None
+        
     # insert into database
     message = Message(SentFrom = account.number,
                       SentTo   = sms_client.phone, 
                       SentAt   = datetime.now(tzlocal()).isoformat(), 
                       Body     = Body,
                       Outgoing = True,
-                      sms_sid  = sms.sid,
+                      sms_sid  = sms_sid,
+                      sms_status = sms_status,
                       Account  = account.id,
                       Client   = client_id 
                       )
@@ -202,18 +206,23 @@ def multiple_send():
             sms = v_client.messages.create(
                  body = Body,
                  messaging_service_sid = account.sid,
-                 statusCallback= twilio_config.status,
+                 status_callback= twilio_config.status,
                  to = sms_client.phone
                  )
+            sms_sid = sms.sid
+            sms_status = None
         except:
-            return redirect(url_for('errors.twilio_server'))    
-
+            sms_status = 'failed'
+            sms_sid = None
+            
         # insert into database
         message = Message(SentFrom = account.number,
                           SentTo   = sms_client.phone, 
                           SentAt   = datetime.now(tzlocal()).isoformat(), 
                           Body     = Body,
-                          sms_sid  = sms.sid, 
+                          Outgoing = True,
+                          sms_sid  = sms_sid,
+                          sms_status = sms_status,
                           Account  = account.id,
                           Client   = client_id 
                           )
@@ -224,8 +233,7 @@ def multiple_send():
         except sql_error as e:
             locale = "adding sent message to database"
             return redirect(url_for('errors.mysql_server', error = e, locale=locale)) 
-            
-
+        
         # publish SSE to message list
         msg_dict = dict_from(message)
         msg_dict.update(dict_from(sms_client))
@@ -245,18 +253,18 @@ def status():
         abort(401)
 
     # get the parts we care about
-    SmsSid = request.form['SmsSid']
-    SmsStatus     = request.form['SmsStatus']
+    sms_sid = request.form['SmsSid']
+    sms_status     = request.form['SmsStatus']
 
     # update the database
     try: 
-        message_to_update = Message.query.filter(Message.SmsSid == SmsSid).one()
+        message_to_update = Message.query.filter(Message.sms_sid == sms_sid).one()
     except sql_error as e:  
             locale="finding message for status update" 
             return redirect(url_for('errors.mysql_server', error = e,locale=locale))
 
-    message_to_update.sms_status = SmsStatus
-    message_to_update.sms_sid = SmsSid
+    message_to_update.sms_status = sms_status
+    message_to_update.sms_sid = sms_sid
     try:
         db.session.add(message_to_update)
         db.session.commit()
@@ -267,12 +275,11 @@ def status():
     # publish SSE to message list
     
     status_dict ={}
-    status_dict['SmsSid']   = SmsSid
-    status_dict['SmsStatus']= SmsStatus
+    status_dict['sms_sid']   = sms_sid
+    status_dict['sms_status']= sms_status
 
     #status_dict = dict_from(message_to_update)
     status_json = json.dumps(status_dict)
-
     sse.publish(status_json, type='sms_status')
 
     return flask_response(status=204)

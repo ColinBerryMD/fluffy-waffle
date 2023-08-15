@@ -6,6 +6,8 @@
   --hover-color:    #b6d1ca;
   --inactive-color: #edf5f3;
   --outgoing-color: #a7dceb;
+  --pending-color:  #2fadd0;
+  --failed-color:   #ffcc99;
   --incoming-color: #d3edf5;
   --time-color:     #717475;
 }
@@ -59,6 +61,22 @@
   margin-left: 15%;
 
 }
+.status-queued, .status-sent {
+  background-color: var(--pending-color);
+}
+.status-delivered {
+  background-color: var(--outgoing-color);
+}
+.status-undelivered, .status-failed {
+  background-color: var(--failed-color);
+}
+.chat-outgoing span[name='flag-failure'] {
+  display: none;
+}
+.chat-outgoing.status-failed span[name='flag-failure'] {
+  display: block;
+}
+
 .chat-incoming {
   border-color: var(--border-color);
   background-color: var(--incoming-color);

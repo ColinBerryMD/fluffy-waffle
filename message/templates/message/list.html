@@ -44,11 +44,15 @@
                         {% for m in their_messages %}
                             {% if m.Outgoing %}
                             <div id="{{ m.sms_sid }}" 
-                                 class="chat-container chat-outgoing {% if m.sms_status %} status-{{m.sms_status}}{%endif%}">
-                                <p>{{ m.Body }}</p>
-                                <!-- failure message will only show on failure -->
-                                <span name="flag-failure" class="chat-time-right">&nbspmessage failed</span>
-                                <span class="chat-time-right">{{ m.SentAt | pretty_timestamp }}</span>
+                                 class="w3-container chat-container chat-outgoing {% if m.sms_status %} status-{{m.sms_status}}{%endif%}">
+                                <form action="{{ url_for('message.archive', sms_sid = m.sms_sid) }}"> 
+                                    <span onclick="submitFormAndHide({{m.sms_sid}})" 
+                                          class="w3-large w3-button w3-display-topright">&times;</span>
+                                    <p>{{ m.Body }}</p>
+                                    <!-- failure message will only show on failure -->
+                                    <span name="flag-failure" class="chat-time-right">&nbspmessage failed</span>
+                                    <span class="chat-time-right">{{ m.SentAt | pretty_timestamp }}</span>
+                                </form>
                             </div>
                             {% else %}
                             <div id="{{ m.sms_sid }}" class="chat-container chat-incoming">
@@ -172,7 +176,7 @@
                         <textarea class="w3-input" placeholder="Type message..." name="Body" required></textarea>
                         <div class="w3-bar w3-padding-16">
                             <button type='reset' class="w3-button" >Reset</button>
-                            <button type='button' class="w3-button" onclick="submitForm('profile_form')">Send</button>
+                            <button type='button' class="w3-button" onclick="submitFormAndClear('profile_form')">Send</button>
                         </div>
                     </div>
                 </form>

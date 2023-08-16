@@ -214,7 +214,13 @@ function AddSelectElement(client_list_json){
   }
 /////////////////////////////////////////////
 // clear text message on submit
-function submitForm(parentForm){ 
+function submitFormAndReset(parentForm){ 
   document.getElementById(parentForm).submit();
   document.getElementById(parentForm).reset();
+  }
+/////////////////////////////////////////////
+// form on submit
+function submitFormAndHide(parentForm){ 
+  document.getElementById(parentForm).submit();
+  document.getElementById(parentForm).setAttibute("style","display: none;");
   }

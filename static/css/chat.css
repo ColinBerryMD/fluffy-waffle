@@ -59,7 +59,7 @@
   border-color: var(--border-color);
   background-color: var(--outgoing-color);
   margin-left: 15%;
-
+  position: relative;
 }
 .status-queued, .status-sent {
   background-color: var(--pending-color);
@@ -81,6 +81,7 @@
   border-color: var(--border-color);
   background-color: var(--incoming-color);
   margin-right: 15%;
+  position: relative;
 }
 
 .chat-container::after {

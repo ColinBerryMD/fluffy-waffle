@@ -16,7 +16,14 @@
 {
     margin-top: 48px;
 }
-
+.cb-close {
+  cursor: pointer;
+  position: absolute;
+  top: 20%;
+  right: 0%;
+  padding: 12px 16px;
+  transform: translate(0%, -50%);
+}
 
 @media only screen and (max-width: 750px) {
     .cb-hide-small {

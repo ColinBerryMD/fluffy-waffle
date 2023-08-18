@@ -221,6 +221,8 @@ function submitFormAndReset(parentForm){
 /////////////////////////////////////////////
 // form on submit
 function submitFormAndHide(parentForm){ 
-  document.getElementById(parentForm).submit();
-  document.getElementById(parentForm).setAttibute("style","display: none;");
+  const msg_form = document.getElementById(parentForm);
+  msg_form.submit();
+  const msgDiv = msg_form.parentElement;
+  msgDiv.setAttribute("style","display: none;");
   }

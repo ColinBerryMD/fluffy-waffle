@@ -27,8 +27,6 @@
                         </button>
                     {% endwith %}
                 {% endfor %}
-            {% else %}
-                <h1 class='w3-padding-16 w3-center cb-under-navbar'>No Messages</h1>
             {% endif %}
         </div>
 
@@ -43,11 +41,10 @@
                         {% endif %}>
                         {% for m in their_messages %}
                             {% if m.Outgoing %}
-                            <div id="{{ m.sms_sid }}" 
-                                 class="w3-container chat-container chat-outgoing {% if m.sms_status %} status-{{m.sms_status}}{%endif%}">
-                                <form action="{{ url_for('message.archive', sms_sid = m.sms_sid) }}"> 
-                                    <span onclick="submitFormAndHide({{m.sms_sid}})" 
-                                          class="w3-large w3-button w3-display-topright">&times;</span>
+                            <div id="id_{{ m.id }}" 
+                                 class="chat-container chat-outgoing {% if m.sms_status %} status-{{m.sms_status}}{%endif%}">
+                                <form id="form_{{ m.id }}" action="{{ url_for('message.archive', sms_id = m.id) }}"> 
+                                    <span class="cb-close" onclick="submitFormAndHide('form_{{m.id}}')">&times;</span>
                                     <p>{{ m.Body }}</p>
                                     <!-- failure message will only show on failure -->
                                     <span name="flag-failure" class="chat-time-right">&nbspmessage failed</span>
@@ -55,9 +52,11 @@
                                 </form>
                             </div>
                             {% else %}
-                            <div id="{{ m.sms_sid }}" class="chat-container chat-incoming">
-                                <p>{{ m.Body }}</p>
-                                <span class="chat-time-left">{{ m.SentAt | pretty_timestamp }}</span>
+                            <div id="id_{{ m.id }}" class="chat-container chat-incoming">
+                                <form id="form_{{ m.id }}" action="{{ url_for('message.archive', sms_id = m.id) }}"> 
+                                    <span class="cb-close" onclick="submitFormAndHide('form_{{m.id}}')">&times;</span>
+                                    <p>{{ m.Body }}</p>
+                                    <span class="chat-time-left">{{ m.SentAt | pretty_timestamp }}</span>
                             </div>
                             {% endif %}
                         {% endfor %}

@@ -11,7 +11,7 @@ from models import Message, WebUser, SMSAccount, SMSGroup, SMSClient,\
                         Client_Group_Link
 from extensions import db, v_client, twilio_config, sql_error, login_required, flask_response,\
                         current_user, render_template, request, url_for, flash, redirect, \
-                        Blueprint, abort, session, func, or_, and_, ForeignKey, relationship, inspect
+                        Blueprint, abort, session, func, or_, and_, not_, ForeignKey, relationship, inspect
 
 
 from phonenumber import cleanphone
@@ -60,7 +60,7 @@ def list():
         group_id = None
 
     try:
-        messages = db.session.query(Message).filter(not_(Message.archive)).all()
+        messages = db.session.query(Message).filter(not_(Message.archived == True)).all()
         if group_id:
             group = SMSGroup.query.filter(SMSGroup.id == group_id).one()
         else:
@@ -125,6 +125,7 @@ def send(client_id):
     msg_dict = dict_from(message)
     msg_dict.update(dict_from(sms_client))
     message_json = json.dumps(msg_dict)
+    print(message_json)
     sse.publish(message_json, type='sms_message')
 
     return flask_response(status=204)
@@ -191,11 +192,11 @@ def multiple_send():
     return flask_response(status=204)
 
 # archive an sms message
-@message.route('/<sms_sid>/archive')
-def archive(sms_sid):
+@message.route('/<sms_id>/archive')
+def archive(sms_id):
     try:
-        message = Message.query.filter(SMSClient.sms_sid == sms_sid).one()
-        message.archive = True
+        message = Message.query.filter(Message.id == sms_id).one()
+        message.archived = True
         db.session.add(message)
         db.session.commit()
     except sql_error as e:

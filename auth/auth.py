@@ -516,6 +516,19 @@ def logout():
     session['group_name']   = None
     session['account_id']   = None
     session['account_name'] = None
+
+    # backdate activity on explicit logout to reset notification flag
+    backdate = datetime.now() - timedelta( minutes= environ['ACTIVITY_LIMIT_MINUTES'])
+    user = current_user
+    user.last_active = backdate
+    
+    try:
+        db.session.add(user)
+        db.session.commit()
+    except sql_error as e:
+        locale = "backdating user activity"
+        return redirect(url_for('errors.mysql_server', error = e, locale=locale)) 
+
     logout_user()
     return redirect(url_for('main.index'))
 

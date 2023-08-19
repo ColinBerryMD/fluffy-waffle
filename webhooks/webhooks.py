@@ -3,15 +3,11 @@ from dateutil.tz import tzlocal
 import json
 from flask_sse import sse
 
-#from sqlalchemy import desc
 from twilio.request_validator import RequestValidator
 from twilio.twiml.messaging_response import MessagingResponse
 
-from models import Message, WebUser, SMSAccount, SMSGroup, SMSClient,\
-                        Client_Group_Link
-from extensions import environ, db, v_client, twilio_config, sql_error, login_required, flask_response,\
-                        current_user, render_template, request, url_for, flash, redirect, \
-                        Blueprint, abort, session, func, or_, and_, not_, ForeignKey, relationship, inspect
+from models import Message, WebUser, SMSAccount, SMSClient
+from extensions import environ, db, v_client, twilio_config, flask_response, request, Blueprint, abort
 
 
 from phonenumber import cleanphone
@@ -34,30 +30,26 @@ def status():
     sms_status     = request.form['SmsStatus']
 
     # update the database
-    try: 
-        message_to_update = Message.query.filter(Message.sms_sid == sms_sid).one()
-    except sql_error as e:  
-            locale="finding message for status update" 
-            return redirect(url_for('errors.mysql_server', error = e,locale=locale))
+    # blocked or rejected messages and their responses are not stored in db -- ignore them
+    message_to_update = Message.query.filter(Message.sms_sid == sms_sid).first()
+    if message_to_update:
+        message_to_update.sms_status = sms_status
+        message_to_update.sms_sid = sms_sid
+        try:
+            db.session.add(message_to_update)
+            db.session.commit()
+        except sql_error as e:
+            abort(401)  
 
-    message_to_update.sms_status = sms_status
-    message_to_update.sms_sid = sms_sid
-    try:
-        db.session.add(message_to_update)
-        db.session.commit()
-    except sql_error as e:
-        locale="updating sms status"
-        return redirect(url_for('errors.mysql_server', error = e, locale=locale))
+        # publish SSE to message list
+        
+        status_dict ={}
+        status_dict['sms_sid']   = sms_sid
+        status_dict['sms_status']= sms_status   
 
-    # publish SSE to message list
-    
-    status_dict ={}
-    status_dict['sms_sid']   = sms_sid
-    status_dict['sms_status']= sms_status
-
-    #status_dict = dict_from(message_to_update)
-    status_json = json.dumps(status_dict)
-    sse.publish(status_json, type='sms_status')
+        #status_dict = dict_from(message_to_update)
+        status_json = json.dumps(status_dict)
+        sse.publish(status_json, type='sms_status')
 
     return flask_response(status=204)
 
@@ -75,47 +67,27 @@ def receive():
     SentFrom = request.form['From']
     Body     = request.form['Body']
     SentTo   = request.form['To']
+    sms_sid  = request.form['sid']
     message_service_id = request.form['MessagingServiceSid']
-    
     try:
-        account = SMSAccount.query.filter(SMSAccount.sid == message_service_id ).one()
-                           
+        account = SMSAccount.query.filter(SMSAccount.sid == message_service_id ).one()                  
     except sql_error as e: 
-        locale = "getting account number from twilio sid"  
-        return redirect(url_for('errors.mysql_server', error = e, locale=locale))
+        abort(401)
 
-    # no account found. Don't know how this can happen
-    if not account:
-        e = "No mysql error thrown, but no twillio account found"
-        locale = "finding sms account"
-        return redirect(url_for('errors.twilio_server',error=e,locale=locale))#
     # is this from a registered client?
-    try:
-        sms_client = SMSClient.query.filter(SMSClient.phone == SentFrom).one()
-                           
-    except sql_error as e:  
-        locale = "getting client info with phone. Do two clients have the same number?" 
-        return redirect(url_for('errors.mysql_server', error = e, locale=locale))    
-        
-   # if not sms_client or sms_client.blocked: # reply with a request to sign up
-#        if not sms_client: # reply with a request to sign up
-#            # reply with a link in the request
-#            s = "Looks like you have yet to sign up for our text messaging service."
-#            s+= "Please re-send your message after signing up through this link."
-#            s+= environ['MY_CLIENT_DASHBOARD']
-#        else: # or maybe they are blocked
-#            s = "Looks like we cannot process your message."
-#            s+= "Please contact us by another method."
-#        try:
-#            sms = v_client.messages.create(
-#                         body = s,
-#                         messaging_service_sid = account.sid,
-#                         to = SentFrom
-#                         )
-#        except:
-#            locale = "sending rejection"
-#            return redirect(url_for('errors.twilio_server',locale=locale))
-#        return("<Response/>")
+    sms_client = SMSClient.query.filter(SMSClient.phone == SentFrom).first()
+    if not sms_client or sms_client.blocked: 
+        if not sms_client: # reply with a request to sign up
+            s = "Looks like you have yet to sign up for our text messaging service. "
+            s+= "Please re-send your message after signing up through this link. "
+            s+= environ['MY_CLIENT_DASHBOARD']
+        else: # or maybe they are blocked
+            s = "Looks like we cannot process your message. "
+            s+= "Please contact us by another method."
+
+        resp = MessagingResponse()
+        resp.message(s)
+        return str(resp)
 
     # ok. this is a valid message
     message = Message(
@@ -124,6 +96,7 @@ def receive():
         SentAt    = datetime.now(tzlocal()).isoformat(), 
         Body      = Body,
         Outgoing  = False,
+        sms_sid   = sms_sid,
         archived  = False,
         Account   = account.id,
         Client    = sms_client.id
@@ -134,8 +107,7 @@ def receive():
         db.session.commit()
         db.session.refresh(message)
     except sql_error as e:
-        locale = "adding recieved message to database"
-        return redirect(url_for('errors.mysql_server', error = e, locale=locale)) 
+        abort(401)
 
     
     # publish SSE to message list
@@ -144,6 +116,9 @@ def receive():
     msg_dict.update(dict_from(sms_client))
     message_json = json.dumps(msg_dict)
 
+    # update dashboard if open
+    sse.publish(message_json, type='sms_message')
+ 
     # unless we get very busy we need a heads up to the account owner that a message is waiting
     # we will only send one such message between logins
     #message_owner = WebUser.query.filter(WebUser.id == account.owner_id )
@@ -170,7 +145,5 @@ def receive():
 #                locale = "updating owner notification"
 #                return redirect(url_for('errors.mysql_server', error = e, locale=locale)) 
 
-    # update dashboard if open
-    sse.publish(message_json, type='sms_message')
 
     return("<Response/>")

@@ -59,9 +59,12 @@ The other blueprints were constructed to test functionality during development. 
 - message: send and recieve sms messages with the active account
 	- list -- the messaging dashboard
 	- send -- a sms 
+	- send_multiple -- same sms to several group members
+	- archive -- label a message for archiving
+
+- webhooks: twilio webhooks for incoming posts. Can't stay in message blueprint because of confusion with before_request()
 	- receive -- an sms via webhook
 	- status -- recieve a status update via webhook
-	- archive -- label a message for archiving
 	
 - sms_client		
 	- create -- enter a client profile

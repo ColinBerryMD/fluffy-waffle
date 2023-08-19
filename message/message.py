@@ -9,7 +9,7 @@ from twilio.twiml.messaging_response import MessagingResponse
 
 from models import Message, WebUser, SMSAccount, SMSGroup, SMSClient,\
                         Client_Group_Link
-from extensions import db, v_client, twilio_config, sql_error, login_required, flask_response,\
+from extensions import environ, db, v_client, twilio_config, sql_error, login_required, flask_response,\
                         current_user, render_template, request, url_for, flash, redirect, \
                         Blueprint, abort, session, func, or_, and_, not_, ForeignKey, relationship, inspect
 
@@ -18,7 +18,7 @@ from phonenumber import cleanphone
 from dict_from import dict_from
 
 
-message = Blueprint('message', __name__,url_prefix='/message', template_folder='templates')
+message = Blueprint('message', __name__, url_prefix='/message', template_folder='templates')
 
 # a little jinja2 filter for the timestamp       
 @message.app_template_filter()
@@ -51,7 +51,21 @@ def pretty_timestamp(iso_time): # actually a iso string -- not a timestamp (time
 
     return stamp
 
-# list all messages
+# reflect user activity in our database on any message related http request
+#@message.before_request
+#def activity():
+#    user = current_user
+#    user.last_active = datetime.now()
+#    try:
+#        db.session.add(user)
+#        db.session.commit()
+#    except sql_error as e:
+#        locale = "updating user activity"
+#        return redirect(url_for('errors.mysql_server', error = e, locale=locale)) #
+
+#    return flask_response(status=204)
+
+# list all messages aka the messaging dashboard
 @message.route('/')
 def list():
     try:
@@ -108,6 +122,7 @@ def send(client_id):
                       SentAt   = datetime.now(tzlocal()).isoformat(), 
                       Body     = Body,
                       Outgoing = True,
+                      archived  = False,
                       sms_sid  = sms_sid,
                       sms_status = sms_status,
                       Account  = account.id,
@@ -169,6 +184,7 @@ def multiple_send():
                           SentAt   = datetime.now(tzlocal()).isoformat(), 
                           Body     = Body,
                           Outgoing = True,
+                          archived  = False,
                           sms_sid  = sms_sid,
                           sms_status = sms_status,
                           Account  = account.id,
@@ -205,35 +221,6 @@ def archive(sms_id):
 
     return flask_response(status=204)
 
-# receive an outbound Twilio SMS message's status via webhook
-@message.post('/status')
-def status():
-
-    # make sure this is a valid twilio text message
-    validator = RequestValidator(twilio_config.auth_token)
-    if not validator.validate(request.url, request.form, request.headers.get('X-Twilio-Signature')):
-        abort(401)
-
-    # get the parts we care about
-    sms_sid = request.form['SmsSid']
-    sms_status     = request.form['SmsStatus']
-
-    # update the database
-    try: 
-        message_to_update = Message.query.filter(Message.sms_sid == sms_sid).one()
-    except sql_error as e:  
-            locale="finding message for status update" 
-            return redirect(url_for('errors.mysql_server', error = e,locale=locale))
-
-    message_to_update.sms_status = sms_status
-    message_to_update.sms_sid = sms_sid
-    try:
-        db.session.add(message_to_update)
-        db.session.commit()
-    except sql_error as e:
-        locale="updating sms status"
-        return redirect(url_for('errors.mysql_server', error = e, locale=locale))
-
     # publish SSE to message list
     
     status_dict ={}
@@ -245,87 +232,3 @@ def status():
     sse.publish(status_json, type='sms_status')
 
     return flask_response(status=204)
-
-
-# receive a Twilio SMS message via webhook
-@message.route('/receive', methods= ( 'GET','POST'))
-def receive():
-
-    # make sure this is a valid twilio text message
-    validator = RequestValidator(twilio_config.auth_token)
-    if not validator.validate(request.url, request.form, request.headers.get('X-Twilio-Signature')):
-        abort(401)
-
-    # get the parts we care about
-    SentFrom = request.form['From']
-    Body     = request.form['Body']
-    SentTo   = request.form['To']
-    message_sid = request.form['MessagingServiceSid']
-    
-    try:
-        account = SMSAccount.query.filter(SMSAccount.sid == message_sid ).one().id
-                           
-    except sql_error as e: 
-        locale = "getting account number from twilio sid"  
-        return redirect(url_for('errors.mysql_server', error = e, locale=locale))
-
-    # no account found. Don't know how this can happen
-    if not account:
-        e = "No mysql error thrown, but no twillio account found"
-        locale = "finding sms account"
-        return redirect(url_for('errors.twilio_server',error=e,locale=locale))
-
-    # is this from a registered client?
-    try:
-        sms_client = SMSClient.query.filter(SMSClient.phone == SentFrom).one()
-                           
-    except sql_error as e:  
-        locale = "getting client info with phone. Do two clients have the same number?" 
-        return redirect(url_for('errors.mysql_server', error = e, locale=locale))    
-        
-    if not sms_client: # reply with a request to sign up
-        ######### reply with a link in the request
-        response = MessagingResponse()
-        s = "Looks like you have yet to sign up for our text messaging service."
-        s+= "Please re-send your message after signing up."
-        response.message(s)
-        return str(response)
-
-    # or maybe they are blocked
-    if sms_client.blocked: # reply with a request to go away
-        response = MessagingResponse()
-        s = "Looks like we cannot process your message."
-        s+= "Please contact us by another method."
-        response.message(s)
-        return str(response)
-
-
-    # ok. this is a valid message
-    message = Message(
-        SentFrom  = SentFrom,
-        SentTo    = SentTo, 
-        SentAt    = datetime.now(tzlocal()).isoformat(), 
-        Body      = Body,
-        Outgoing  = False,
-        Account   = account,
-        Client    = sms_client.id
-        )
-
-    try: # add the message to the database
-        db.session.add(message)
-        db.session.commit()
-        db.session.refresh(message)
-    except sql_error as e:
-        locale = "adding recieved message to database"
-        return redirect(url_for('errors.mysql_server', error = e, locale=locale)) 
-
-    
-    # publish SSE to message list
-
-    msg_dict = dict_from(message)
-    msg_dict.update(dict_from(sms_client))
-    message_json = json.dumps(msg_dict)
-
-    sse.publish(message_json, type='sms_message')
-
-    return("<Response/>")

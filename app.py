@@ -65,6 +65,9 @@ app.register_blueprint(account_blueprint)
 from errors.errors import errors as errors_blueprint
 app.register_blueprint(errors_blueprint)
 
+from webhooks.webhooks import webhooks as webhooks_blueprint
+app.register_blueprint(webhooks_blueprint)
+
 from message.message import sse
 app.register_blueprint(sse, url_prefix='/stream')
 

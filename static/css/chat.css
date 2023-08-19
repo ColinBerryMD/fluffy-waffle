@@ -39,7 +39,6 @@
   border-right: 1px solid var(--border-color);
   position: relative;
   height: 100vh;
-  position: relative;
   margin-top: -2px;
   z-index: 0;
 }

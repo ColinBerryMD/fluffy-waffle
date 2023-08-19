@@ -512,12 +512,11 @@ def edit(user_id):
 @auth.route('/logout')
 @login_required
 def logout():
-    logout_user()
     session['group_id']     = None
     session['group_name']   = None
     session['account_id']   = None
     session['account_name'] = None
-
+    logout_user()
     return redirect(url_for('main.index'))
 
 # delete a user account

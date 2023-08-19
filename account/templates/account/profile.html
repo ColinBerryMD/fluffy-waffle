@@ -10,7 +10,7 @@
         {% if account.users %}
             {% for user in account.users %}
                 <p>{{ user.first  }}&nbsp{{ user.last  }}
-                    {% if user.is_owner %}
+                    {% if user.id == account.owner_id %}
                         (owner)
                     {% else %}
                     <a href="{{ url_for('account.delete_user', user_id = user.id, account_id = account.id ) }}" 

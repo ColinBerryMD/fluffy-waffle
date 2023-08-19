@@ -91,14 +91,37 @@ function AddChatElement(smsMessage){
     }
     
     // build our child <div>
-    const chatChild = document.createElement("div"); 
-    chatChild.setAttribute("id",smsMessage.sms_sid);
+    const chatChild = document.createElement("div");
+    let child_id = "id_"+String(smsMessage.id);
+    chatChild.setAttribute("id",child_id);
     chatContent.appendChild(chatChild);
-    
+
+    // 'x' button to archive
+    const childForm = document.createElement("form");
+    let form_id = "form_"+String(smsMessage.id);
+    childForm.setAttribute("id",form_id);
+    let action = "/message/"+String(smsMessage.id)+"/archive";
+    childForm.setAttribute("action",action);
+    chatChild.appendChild(childForm);
+
+    const closeDiv = document.createElement("span");
+    closeDiv.setAttribute("class","cb-close");
+    closeDiv.setAttribute("onclick","submitFormAndHide('"+form_id+"')");
+    closeX = document.createTextNode('x');
+    closeDiv.appendChild(closeX);
+    childForm.appendChild(closeDiv);
+
     let divClass, spanClass;
     if (smsMessage.Outgoing) {
       divClass = "chat-container chat-outgoing";
       spanClass= "chat-time-right";
+      // a span element to flag failed outgoing messages
+      const failSpan = document.createElement("span"); 
+      childForm.appendChild(failSpan);
+      failSpan.setAttribute("class",'chat-time-right chat-failed');
+      failSpan.setAttribute("name",'flag-failure');
+      failMsg = document.createTextNode("_message failed");
+      failSpan.appendChild(failMsg);
     } else {
       divClass = "chat-container chat-incoming";
       spanClass="chat-time-left";
@@ -108,25 +131,16 @@ function AddChatElement(smsMessage){
     
     // the <p> element containing the text itself
     const newPar = document.createElement("p"); 
-    chatChild.appendChild(newPar);
+    childForm.appendChild(newPar);
     const newContent = document.createTextNode(smsMessage.Body);
     newPar.appendChild(newContent);
     
-    // a span element to flag failed messages
-    const failSpan = document.createElement("span"); 
-    chatChild.appendChild(failSpan);
-    failSpan.setAttribute("class",'chat-time-right chat-failed');
-    failSpan.setAttribute("name",'flag-failure');
-    failMsg = document.createTextNode("_message failed");
-    failSpan.appendChild(failMsg);
-    //failSpan.setAttribute("style","display: none;");
-
     // if the status is already known, ie failed
     chatChild.classList.add("status-"+smsMessage.sms_status);
 
     // the <span> element with the time and date
     const newSpan = document.createElement("span"); 
-    chatChild.appendChild(newSpan);// the <span> element with the time and date
+    childForm.appendChild(newSpan);// the <span> element with the time and date
     newSpan.setAttribute("class",spanClass);  // depends on incoming v. outgoing
 
     const timeContent = document.createTextNode(messageTime(smsMessage.SentAt));
@@ -139,7 +153,9 @@ function AddChatElement(smsMessage){
 function UpdateChatStatus(smsStatus){ 
   const chatChild = document.getElementById( smsStatus.sms_sid );
   chatChild.classList.remove("status-queued","status-sent","status-delivered","status-undelivered","status-failed");
-  chatChild.classList.add("status-"+smsStatus.sms_status);
+  if (smsStatus.sms_status){
+    chatChild.classList.add("status-"+smsStatus.sms_status);
+  }
 }
 /////////////////////////////////////////////
 // create a popup element to send a message

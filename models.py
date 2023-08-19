@@ -20,6 +20,8 @@ class WebUser(UserMixin,db.Model):
     default_group = db.Column(db.Integer)
     translate = db.Column( db.Boolean() )
     two_fa_expires = db.Column( db.DateTime() )
+    last_active = db.Column( db.DateTime() )  
+    last_notification = db.Column( db.DateTime() )  
     owned_accounts = relationship("SMSAccount", back_populates="owner")
     accounts = relationship('SMSAccount', secondary = 'User_Account_Link', viewonly=True )
 

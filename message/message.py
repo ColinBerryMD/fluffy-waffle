@@ -20,6 +20,26 @@ from dict_from import dict_from
 
 message = Blueprint('message', __name__, url_prefix='/message', template_folder='templates')
 
+# reflect user activity in our database on any message related http request
+@message.before_request
+def activity():
+    print("activity")
+    try:
+        user_id = current_user.id
+    except:
+        user_id = None
+
+    if user_id:
+        user = WebUser.query.filter(WebUser.id == user_id).one()
+        user.last_active = datetime.now()
+        try:
+            db.session.add(user)
+            db.session.commit()
+        except sql_error as e:
+            locale = "updating activity"
+            print("Error "+locale)
+            abort(401)
+
 # a little jinja2 filter for the timestamp       
 @message.app_template_filter()
 def pretty_timestamp(iso_time): # actually a iso string -- not a timestamp (timestamps dont jasonify)
@@ -51,22 +71,10 @@ def pretty_timestamp(iso_time): # actually a iso string -- not a timestamp (time
 
     return stamp
 
-# reflect user activity in our database on any message related http request
-#@message.before_request
-#def activity():
-#    user = current_user
-#    user.last_active = datetime.now()
-#    try:
-#        db.session.add(user)
-#        db.session.commit()
-#    except sql_error as e:
-#        locale = "updating user activity"
-#        return redirect(url_for('errors.mysql_server', error = e, locale=locale)) #
-
-#    return flask_response(status=204)
 
 # list all messages aka the messaging dashboard
 @message.route('/')
+@login_required
 def list():
     try:
         group_id = session['group_id']
@@ -88,6 +96,7 @@ def list():
 
 # send an sms message
 @message.post('/<int:client_id>/send')
+@login_required
 def send(client_id):
     sms_client = SMSClient.query.filter(SMSClient.id == client_id).one()
 
@@ -147,6 +156,7 @@ def send(client_id):
 
 # send a group of sms messages
 @message.route('/multiple_send', methods= ( 'GET','POST'))
+@login_required
 def multiple_send():
 
     Body = request.form['MultiBody']
@@ -209,6 +219,7 @@ def multiple_send():
 
 # archive an sms message
 @message.route('/<sms_id>/archive')
+@login_required
 def archive(sms_id):
     try:
         message = Message.query.filter(Message.id == sms_id).one()

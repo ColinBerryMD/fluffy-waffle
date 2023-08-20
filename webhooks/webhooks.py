@@ -23,7 +23,10 @@ def status():
     # make sure this is a valid twilio text message
     validator = RequestValidator(twilio_config.auth_token)
     if not validator.validate(request.url, request.form, request.headers.get('X-Twilio-Signature')):
+        locale = "validating twilio status request"
+        print("Error "+locale)
         abort(401)
+
 
     # get the parts we care about
     sms_sid = request.form['SmsSid']
@@ -39,7 +42,10 @@ def status():
             db.session.add(message_to_update)
             db.session.commit()
         except sql_error as e:
-            abort(401)  
+            locale = "updating status"
+            print("Error "+locale)
+            abort(401)
+  
 
         # publish SSE to message list
         
@@ -61,22 +67,30 @@ def receive():
     # make sure this is a valid twilio text message
     validator = RequestValidator(twilio_config.auth_token)
     if not validator.validate(request.url, request.form, request.headers.get('X-Twilio-Signature')):
+        locale = "validating twilio request"
+        print("Error "+locale)
         abort(401)
+
+
 
     # get the parts we care about
     SentFrom = request.form['From']
     Body     = request.form['Body']
     SentTo   = request.form['To']
-    sms_sid  = request.form['sid']
+    sms_sid  = request.form['SmsSid']
     message_service_id = request.form['MessagingServiceSid']
     try:
         account = SMSAccount.query.filter(SMSAccount.sid == message_service_id ).one()                  
     except sql_error as e: 
+        locale = "finding account"
+        print("Error "+locale)
         abort(401)
+
+
 
     # is this from a registered client?
     sms_client = SMSClient.query.filter(SMSClient.phone == SentFrom).first()
-    if not sms_client or sms_client.blocked: 
+    if (not sms_client) or (sms_client.blocked == True): 
         if not sms_client: # reply with a request to sign up
             s = "Looks like you have yet to sign up for our text messaging service. "
             s+= "Please re-send your message after signing up through this link. "
@@ -107,7 +121,10 @@ def receive():
         db.session.commit()
         db.session.refresh(message)
     except sql_error as e:
+        locale = "inserting message"
+        print("Error "+locale)
         abort(401)
+
 
     
     # publish SSE to message list
@@ -121,29 +138,34 @@ def receive():
  
     # unless we get very busy we need a heads up to the account owner that a message is waiting
     # we will only send one such message between logins
-    #message_owner = WebUser.query.filter(WebUser.id == account.owner_id )
-#    if message_owner.last_notification < message_owner.last_active: # they have been active since their last notification
-#        if message_owner.last_active < datetime.now() - timedelta( minutes= environ['ACTIVITY_LIMIT_MINUTES']): # owner is probably offline
-#            
-#            # send a notification 
-#            try:
-#                sms = v_client.messages.create(
-#                         body = "You have a new message at "+environ['MY_MESSAGE_DASHBOARD'],
-#                         messaging_service_sid = account.sid,
-#                         to = message_owner.sms
-#                         )
-#            except:
-#                locale = "sending notification"
-#                return redirect(url_for('errors.twilio_server',locale=locale))
-#            
-#            # update notification flag
-#            message_owner.last_notification = datetime.now()
-#            try:
-#                db.session.add(message_owner)
-#                db.session.commit()
-#            except sql_error as e:
-#                locale = "updating owner notification"
-#                return redirect(url_for('errors.mysql_server', error = e, locale=locale)) 
+    message_owner = WebUser.query.filter(WebUser.id == account.owner_id ).one()
+    # they have been active since their last notification
+    if not message_owner.last_notification \
+        or not message_owner.last_active \
+        or ( message_owner.last_notification < message_owner.last_active  \
+            and message_owner.last_active < datetime.now() - timedelta( minutes = int(environ['ACTIVITY_LIMIT_MINUTES']))): # owner is probably offline
+            
+            # send a notification 
+            try:
+                sms = v_client.messages.create(
+                         body = "You have a new message at "+environ['MY_MESSAGE_DASHBOARD'],
+                         messaging_service_sid = account.sid,
+                         to = message_owner.sms
+                         )
+            except:
+                locale = "sending notification"
+                print("Error "+locale)
+                abort(401)
+          
+           # update notification flag
+            message_owner.last_notification = datetime.now()
+            try:
+                db.session.add(message_owner)
+                db.session.commit()
+            except sql_error as e:
+                locale = "updating owner notification"
+                print("Error "+locale)
+                abort(401)
 
 
     return("<Response/>")

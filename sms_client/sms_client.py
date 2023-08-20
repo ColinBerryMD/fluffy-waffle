@@ -380,7 +380,7 @@ def block(client_id):
     client_to_block = SMSClient.query.filter(SMSClient.id == client_id).one()
     client_to_block.blocked = True
     try:
-        db.session.add( sms_client_to_block)
+        db.session.add( client_to_block)
         db.session.commit()
     except sql_error as e:
         locale="blocking a client"

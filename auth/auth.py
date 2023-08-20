@@ -17,6 +17,7 @@ from extensions import Blueprint, render_template, redirect, url_for, request, f
 
 password_lifetime = timedelta( days = int(environ['PASSWORD_LIFE_IN_DAYS']))
 two_fa_lifetime   = timedelta( days = int(environ['TWO_FA_LIFE_IN_DAYS']))
+activity_limit    = timedelta( minutes = int(environ['ACTIVITY_LIMIT_MINUTES']))
 
 auth = Blueprint('auth', __name__, url_prefix='/auth', template_folder='templates')
 
@@ -518,8 +519,8 @@ def logout():
     session['account_name'] = None
 
     # backdate activity on explicit logout to reset notification flag
-    backdate = datetime.now() - timedelta( minutes= environ['ACTIVITY_LIMIT_MINUTES'])
-    user = current_user
+    backdate = datetime.now() - activity_limit
+    user = WebUser.query.filter(WebUser.id == current_user.id).one()
     user.last_active = backdate
     
     try:

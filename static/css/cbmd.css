@@ -10,8 +10,37 @@
 }
 .w3-bar 
 {
-    overflow: visible;
+
 }
+
+.cb-bar
+{   
+    white-space: nowrap;
+    display:flex;
+    flex-wrap: nowrap;
+    max-width: 100%;
+    overflow-x: scroll;
+}
+
+.cb-bar:before, .cb-bar:after
+{
+    content:"";
+    display:table;
+    clear:both;
+}
+
+.cb-bar .cb-bar-item 
+{
+    padding:8px 16px;
+    float:left;
+    width:auto;
+    display: inline-block;
+    border:none;
+    border-radius: 10px 10px 0px 0px;
+    outline:0
+}
+
+
 .cb-under-navbar
 {
     margin-top: 48px;
@@ -38,6 +67,22 @@
     .cb-col-two-of-two {
         width: 100%;
     }
+    /* stack tabs accordian style on small screens */
+    .cb-bar .cb-bar-item 
+    {
+       padding: 10px;
+       margin: 0px;
+       width: 100%;
+       border-radius: 0px 0px 0px 0px;
+       display: block;
+    }
+    .cb-bar {
+        display: block;
+    }
+    .cb-container 
+    {
+        padding: 0px !important;
+    }
 }
 @media only screen and (min-width: 751px) and (max-width: 1225px) {
     .cb-hide-medium {
@@ -47,11 +92,15 @@
         display: block;
     }
     .cb-col-one-of-two {
-        max-width: 850px;
-
+        float: left;
+        width: calc(100% - 400px);
     }
     .cb-col-two-of-two {
-        min-width: 325px;
+        width: 400px;
+    }
+    .cb-bar .cb-bar-item 
+    {
+        display: inline-block!important;
     }
 }
 @media only screen and (min-width: 1226px) {
@@ -62,10 +111,11 @@
         display: block;
     }
     .cb-col-one-of-two {
-        width: 70%;
+        width: 65%;
     }
     .cb-col-two-of-two {
-        width: 30%;
+        width: 35%;
+        min-width: 400px;
     }
 }
 

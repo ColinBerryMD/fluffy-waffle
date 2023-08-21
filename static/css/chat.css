@@ -1,24 +1,11 @@
 
 /* Style the tab buttons */
-:root {
-  --border-color: grey;
-  --active-color:   #F0FFF0;
-  --hover-color:    #b6d1ca;
-  --inactive-color: #edf5f3;
-  --outgoing-color: #a7dceb;
-  --pending-color:  #2fadd0;
-  --failed-color:   #ffcc99;
-  --incoming-color: #d3edf5;
-  --time-color:     #717475;
-}
 
 #tab_parent button, #group_parent button {
   cursor: pointer;
-  padding: 10px;
   margin-right: 2px;
   transition: 0.3s;
   background-color: var(--inactive-color);
-  border-radius: 10px 10px 0px 0px;
   border: 1px  solid var(--border-color);
 }
 #tab_parent button:hover, #group_parent button:hover {
@@ -42,10 +29,6 @@
   margin-top: -2px;
   z-index: 0;
 }
-/*#chat_parent {
-  overflow: auto;
-  white-space: nowrap;
-}*/
 
 .chat-container {
   border: 1px solid var(--border-color);

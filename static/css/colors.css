@@ -1,0 +1,11 @@
+:root {
+  --border-color: grey;
+  --active-color:   #F0FFF0;
+  --hover-color:    #b6d1ca;
+  --inactive-color: #edf5f3;
+  --outgoing-color: #a7dceb;
+  --pending-color:  #2fadd0;
+  --failed-color:   #ffcc99;
+  --incoming-color: #d3edf5;
+  --time-color:     #717475;
+}

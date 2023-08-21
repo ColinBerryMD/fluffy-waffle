@@ -23,7 +23,6 @@ message = Blueprint('message', __name__, url_prefix='/message', template_folder=
 # reflect user activity in our database on any message related http request
 @message.before_request
 def activity():
-    print("activity")
     try:
         user_id = current_user.id
     except:

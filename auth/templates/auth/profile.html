@@ -10,9 +10,6 @@
         <p>Email: {{ user.email }}</p>
         <p>SMS: {{ user.sms }}</p>
         <p>Voice Phone: {{ user.voice }}</p>
-        {% if user.translate %}
-            <p>Requests translation to spanish.</p>
-        {% endif %}
         {% if user.is_sms %}
             <p>Has SMS access.</p>
         {% endif %}

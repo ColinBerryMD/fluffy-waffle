@@ -14,9 +14,9 @@ from extensions import environ, db, v_client, twilio_config, sql_error, login_re
                         Blueprint, abort, session, func, or_, and_, not_, ForeignKey, relationship, inspect
 
 
-from phonenumber import cleanphone
-from dict_from import dict_from
-
+from utils.phonenumber import cleanphone
+from utils.dict_from import dict_from
+from utils.translate import to_spanish, is_spanish, to_english, is_english
 
 message = Blueprint('message', __name__, url_prefix='/message', template_folder='templates')
 
@@ -104,6 +104,13 @@ def send(client_id):
         flash('Message content is required!','error')
         return redirect( url_for('message.list'))
 
+    # translate to spanish if requested
+    if sms_client.translate and is_english(Body):
+        body_to_send = to_spanish(Body)
+        Body = body_to_send +'\n'+Body
+    else:
+        body_to_send = Body
+
     account = SMSAccount.query.filter(SMSAccount.id == session['account_id'] ).one()
     if not account:
         flash('Active account is required.','error')
@@ -113,7 +120,7 @@ def send(client_id):
 
     try:
         sms = v_client.messages.create(
-             body = Body,
+             body = body_to_send,
              messaging_service_sid = account.sid,
              status_callback= twilio_config.status,
              to = sms_client.phone
@@ -174,9 +181,17 @@ def multiple_send():
 
     for client_id in selection:
         sms_client = SMSClient.query.filter(SMSClient.id == client_id).one()
+
+        # translate to spanish if requested
+        if sms_client.translate and is_english(Body):
+            body_to_send = to_spanish(Body)
+            this_body = body_to_send +'\n'+Body
+        else:
+            this_body = Body
+            body_to_send = Body
         try:
             sms = v_client.messages.create(
-                 body = Body,
+                 body = body_to_send,
                  messaging_service_sid = account.sid,
                  status_callback= twilio_config.status,
                  to = sms_client.phone
@@ -191,7 +206,7 @@ def multiple_send():
         message = Message(SentFrom = account.number,
                           SentTo   = sms_client.phone, 
                           SentAt   = datetime.now(tzlocal()).isoformat(), 
-                          Body     = Body,
+                          Body     = this_body,
                           Outgoing = True,
                           archived  = False,
                           sms_sid  = sms_sid,

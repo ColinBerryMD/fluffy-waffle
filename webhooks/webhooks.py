@@ -10,8 +10,8 @@ from models import Message, WebUser, SMSAccount, SMSClient
 from extensions import environ, db, v_client, twilio_config, flask_response, request, Blueprint, abort
 
 
-from phonenumber import cleanphone
-from dict_from import dict_from
+from utils.phonenumber import cleanphone
+from utils.dict_from import dict_from
 
 # we needed a separate blueprint to not conflict on before request
 webhooks = Blueprint('webhooks', __name__, url_prefix='/webhooks')
@@ -104,6 +104,11 @@ def receive():
         return str(resp)
 
     # ok. this is a valid message
+
+    # translate from spanish if requested
+    if sms_client.translate and is_spanish(Body):
+        Body = to_english(Body) +'\n'+Body
+
     message = Message(
         SentFrom  = SentFrom,
         SentTo    = SentTo, 

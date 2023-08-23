@@ -18,7 +18,6 @@ class WebUser(UserMixin,db.Model):
     is_sms = db.Column( db.Boolean() )
     default_account = db.Column(db.Integer)
     default_group = db.Column(db.Integer)
-    translate = db.Column( db.Boolean() )
     two_fa_expires = db.Column( db.DateTime() )
     last_active = db.Column( db.DateTime() )  
     last_notification = db.Column( db.DateTime() )  

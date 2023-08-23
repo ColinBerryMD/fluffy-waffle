@@ -27,11 +27,6 @@
             <label for="is_sms">Use SMS Account</label>
             <input type="checkbox" name="is_sms" {% if user.sms %}checked{%endif%}/>
         </div>
-        
-        <div>
-            <label for="translate">Translate from English to Spanish</label>
-            <input type="checkbox" name="translate" {% if user.translate %}checked{%endif%}/>
-        </div>
 
         <div class="w3-bar w3-padding-16">
             <button type='submit' class="w3-button w3-black">Submit</button>

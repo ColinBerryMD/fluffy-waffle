@@ -6,7 +6,7 @@ from extensions import db, v_client, twilio_config, sql_error, render_template, 
                             url_for, flash, redirect, Blueprint, abort, session, func, or_, and_, not_,\
                             login_required, current_user
 
-from phonenumber import cleanphone
+from utils.phonenumber import cleanphone
 
 account = Blueprint('account', __name__, url_prefix='/account', template_folder='templates')
 

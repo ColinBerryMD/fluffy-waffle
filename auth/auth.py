@@ -8,8 +8,8 @@ from datetime import datetime, timedelta
 from models import WebUser, OldPasswords, SMSAccount, SMSGroup
 
 # my own modules
-from phonenumber import cleanphone
-from .cleanpassword import cleanpassword
+from utils.phonenumber import cleanphone
+from utils.cleanpassword import cleanpassword
 
 from extensions import Blueprint, render_template, redirect, url_for, request, flash, session,\
                             current_app, db, v_client, twilio_config, sql_error, environ, sql_text,\
@@ -203,10 +203,6 @@ def register(user_id):
         else:
             is_sms = False
 
-        if request.form.get('translate') == 'on':
-            translate = True
-        else:
-            translate = False
 
         # check for empties
         if not first or not last or not email or not sms:
@@ -239,7 +235,6 @@ def register(user_id):
         user.sms = sms
         user.voice = voice
         user.is_sms = is_sms
-        user.translate = translate
         
         try:
             db.session.add(user)
@@ -472,11 +467,6 @@ def edit(user_id):
             is_sms = True
         else:
             is_sms = False
-
-        if request.form.get('translate') == 'on':
-            translate = True
-        else:
-            translate = False
     
         # check for empty fields
         if not first or not last or not email or not sms:
@@ -495,7 +485,6 @@ def edit(user_id):
         user.sms = sms
         user.voice = voice
         user._is_sms = is_sms
-        user.translate = translate
         
         try:
             db.session.add(user)

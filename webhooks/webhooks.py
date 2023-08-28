@@ -12,6 +12,8 @@ from extensions import environ, db, v_client, twilio_config, flask_response, req
 
 from utils.phonenumber import cleanphone
 from utils.dict_from import dict_from
+from utils.google_translate import to_english, is_spanish
+
 
 # we needed a separate blueprint to not conflict on before request
 webhooks = Blueprint('webhooks', __name__, url_prefix='/webhooks')

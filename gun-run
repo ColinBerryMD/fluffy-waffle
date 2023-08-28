@@ -1,6 +1,6 @@
 #!/bin/bash
 # expose to the world -- needed to recieve twilio posts
-gunicorn3 app:app --worker-class gevent --bind 0.0.0.0:8000
+"$(dirname "$0")"/env/bin/gunicorn app:app --worker-class gevent --bind 0.0.0.0:8000 
 # work though ssh tunnel
 #gunicorn3 app:app --worker-class gevent --bind 127.0.0.1:8000
 

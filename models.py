@@ -43,7 +43,7 @@ class Message(db.Model):
     SentFrom = db.Column(db.String(14))
     SentTo = db.Column(db.String(14))
     SentAt =db.Column(db.String(50))
-    Body = db.Column(db.String(160))
+    Body = db.Column(db.String(325))
     Outgoing = db.Column(db.Boolean)
     sms_sid = db.Column(db.String(40))
     sms_status = db.Column(db.String(20))

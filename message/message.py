@@ -16,7 +16,7 @@ from extensions import environ, db, v_client, twilio_config, sql_error, login_re
 
 from utils.phonenumber import cleanphone
 from utils.dict_from import dict_from
-from utils.translate import to_spanish, is_spanish, to_english, is_english
+from utils.google_translate import to_spanish, is_english
 
 message = Blueprint('message', __name__, url_prefix='/message', template_folder='templates')
 
@@ -107,7 +107,7 @@ def send(client_id):
     # translate to spanish if requested
     if sms_client.translate and is_english(Body):
         body_to_send = to_spanish(Body)
-        Body = body_to_send +'\n'+Body
+        Body = body_to_send +' ('+Body+') '
     else:
         body_to_send = Body
 
@@ -155,7 +155,6 @@ def send(client_id):
     msg_dict = dict_from(message)
     msg_dict.update(dict_from(sms_client))
     message_json = json.dumps(msg_dict)
-    print(message_json)
     sse.publish(message_json, type='sms_message')
 
     return flask_response(status=204)
@@ -185,7 +184,7 @@ def multiple_send():
         # translate to spanish if requested
         if sms_client.translate and is_english(Body):
             body_to_send = to_spanish(Body)
-            this_body = body_to_send +'\n'+Body
+            this_body = body_to_send +' ('+Body+') '
         else:
             this_body = Body
             body_to_send = Body

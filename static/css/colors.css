@@ -9,3 +9,8 @@
   --incoming-color: #d3edf5;
   --time-color:     #717475;
 }
+
+.cb-teal {
+  background-color: #66B2B2;
+  color: black;
+}

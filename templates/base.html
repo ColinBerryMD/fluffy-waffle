@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
+    <head> 
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>{% block title %}Colin Berry MD{% endblock %}</title>
 
@@ -8,7 +8,6 @@
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-        <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-black.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         
         <link rel="stylesheet" href="{{ url_for('static', filename='css/w3.css') }}">
@@ -22,13 +21,8 @@
 <!-- Navbar -->
 
         <div class="w3-top">
-            <div class="w3-bar w3-theme w3-top w3-left-align w3-large">
-
-                <!-- test out window widths to make our menus work -->
-                <!--div class="cb-hide-large cb-hide-medium cb-show-small w3-white"><p>small</p></div>
-                <div class="cb-hide-large cb-hide-small cb-show-medium w3-white" ><p>medium</p></div>
-                <div class="cb-hide-medium cb-hide-small cb-show-large w3-white"><p>large</p></div-->
-
+            <div class="w3-bar cb-teal w3-left-align w3-large" >
+                
                 <!-- the 'hamburger' menu for phones and small screens -->
                 <div class="w3-bar-item dropdown">
                     <button class="btn btn-default dropdown-toggle cb-show-medium cb-show-small cb-hide-large" type="button" data-toggle="dropdown">
@@ -51,6 +45,7 @@
                             </ul>
                         </li>
                     {% endif %}
+                    
                     {% if current_user.is_sms %}
                         <!-- select or manage account -->
                         {% if session['account_id'] %}
@@ -99,8 +94,9 @@
                     </ul>
                 </div>
 
+
                 <a href="{{ url_for('main.index') }}" 
-                   class="w3-bar-item w3-button w3-theme-l1"><i class='fa fa-home'></i></a>
+                   class="w3-bar-item w3-button"><i class='fa fa-home'></i></a>
  
                 {% if current_user.is_admin %}
                 <a href="{{ url_for('main.admin') }}"
@@ -272,7 +268,6 @@
             </div>
         </div>
 
-
 <!-- Sidbar if there is one in this template -->
 {% block sidebar %}{% endblock %}
 
@@ -305,19 +300,8 @@
 
 <!-- Template content -->
         {% block content %}{% endblock %}
-        </div>
 
     </body>
-    <!-- jquery to drive our nested menus -->
-    <script>
-        $(document).ready(function(){
-          $('.dropdown-submenu a.test').on("click", function(e){
-            $(this).next('ul').toggle();
-            e.stopPropagation();
-            e.preventDefault();
-          });
-        });
-    </script>
     <script type="text/javascript">// listen for sse events or server problems
         var source = new EventSource("{{ url_for('sse.stream') }}");
         source.addEventListener('sms_message', function(event) {
@@ -340,4 +324,16 @@
         //  alert("Failed to connect to event stream. Is Redis running?");
         //}, false);
     </script>
+    
+    <!-- jquery to drive our nested menus -->
+    <script>
+        $(document).ready(function(){
+          $('.dropdown-submenu a.test').on("click", function(e){
+            $(this).next('ul').toggle();
+            e.stopPropagation();
+            e.preventDefault();
+          });
+        });
+    </script>
+
 </html>

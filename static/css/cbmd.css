@@ -10,7 +10,9 @@
 }
 .w3-bar 
 {
-
+    overflow: visible;
+    position: relative;
+    z-index: 5;
 }
 
 .cb-bar
@@ -124,7 +126,9 @@
 }
 
 .dropdown-submenu .dropdown-menu {
-  top: 0;
-  left: 100%;
-  margin-top: -1px;
+    top: 0;
+    left: 100%;
+    margin-top: -1px;
+    z-index: 12;
+
 }

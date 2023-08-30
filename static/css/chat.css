@@ -16,7 +16,7 @@
   background-color: var(--active-color); 
   border-bottom: 2px solid var(--active-color);
   position: relative;
-  z-index: 5;
+  z-index: 2;
 }
 
 #chat_parent, #group_list, #group_multiple, #group_other_client {

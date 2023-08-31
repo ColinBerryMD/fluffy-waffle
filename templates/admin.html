@@ -24,6 +24,18 @@
 </nav>
 
 {% endblock %}
+
+{% block minisidebar %}
+
+    <li><a class="cb-hover-teal" tabindex="-1" href="{{ url_for('auth.create') }}">Create User Name</a></li>
+    <li><a class="cb-hover-teal" tabindex="-1" href="{{ url_for('auth.all') }}">List All Users</a></li>
+    <li><a class="cb-hover-teal" tabindex="-1" href="{{ url_for('auth.select') }}">Select User</a></li>
+    <li><a class="cb-hover-teal" tabindex="-1" href="{{ url_for('group.create') }}">Create New Client Group</a></li>
+    <li><a class="cb-hover-teal" tabindex="-1" href="{{ url_for('account.create') }}">Create New Account</a></li>
+    <li><a class="cb-hover-teal" tabindex="-1" href="{{ url_for('sms_client.select') }}">Select Client</a></li>
+
+{% endblock %}
+
 {% block content %}
 <!-- Main content: shift it to the right by 250 pixels when the sidebar is visible -->
     <div class="w3-main" style="margin-left:250px">

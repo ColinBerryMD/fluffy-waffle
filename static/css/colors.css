@@ -14,3 +14,6 @@
   background-color: #66B2B2;
   color: black;
 }
+.cb-hover-teal:hover {
+  background-color: #66B2B2!important;
+}

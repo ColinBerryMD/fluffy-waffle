@@ -91,6 +91,9 @@
                         <li><a tabindex="-1" href="{{ url_for('sms_client.create') }}">Claim Username</a></li>
                         <li><a tabindex="-1" href="{{ url_for('sms_client.create') }}">Contact Us</a></li>
                     {% endif %}
+
+                    {% block minisidebar %}{% endblock %}
+
                     </ul>
                 </div>
 
@@ -269,9 +272,11 @@
         </div>
 
 <!-- Sidbar if there is one in this template -->
-{% block sidebar %}{% endblock %}
-
-
+        <div class="sidenav">
+            <ul>
+                {{ self.minisidebar() }}
+            </ul>
+        </div>
 
 <!-- Flash messages -->
         {% with messages = get_flashed_messages( with_categories = true ) %}

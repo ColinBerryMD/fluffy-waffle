@@ -3,8 +3,8 @@
 {% block title %}List Users{% endblock %}
 {% block content %}
 {# needs users a list of WebUser() #}
-<div class="w3-container">
-    <h1 class='w3-padding-16' style="margin-top: 32px;">User List</h1>
+<div class="cb-container">
+    <h1 class='cb-header'>User List</h1>
     <form method="POST" action="{{ url_for('auth.list') }}">
         {% if users %}
             {% for user in users %}
@@ -21,9 +21,9 @@
         {% else %}
             <h2>No users found in database.</h2>
         {% endif %}
-        <div class="w3-bar w3-padding-16">
-           <button type='submit' class="w3-button w3-black">Select</button>
-           <a href="{{ url_for('main.index') }}" class="w3-button w3-black">Cancel</a>
+        <div class="cb-bar padding-16">
+           <button type='submit' class="cb-button cb-teal">Select</button>
+           <a href="{{ url_for('main.index') }}" class="cb-button cb-teal">Cancel</a>
         </div>
     </form>
 </div>

@@ -3,16 +3,16 @@
 {% block title %}One Time Password{% endblock %}
 {% block content %}
 {# needs user = WebUser() #}
-<div class="w3-container">
-    <h1 class='w3-padding-16' style="margin-top: 32px;">New One Time Pass Code for Username: {{ user.User }}</h1>
+<div class="cb-container">
+    <h1 class='cb-header'>New One Time Pass Code for Username: {{ user.User }}</h1>
     <form method="POST" action="{{ url_for('auth.two_factor', user_id = user.id) }}">
         <div>
             <input class="input is-large" type="text" name="one_time_pass_code" 
                                placeholder="One Time Pass Code">
         </div>
-        <div class="w3-bar w3-padding-16">
-            <button type='submit' class="w3-button w3-black">Login</button>
-            <a href="{{ url_for('main.index') }}" class="w3-button w3-black">Cancel</a>
+        <div class="cb-bar padding-16">
+            <button type='submit' class="cb-button cb-teal">Login</button>
+            <a href="{{ url_for('main.index') }}" class="cb-button cb-teal">Cancel</a>
         </div>
     </form>
 </div>

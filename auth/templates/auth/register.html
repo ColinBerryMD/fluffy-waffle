@@ -3,8 +3,8 @@
 {% block title %}Claim Username{% endblock %}
 {% block content %}
 {# needs user = WebUser() #}
-<div class="w3-container">
-    <h1 class='w3-padding-16' style="margin-top: 32px;">Claim Username: {{ user.User }}</h1>
+<div class="cb-container">
+    <h1 class='cb-header'>Claim Username: {{ user.User }}</h1>
     <form method="POST" action="{{ url_for('auth.register', user_id = user.id) }}">
         <div>
             <input  type="password" name="password" placeholder="Password">
@@ -32,9 +32,9 @@
             <label for="is_sms">Use SMS Account</label>
             <input type="checkbox" name="is_sms" checked/>
         </div>
-        <div class="w3-bar w3-padding-16">
-           <button type='submit' class="w3-button w3-black">Submit</button>
-           <a href="{{ url_for('main.index') }}" class="w3-button w3-black">Cancel</a>
+        <div class="cb-bar padding-16">
+           <button type='submit' class="cb-button cb-teal">Submit</button>
+           <a href="{{ url_for('main.index') }}" class="cb-button cb-teal">Cancel</a>
        </div>
     </form>
 </div>

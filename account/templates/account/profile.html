@@ -3,8 +3,8 @@
 {% block title %}{{ account.name }}{% endblock %}
 {% block content %}
 {# needs account = SMSAccount() #}
-<div class="w3-container">
-    <h1 class='w3-padding-16' style="margin-top: 32px">{{ account.name }}</h1>
+<div class="cb-container">
+    <h1 cb-header>{{ account.name }}</h1>
         <p>SMS Phone: {{ account.number }}</p>
         <p>SID:&nbsp{{ account.sid }}</p>
         {% if account.users %}
@@ -14,26 +14,26 @@
                         (owner)
                     {% else %}
                     <a href="{{ url_for('account.delete_user', user_id = user.id, account_id = account.id ) }}" 
-                       class="w3-bar-item w3-button"><i class='fa fa-trash' aria-hidden="true"></i></a>
+                       class="cb-bar-item cb-button"><i class='fa fa-trash' aria-hidden="true"></i></a>
                     {%endif%}
                 </p>    
             {% endfor %}
         {% else %} 
                 <p>No users on this account</p>
         {% endif %}
-        <div class="w3-bar w3-padding-16">
+        <div class="cb-bar padding-16">
             <a href="{{ url_for('account.edit', account_id = account.id ) }}" 
-                               class="w3-bar-item w3-button w3-theme-l1"><i class='fa fa-pencil'></i></a>
+                               class="cb-bar-item cb-button cb-teal"><i class='fa fa-pencil'></i></a>
             
             <a href="{{ url_for('account.delete_account', account_id = account.id ) }}" 
-               class="w3-bar-item w3-button w3-theme-l1" onclick="return confirm('Are you sure you want to delete this account?')">
+               class="cb-bar-item cb-button cb-teal" onclick="return confirm('Are you sure you want to delete this account?')">
                 <i class='fas fa fa-trash'/>
                 </i>
             </a>
             <a href="{{ url_for('account.activate', account_id=account.id) }}" }}" 
-               class="w3-bar-item w3-button w3-theme-l1">Select</a>     
+               class="cb-bar-item cb-button cb-teal">Select</a>     
 
-            <a href="{{ url_for('main.index' ) }}" class="w3-bar-item w3-button w3-theme-l1">Cancel</a>
+            <a href="{{ url_for('main.index' ) }}" class="cb-bar-item cb-button cb-teal">Cancel</a>
         </div>
 </div>
 {% endblock %}

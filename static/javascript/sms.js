@@ -65,7 +65,7 @@ function AddChatElement(smsMessage){
     } else {
       tabLink = document.createElement("button"); // need button attributes
       tabLink.setAttribute("id",linkId);
-      tabLink.setAttribute("class", "w3-button w3-border w3-block w3-right-align tablink");
+      tabLink.setAttribute("class", "cb-button w3-border w3-block w3-right-align tablink");
       tabLink.setAttribute("onclick", "openTab(event,'sms_"+String(smsMessage.Client)+"')");
       fullName= smsMessage.sms_client.firstname+" "+smsMessage.sms_client.lastname;
       buttonContent = document.createTextNode(fullName);
@@ -85,7 +85,7 @@ function AddChatElement(smsMessage){
     } else {
       chatContent = document.createElement("div");
       chatContent.setAttribute("id", contentId);
-      chatContent.setAttribute("class", "w3-container tabcontent");
+      chatContent.setAttribute("class", "cb-container tabcontent");
       chatContent.setAttribute("style", "display: none;");
       chatParent.appendChild( chatContent );
     }

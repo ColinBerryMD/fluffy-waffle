@@ -3,8 +3,8 @@
 {% block title %}Client:&nbsp{{ client.firstname }}&nbsp{{ client.lastname }}{% endblock %}
 {% block content %}
 {# needs client = SMSClient() #}
-<div class="w3-container">
-    <h1 class='w3-padding-16' style="margin-top: 32px">{{ client.firstname }}&nbsp{{ client.lastname }}</h1>
+<div class="cb-container">
+    <h1 cb-header>{{ client.firstname }}&nbsp{{ client.lastname }}</h1>
     <p>{{ client.email }}</p>
 
     {% if client.dob %}
@@ -22,15 +22,15 @@
     {% endif %}
     {% if session['group_name'] %}
     <a href="{{ url_for('group.add_client', client_id = client.id, group_id=session['group_id'] ) }}" 
-                   class="w3-bar-item w3-button w3-theme-l1">Add to {{session['group_name']}} Group</i></a>
+                   class="cb-bar-item cb-button cb-teal">Add to {{session['group_name']}} Group</i></a>
     {% endif %}
     <a href="{{ url_for('sms_client.edit', sms_client_id = client.id ) }}" 
-                   class="w3-bar-item w3-button w3-theme-l1"><i class='fa fa-pencil'></i></a>
+                   class="cb-bar-item cb-button cb-teal"><i class='fa fa-pencil'></i></a>
     <a href="{{ url_for('sms_client.delete', client_id = client.id ) }}" 
-                   class="w3-bar-item w3-button w3-theme-l1"><i class='fa fa-trash'></i></a>
+                   class="cb-bar-item cb-button cb-teal"><i class='fa fa-trash'></i></a>
     <a href="{{ url_for('sms_client.block', client_id = client.id ) }}"
-                   class="w3-bar-item w3-button w3-theme-l1">Block</a>
+                   class="cb-bar-item cb-button cb-teal">Block</a>
     <a href="{{ url_for('main.index' ) }}" 
-                   class="w3-bar-item w3-button w3-theme-l1">Cancel</a>
+                   class="cb-bar-item cb-button cb-teal">Cancel</a>
 </div>
 {% endblock %}

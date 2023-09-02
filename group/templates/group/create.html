@@ -2,15 +2,15 @@
 
 {% block title %}Create New Client Group{% endblock %}
 {% block content %}
-<div class="w3-container">
-    <h1 class='w3-padding-16' style="margin-top: 32px;">Create New Client Group</h1>
+<div class="cb-container">
+    <h1 class='cb-header'>Create New Client Group</h1>
     <form method="POST" action="{{ url_for('group.create')}}">
        <div >
            <input type="text" name="name" placeholder="Group Name" autofocus="">
        </div>
-       <div class="w3-bar w3-padding-16">
-           <button type='submit' class="w3-button w3-black">Submit</button>
-           <a href="{{ url_for('main.index') }}" class="w3-button w3-black">Cancel</a>
+       <div class="cb-bar padding-16">
+           <button type='submit' class="cb-button cb-teal">Submit</button>
+           <a href="{{ url_for('main.index') }}" class="cb-button cb-teal">Cancel</a>
        </div>
     </form>
 </div>

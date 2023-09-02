@@ -3,8 +3,8 @@
 {% block title %}Client:&nbsp{{ client.firstname }}&nbsp{{ client.lastname }}{% endblock %}
 {% block content %}
 {# needs client = SMSClient() #}
-<div class="w3-container">
-    <h1 class='w3-padding-16' style="margin-top: 32px">Edit:&nbsp{{ client.firstname }}&nbsp{{ client.lastname }}</h1>
+<div class="cb-container">
+    <h1 cb-header>Edit:&nbsp{{ client.firstname }}&nbsp{{ client.lastname }}</h1>
     <form method="POST" action="{{ url_for('sms_client.edit', sms_client_id = client.id ) }}">
         <div>
             <input class="input is-large" type="text" name="firstname" value={{ client.firstname }} />
@@ -30,9 +30,9 @@
             <input type="checkbox" name="translate" checked="{{ client.translate }}"/>
             <label for="translate">Translate from English to Spanish</label>
         </div>
-        <div class="w3-bar w3-padding-16">
-            <button type='submit' class="w3-button w3-black">Submit</button>
-            <a href="{{ url_for('main.index') }}" class="w3-button w3-black">Cancel</a>
+        <div class="cb-bar padding-16">
+            <button type='submit' class="cb-button cb-teal">Submit</button>
+            <a href="{{ url_for('main.index') }}" class="cb-button cb-teal">Cancel</a>
         </div>
     </form>
 </div>

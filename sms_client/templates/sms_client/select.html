@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block title %}Client Search{% endblock %}
 {% block content %}
-<div class="w3-container">
-    <h1 class='w3-padding-16' style="margin-top: 32px;">Client Search</h1>
+<div class="cb-container">
+    <h1 class='cb-header'>Client Search</h1>
     <form method="POST" action="{{ url_for('sms_client.select') }}">
         <div>
             <label for="select_all">List All Clients</label>
@@ -17,9 +17,9 @@
         <div>
             <input  type="text" name="dob" placeholder="Date of Birth"/>
         </div>
-        <div class="w3-bar w3-padding-16">
-           <button type='submit' class="w3-button w3-black">Select</button>
-           <a href="{{ url_for('main.index') }}" class="w3-button w3-black">Cancel</a>
+        <div class="cb-bar padding-16">
+           <button type='submit' class="cb-button cb-teal">Select</button>
+           <a href="{{ url_for('main.index') }}" class="cb-button cb-teal">Cancel</a>
         </div>
     </form>
 </div>

@@ -17,15 +17,38 @@
   text-decoration: none;
   display: block;
 }
+
+.cb-container {
+    padding:0.01em 16px;
+
+}.cb-container:after, cb-container:before {
+    content:"";
+    display:table;
+    clear:both;
+}
+
+.cb-header {
+    color: var(--top-bar-color);
+    margin-top: 32px;
+    padding-top:16px;
+    padding-bottom:16px;
+}
+
 .cb-teal {
   background-color: var(--top-bar-color);
   color: black;
 }
+
 .cb-hover-teal:hover {
   background-color: var(--hover-color)!important;
 }
+
 .cb-links a {
     text-decoration: underline;
+}
+.padding-16 {
+    padding-top:16px;
+    padding-bottom:16px;
 }
 .sidenav {
   background-color: var(--top-bar-color);
@@ -47,6 +70,7 @@
 .w3-dropdown-content {
     z-index: 12;
 }
+
 .w3-bar 
 {
     overflow: visible;
@@ -57,11 +81,24 @@
 .cb-bar
 {   
     white-space: nowrap;
-    display:flex;
     flex-wrap: nowrap;
     max-width: 100%;
     overflow-x: scroll;
 }
+
+.cb-bar .cb-bar-item {
+    padding:8px 16px;
+    float:left;
+    width:auto;
+    border:none;
+    display:block;
+    outline:0
+}
+
+.cb-bar .cb-button {
+    white-space: normal;
+}
+
 
 .cb-bar:before, .cb-bar:after
 {
@@ -70,7 +107,7 @@
     clear:both;
 }
 
-.cb-bar .cb-bar-item 
+.cb-bar .cb-bar-tab 
 {
     padding:8px 16px;
     float:left;
@@ -81,6 +118,40 @@
     outline:0
 }
 
+/*.w3-btn,.cb-button{border:none;display:inline-block;padding:8px 16px;vertical-align:middle;overflow:hidden;text-decoration:none;color:inherit;background-color:inherit;text-align:center;cursor:pointer;white-space:nowrap}
+.w3-btn,.cb-button{-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}   
+.w3-disabled,.w3-btn:disabled,.cb-button:disabled{cursor:not-allowed;opacity:0.3}.w3-disabled *,:disabled *{pointer-events:none}*/
+
+.cb-button {
+    border:none;
+    display:inline-block;
+    padding:8px 16px;
+    vertical-align:middle;
+    overflow:hidden;
+    text-decoration:none;
+    /*color:inherit;
+    background-color:inherit;*/
+    text-align:center;
+    cursor:pointer;
+    white-space:nowrap;
+
+    -webkit-touch-callout:none;
+    -webkit-user-select:none;
+    -khtml-user-select:none;
+    -moz-user-select:none;
+    -ms-user-select:none;
+    user-select:none
+}
+
+.cb-button:disabled {}
+    cursor:not-allowed;
+    opacity:0.3;
+}
+
+.cb-button:hover {
+    color:#000!important;
+    background-color:#ccc!important;
+}
 
 .cb-under-navbar
 {
@@ -112,7 +183,7 @@
         display: none;
     }
     /* stack tabs accordian style on small screens */
-    .cb-bar .cb-bar-item 
+    .cb-bar .cb-bar-tab 
     {
        padding: 10px;
        margin: 0px;

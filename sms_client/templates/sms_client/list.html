@@ -3,8 +3,8 @@
 {% block title %}List Clients{% endblock %}
 {% block content %}
 {# needs clients; a list of SMSClient() #}
-<div class="w3-container">
-    <h1 class='w3-padding-16' style="margin-top: 32px;">Client List</h1>
+<div class="cb-container">
+    <h1 class='cb-header'>Client List</h1>
     <form method="POST" action="{{ url_for('sms_client.list') }}">
         {% if clients %}
             {% for client in clients %}
@@ -17,9 +17,9 @@
         {% else %}
             <h2>No client found in database.</h2>
         {% endif %}
-        <div class="w3-bar w3-padding-16">
-           <button type='submit' class="w3-button w3-black">Select</button>
-           <a href="{{ url_for('main.index') }}" class="w3-button w3-black">Cancel</a>
+        <div class="cb-bar padding-16">
+           <button type='submit' class="cb-button cb-teal">Select</button>
+           <a href="{{ url_for('main.index') }}" class="cb-button cb-teal">Cancel</a>
         </div>
     </form>
 </div>

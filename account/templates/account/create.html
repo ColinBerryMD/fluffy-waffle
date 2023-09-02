@@ -2,8 +2,8 @@
 
 {% block title %}Create New Account{% endblock %}
 {% block content %}
-<div class="w3-container">
-    <h1 class='w3-padding-16' style="margin-top: 32px">Create Account</h1>
+<div class="cb-container">
+    <h1 cb-header>Create Account</h1>
     <form method="POST" action="{{ url_for('account.create') }}">
         <div>
             <input class="input is-large" type="text" name="owner_user_name" placeholder='Owner Username' autofocus="">
@@ -18,9 +18,9 @@
             <input class="input is-large" type="text" name="sid" placeholder='Paste Twilio SID Here' autofocus="">
             
         </div>
-        <div class="w3-bar w3-padding-16">
-            <button type='submit' class="w3-button w3-black">Create</button>
-            <a href="{{ url_for('main.index') }}" class="w3-button w3-black">Cancel</a>
+        <div class="cb-bar padding-16">
+            <button type='submit' class="cb-button cb-teal">Create</button>
+            <a href="{{ url_for('main.index') }}" class="cb-button cb-teal">Cancel</a>
         </div>
     </form>
 </div>

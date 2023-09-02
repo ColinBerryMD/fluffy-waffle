@@ -2,9 +2,9 @@
 
 {% block title %}New Messaging Client{% endblock %}
 {% block content %}
-<div class="w3-container">
-    <h1 class='w3-padding-16' style="margin-top: 32px;">New Messaging Client</h1>
-    <form method="POST" action='{{ url_for('sms_client.fake') }}'>
+<div class="cb-container">
+    <h1 class='cb-header'>New Messaging Client</h1>
+    <form method="POST" action='{{ url_for('sms_client.create') }}'>
         <p>This information is to add you to our contacts list and prove that you are not a robot.</p>
         <div>
             <input type="text" name="firstname" placeholder="First Name"/>
@@ -26,9 +26,9 @@
             <input type="checkbox" name="translate"/>
         </div>
         <p>To review and send a one time passcode to your phone, press Sign Up.</p>
-        <div class="w3-bar w3-padding-16">
-            <button type='submit' class="w3-button w3-black">Sign Up</button>
-            <a href="{{ url_for('main.index') }}" class="w3-button w3-black">Cancel</a>
+        <div class="cb-bar padding-16">
+            <button type='submit' class="cb-button cb-teal">Sign Up</button>
+            <a href="{{ url_for('main.index') }}" class="cb-button cb-teal">Cancel</a>
         </div>
     </form>
 </div>

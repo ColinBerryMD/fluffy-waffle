@@ -3,8 +3,8 @@
 {% block title %}Edit User{% endblock %}
 {% block content %}
 {# needs user = WebUser() #}
-<div class="w3-container">
-    <h1 class='w3-padding-16' style="margin-top: 32px;">Edit User : {{ user.User }}</h1>
+<div class="cb-container">
+    <h1 class='cb-header'>Edit User : {{ user.User }}</h1>
     <form method="POST" action="{{ url_for('auth.edit', user_id = user.id) }}">            
         <div>
             <input class="input is-large" type="text" name="first" value="{{ user.first }}" autofocus="">
@@ -28,9 +28,9 @@
             <input type="checkbox" name="is_sms" {% if user.sms %}checked{%endif%}/>
         </div>
 
-        <div class="w3-bar w3-padding-16">
-            <button type='submit' class="w3-button w3-black">Submit</button>
-            <a href="{{ url_for('main.index') }}" class="w3-button w3-black">Cancel</a>
+        <div class="cb-bar padding-16">
+            <button type='submit' class="cb-button cb-teal">Submit</button>
+            <a href="{{ url_for('main.index') }}" class="cb-button cb-teal">Cancel</a>
         </div>
     </form>
 </div>

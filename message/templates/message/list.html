@@ -18,7 +18,7 @@
                     {% with client = their_messages[0].sms_client %}
                         <button id="button_{{ sender }}" 
                             {% if loop.index == 1 %}
-                                class="cb-bar-item w3-left w3-block tablink active" 
+                                class="cb-bar-item w3-left w3-block tablink active-tab" 
                             {% else %}
                                 class="cb-bar-item w3-left w3-block tablink" 
                             {% endif %}
@@ -75,7 +75,7 @@
     <div id="group_column" class="w3-col cb-col-two-of-two cb-under-navbar">
         <div id="group_parent" class="w3-container cb-container cb-bar">
             <button id="button_list" 
-                    class="cb-bar-item w3-left w3-block tablink active" 
+                    class="cb-bar-item w3-left w3-block tablink active-tab" 
                     onclick="openTab(event,'group_column','group_list')" >
                 {{ group.name }}
             </button>

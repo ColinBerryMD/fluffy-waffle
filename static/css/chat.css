@@ -12,7 +12,7 @@
   background-color: var(--hover-color)
 }
 
-#tab_parent button.active, #group_parent button.active {
+#tab_parent button.active-tab, #group_parent button.active-tab {
   background-color: var(--active-color); 
   border-bottom: 2px solid var(--active-color);
   position: relative;
@@ -120,6 +120,6 @@
 .chat-popup button:hover, #group_other_client button:hover {
   background-color: var(--hover-color);
 }
-#group_other_client button.active {
+#group_other_client button.active-tab {
   background-color: var(--active-color);
 }

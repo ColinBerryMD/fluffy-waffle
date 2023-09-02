@@ -24,7 +24,7 @@
             <div class="w3-bar cb-teal w3-left-align w3-large" >
                 
                 <!-- the 'hamburger' menu for phones and small screens -->
-                <div class="w3-bar-item dropdown">
+                <div class="w3-bar-item dropdown" >
                     <button class="btn btn-default dropdown-toggle cb-show-medium cb-show-small cb-hide-large" type="button" data-toggle="dropdown">
                         <i class="fa fa-bars"></i>
                     </button>
@@ -92,7 +92,7 @@
                         <li><a tabindex="-1" href="{{ url_for('sms_client.create') }}">Contact Us</a></li>
                     {% endif %}
 
-                    {% block minisidebar %}{% endblock %}
+                    {% block sidebar %}{% endblock %}
 
                     </ul>
                 </div>
@@ -272,11 +272,12 @@
         </div>
 
 <!-- Sidbar if there is one in this template -->
-        <div class="sidenav">
+        {% if self.sidebar() %}<div class="sidenav">
             <ul>
-                {{ self.minisidebar() }}
+                {{ self.sidebar() }}
             </ul>
         </div>
+        {% endif %}
 
 <!-- Flash messages -->
         {% with messages = get_flashed_messages( with_categories = true ) %}

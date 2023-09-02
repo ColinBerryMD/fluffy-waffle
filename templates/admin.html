@@ -1,38 +1,13 @@
 {% extends "base.html" %}
 {% block title %}Admin Dashboard{% endblock %}
 {% block sidebar %}
-<!-- Sidebar -->
-<!-- Overlay effect when opening sidebar on small screens -->
-<div class="w3-overlay w3-hide-large" style="cursor:pointer" 
-     title="close side menu" id="myOverlay"></div>
-<nav class="w3-sidebar w3-bar-block w3-collapse w3-large w3-theme-l5 w3-animate-left" id="mySidebar">
-    <a class="w3-right w3-xlarge w3-padding-large w3-hover-black w3-hide-large" title="Close Menu">
-        <i class="fa fa-remove"></i>
-    </a>
-    <a class="w3-bar-item w3-button w3-hover-black" 
-       href="{{ url_for('auth.create') }}">Create User Name</a>
-    <a class="w3-bar-item w3-button w3-hover-black" 
-       href="{{ url_for('auth.all') }}">List All Users</a>
-    <a class="w3-bar-item w3-button w3-hover-black" 
-       href="{{ url_for('auth.select') }}">Select User</a>
-    <a class="w3-bar-item w3-button w3-hover-black" 
-       href="{{ url_for('group.create') }}">Create New Client Group</a>
-    <a class="w3-bar-item w3-button w3-hover-black" 
-       href="{{ url_for('account.create') }}">Create New Account</a>
-    <a class="w3-bar-item w3-button w3-hover-black" 
-       href="{{ url_for('sms_client.select') }}">Select Client</a>
-</nav>
 
-{% endblock %}
-
-{% block minisidebar %}
-
-    <li><a class="cb-hover-teal" tabindex="-1" href="{{ url_for('auth.create') }}">Create User Name</a></li>
-    <li><a class="cb-hover-teal" tabindex="-1" href="{{ url_for('auth.all') }}">List All Users</a></li>
-    <li><a class="cb-hover-teal" tabindex="-1" href="{{ url_for('auth.select') }}">Select User</a></li>
-    <li><a class="cb-hover-teal" tabindex="-1" href="{{ url_for('group.create') }}">Create New Client Group</a></li>
-    <li><a class="cb-hover-teal" tabindex="-1" href="{{ url_for('account.create') }}">Create New Account</a></li>
-    <li><a class="cb-hover-teal" tabindex="-1" href="{{ url_for('sms_client.select') }}">Select Client</a></li>
+    <li class="cb-hover-teal"><a tabindex="-1" href="{{ url_for('auth.create') }}">Create User Name</a></li>
+    <li class="cb-hover-teal"><a tabindex="-1" href="{{ url_for('auth.all') }}">List All Users</a></li>
+    <li class="cb-hover-teal"><a tabindex="-1" href="{{ url_for('auth.select') }}">Select User</a></li>
+    <li class="cb-hover-teal"><a tabindex="-1" href="{{ url_for('group.create') }}">Create New Client Group</a></li>
+    <li class="cb-hover-teal"><a tabindex="-1" href="{{ url_for('account.create') }}">Create New Account</a></li>
+    <li class="cb-hover-teal"><a tabindex="-1" href="{{ url_for('sms_client.select') }}">Select Client</a></li>
 
 {% endblock %}
 

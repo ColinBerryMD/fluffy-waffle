@@ -2,19 +2,13 @@
 {% block title %}Client Welcome{% endblock %}
 {% block sidebar %}
 <!-- Sidebar -->
-    <nav class="w3-sidebar w3-bar-block w3-collapse w3-large w3-theme-l5 w3-animate-left" id="mySidebar">
-        <a class="w3-right w3-xlarge w3-padding-large w3-hover-black w3-hide-large" title="Close Menu">
-            <i class="fa fa-remove"></i>
-        </a>
-        <a class="w3-bar-item w3-button w3-hover-black" 
-           href="https://www.w3schools.com/w3css/tryw3css_templates_webpage.htm#">Link</a>
-        <a class="w3-bar-item w3-button w3-hover-black" 
-           href="https://www.w3schools.com/w3css/tryw3css_templates_webpage.htm#">Link</a>
-        <a class="w3-bar-item w3-button w3-hover-black" 
-           href="https://www.w3schools.com/w3css/tryw3css_templates_webpage.htm#">Link</a>
-        <a class="w3-bar-item w3-button w3-hover-black" 
-           href="https://www.w3schools.com/w3css/tryw3css_templates_webpage.htm#">Link</a>
-    </nav>
+
+    <li class="cb-hover-teal"><a tabindex="-1" href="{{ url_for('sms_client.create') }}">Register SMS Number</a></li>
+    <!--li class="cb-hover-teal"><a tabindex="-1" href="{{ url_for('auth.all') }}">List All Users</a></li>
+    <li class="cb-hover-teal"><a tabindex="-1" href="{{ url_for('auth.select') }}">Select User</a></li>
+    <li class="cb-hover-teal"><a tabindex="-1" href="{{ url_for('group.create') }}">Create New Client Group</a></li>
+    <li class="cb-hover-teal"><a tabindex="-1" href="{{ url_for('account.create') }}">Create New Account</a></li>
+    <li class="cb-hover-teal"><a tabindex="-1" href="{{ url_for('sms_client.select') }}">Select Client</a></li-->
 
 {% endblock %}
 {% block content %}
@@ -28,7 +22,10 @@
                 the button on the upper right or to the left.
             </p>
             <p>
-                Also to the left are buttons leading to our other website functions.
+                Also to the left are buttons leading to our other website functions. Or they will be when we have some.
+            </p>
+            <p>
+                If you are using your phone or another small screen click the menu bars (<i class="fa fa-bars"></i>) to see the left side menu.
             </p>
             <p>
                 We promise never to use your information for spam or advertising. It is just that

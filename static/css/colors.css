@@ -1,5 +1,6 @@
 :root {
   --border-color: grey;
+  --top-bar-color:  #66B2B2;
   --active-color:   #F0FFF0;
   --hover-color:    #b6d1ca;
   --inactive-color: #edf5f3;
@@ -10,10 +11,3 @@
   --time-color:     #717475;
 }
 
-.cb-teal {
-  background-color: #66B2B2;
-  color: black;
-}
-.cb-hover-teal:hover {
-  background-color: #66B2B2!important;
-}

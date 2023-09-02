@@ -78,10 +78,6 @@ The other blueprints were constructed to test functionality during development. 
 
 Messaging requires server sent events, which wont work on the flask development server. Upgraded to a combination of gunicorn, redis and nginx (none of which I understand that well but seem to be working).
 
-At that point the front end is styled mostly with w3css. Needed some bootstrap and jquery to make it responsive. Time will tell how much more I will need.
-
 Working hard to keep the local styling and javascript to a minimum. The general local css should be static/css/cbmd.css. The css for the messaging dashboard is in chat.css. The only local js is in static/javascript/sms.js. This does the dynamic modification of the message dashboard. There is a little js to listen for sse events at the bottom of base.html. At this point that is the only javascript in the project. The tiny jquery to make the nested phone menus work is also at the bottom of base.html.
-
-Still to do: debug the status updates. Style the status updates. Write the archiving feature. Write the translator. Better responsive style. Cohesive overall color scheme. Write the content prose.
 
 ## I would appreciate feedback regarding style, readability and potential security vulnerabilities. 

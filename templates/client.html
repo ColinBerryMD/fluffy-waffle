@@ -13,25 +13,23 @@
 {% endblock %}
 {% block content %}
 <div class="w3-main" style="margin-left:250px">
-    <div class="w3-row w3-padding-64">
-        <div class="w3-twothird cb-container">
-            <h1 class="w3-text-teal">Welcome to Our Website</h1>
-            <p>
-                If you are here because you want to exchange text messages with us you will need to 
-                <a href="{{ url_for('sms_client.create') }}">register by clicking here</a> or on
-                the button on the upper right or to the left.
-            </p>
-            <p>
-                Also to the left are buttons leading to our other website functions. Or they will be when we have some.
-            </p>
-            <p>
-                If you are using your phone or another small screen click the menu bars (<i class="fa fa-bars"></i>) to see the left side menu.
-            </p>
-            <p>
-                We promise never to use your information for spam or advertising. It is just that
-                adding you to our contacts list is the only way we can keep from getting spam ourselves.
-            </p>
-        </div>
+    <div class="padding-64 cb-container">
+        <h1 class="cb-header">Welcome to Our Website</h1>
+        <p>
+            If you are here because you want to exchange text messages with us you will need to 
+            <a href="{{ url_for('sms_client.create') }}">register by clicking here</a> or on
+            the button on the upper right or to the left.
+        </p>
+        <p>
+            Also to the left are buttons leading to our other website functions. Or they will be when we have some.
+        </p>
+        <p>
+            If you are using your phone or another small screen click the menu bars (<i class="fa fa-bars"></i>) to see the left side menu.
+        </p>
+        <p>
+            We promise never to use your information for spam or advertising. It is just that
+            adding you to our contacts list is the only way we can keep from getting spam ourselves.
+        </p>
     </div>
  </div>       
 {% endblock %}

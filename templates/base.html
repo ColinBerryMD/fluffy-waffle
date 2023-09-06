@@ -25,11 +25,13 @@
                 
                 <!-- the 'hamburger' menu for phones and small screens -->
                 <div class="w3-bar-item dropdown" >
-                    <button class="btn btn-default dropdown-toggle cb-show-medium cb-show-small cb-hide-large" type="button" data-toggle="dropdown">
+                    <button class="btn btn-default dropdown-toggle cb-show-medium cb-show-small cb-hide-large" 
+                    onclick="cbOpenHamburger();" type="button" data-toggle="dropdown">
                         <i class="fa fa-bars"></i>
                     </button>
-                    <ul class="dropdown-menu">
-                    {% if current_user.is_authenticated %}
+                    <ul id="hamburger" class="dropdown-menu">
+                        <li><a onclick="cbCloseHamburger()" class="test" tabindex="-1" onclick="cbCloseHamburger()">Close Menu &times;</a></li>
+                        {% if current_user.is_authenticated %}
                         <li class="dropdown-submenu">
                             <a class="test" tabindex="-1">Current User: &nbsp{{ current_user.User }}&nbsp<span class="caret"></span></a>
                             <ul class="dropdown-menu">
@@ -44,7 +46,7 @@
                                 </a></li>
                             </ul>
                         </li>
-                    {% endif %}
+                        {% endif %}
                     
                     {% if current_user.is_sms %}
                         <!-- select or manage account -->
@@ -88,8 +90,8 @@
                         {% endif %}
                     {% else %}
                         <li><a tabindex="-1" href="{{ url_for('sms_client.create') }}">Registration</a></li>
-                        <li><a tabindex="-1" href="{{ url_for('sms_client.create') }}">Claim Username</a></li>
-                        <li><a tabindex="-1" href="{{ url_for('sms_client.create') }}">Contact Us</a></li>
+                        <li><a tabindex="-1" href="{{ url_for('auth.lookup') }}">Claim Username</a></li>
+                        <li><a tabindex="-1" href="{{ url_for('main.contact') }}">Contact Us</a></li>
                     {% endif %}
 
                     {% block sidebar %}{% endblock %}

@@ -5,6 +5,16 @@
 
 // Process sse based response to twillio message and message status
 
+//////////////////////////////////////////
+// use responsive menu on resize
+function cbHamburgerOpen() {
+  document.getElementById("hamburger").style.width = "100%";
+  document.getElementById("hamburger").style.display = "block";
+}
+
+function cbHamburgerClose() {
+  document.getElementById("hamburger").style.display = "none";
+}
 
 //////////////////////////////////////////
 // work with css to style tabbed layout

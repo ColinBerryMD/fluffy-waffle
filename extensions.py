@@ -1,4 +1,5 @@
 from os import environ
+
 from flask import Blueprint, render_template, redirect, request, flash, url_for, abort, current_app, session, Response as flask_response
 from flask_login import LoginManager,  login_required, login_user, current_user, logout_user
 from flask_bcrypt import Bcrypt
@@ -17,8 +18,6 @@ login_manager = LoginManager()
 
 # Find your Account SID and Auth Token at twilio.com/console
 # and set the environment variables. See http://twil.io/secure
-##### at least the sms sid and phone number will be account specific and retrieved
-##### from database
 try:
 	class twilio_config():
 		account_sid = environ['TWILIO_ACCOUNT_SID']

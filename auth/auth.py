@@ -33,9 +33,9 @@ def login():
 
         try:
             user = WebUser.query.filter_by(User=User).one()
-        except sql_error as e:
-            locale = "getting user for login"
-            return redirect(url_for('errors.mysql_server', error = e, locale=locale)) 
+        except:
+            flash('Please check your login details and try again.')
+            return render_template('auth/login.html')  # if the user doesn't exist or password is wrong, reload the page 
 
         # check if the user actually exists
         # take the user-supplied password, hash it, and compare it to the hashed password in the database

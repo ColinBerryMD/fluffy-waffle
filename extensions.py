@@ -1,4 +1,5 @@
 from os import environ
+from dotenv import load_dotenv, find_dotenv
 
 from flask import Blueprint, render_template, redirect, request, flash, url_for, abort, current_app, session, Response as flask_response
 from flask_login import LoginManager,  login_required, login_user, current_user, logout_user
@@ -15,6 +16,7 @@ from twilio.rest import Client as TwilioClient
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 login_manager = LoginManager()
+load_dotenv(find_dotenv())
 
 # Find your Account SID and Auth Token at twilio.com/console
 # and set the environment variables. See http://twil.io/secure
@@ -24,9 +26,9 @@ try:
 		otp_sid 	= environ['TWILIO_OTP_SERVICE_SID']
 		sms_sid		= environ['TWILIO_MSG_SERVICE_SID']
 		auth_token 	= environ['TWILIO_AUTH_TOKEN']
-		twilio_phone= environ['TWILIO_PHONE_NUMBER']
+#		twilio_phone= environ['TWILIO_PHONE_NUMBER']
 		status      = environ['TWILIO_STATUS_WEBHOOK']
-		my_cell 	= environ['MY_CELL_NUMBER']
+#		my_cell 	= environ['MY_CELL_NUMBER']
 except KeyError:
 	print("Error on initial twilio configuration. Did you set the environmental variables?")
 	abort(401)

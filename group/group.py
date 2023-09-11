@@ -240,7 +240,7 @@ def delete_client(client_id,group_id):
     return redirect(url_for('main.index'))
 
 # delete a whole client group
-@group.route('/<int:group_id>/delete/')
+@group.route('/<int:group_id>/delete/', methods=('GET','POST'))
 @login_required
 def delete(group_id):
     # require sms access

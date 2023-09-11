@@ -5,7 +5,7 @@
 from datetime import datetime, timedelta
 
 # database models
-from models import WebUser, OldPasswords, SMSAccount, SMSGroup
+from models import WebUser, OldPasswords, SMSAccount, SMSGroup, User_Account_Link
 
 # my own modules
 from utils.phonenumber import cleanphone
@@ -346,6 +346,7 @@ def change_password(user_id):
             locale="adding to old passwords file" 
             return redirect(url_for("errors.mysql_server", error = e,locale=locale))
         
+        flash("Password changed.","info")
         return redirect(url_for('auth.profile',user_id=user.id))
 
     # handle GET request
@@ -523,7 +524,7 @@ def logout():
     return redirect(url_for('main.index'))
 
 # delete a user account
-@auth.route('/<int:user_id>/delete/', methods=(['POST']))
+@auth.route('/<int:user_id>/delete/', methods=('GET', 'POST'))
 @login_required
 def delete(user_id):
     # require admin access

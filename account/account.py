@@ -362,9 +362,9 @@ def delete_user(user_id,account_id):
 
 # and finally, the admin or owner of an account can delete the account
 @login_required
-@account.post('/<int:account_id>/delete_account')
+@account.route('/<int:account_id>/delete_account', methods=('GET','POST'))
 def delete_account(account_id):
-    account_to_delete = SMSAccount.query.filter(SMSAccount.id == account_id)
+    account_to_delete = SMSAccount.query.filter(SMSAccount.id == account_id).one()
 
     # need authorization to edit account
     if not current_user.is_admin and not current_user.id == account_to_delete.owner_id:
@@ -386,6 +386,10 @@ def delete_account(account_id):
     except sql_error as e:
         locale="deleting account"
         return redirect(url_for('errors.mysql_server', error = e, locale=locale))
+
+    session['account_id'] = None
+    session['account_name'] = None
+
 
     flash(account_to_delete.name +'('+account_to_delete.number+') '+' deleted.','info')
     return redirect(url_for('main.index'))

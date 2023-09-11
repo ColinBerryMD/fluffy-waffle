@@ -41,6 +41,7 @@
     text-justify:inter-word;
 }
 
+
 .cb-teal {
   background-color: var(--top-bar-color);
   color: black;
@@ -91,7 +92,7 @@
 {
     overflow: visible;
     position: relative;
-    z-index: 5;
+    z-index: 10;
 }
 
 .cb-main, #main{
@@ -188,6 +189,9 @@
     .cb-show-small {
         display: block;
     }
+    .cb-show-small.cb-span {
+        display: contents;
+    }
     .cb-col-one-of-two {
         width: 100%;
     }
@@ -221,6 +225,9 @@
     .cb-show-medium {
         display: block;
     }
+    .cb-show-medium.cb-span {
+        display: contents;
+    }
     .sidenav {
         display: none;
     }
@@ -246,6 +253,9 @@
     }
     .cb-show-large {
         display: block;
+    }
+    .cb-show-large.cb-span {
+        display: contents;
     }
     .cb-col-one-of-two {
         width: 65%;
